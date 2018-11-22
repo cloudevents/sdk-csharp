@@ -1,65 +1,95 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿// Copyright (c) Cloud Native Foundation. 
+// Licensed under the Apache 2.0 license.
+// See LICENSE file in the project root for full license information.
 
 namespace CloudNative.CloudEvents
 {
-    using System.Linq;
+    using System;
+    using System.IO;
     using System.Net.Mime;
-    using System.Threading.Tasks;
+    using System.Text;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
-    public static class JsonEventFormatter
+    public class JsonEventFormatter : ICloudEventFormatter
     {
-        public static CloudEvent FromJson(string jsonText, params ICloudEventExtension[] extensions)
+        public CloudEvent DecodeStructuredEvent(Stream data, params ICloudEventExtension[] extensions)
         {
-            var jo = JObject.Parse(jsonText);
-            var ce = new CloudEvent(extensions);
-            var attr = ce.GetAttributes();
-            foreach (var prop in jo)
-            {
-                switch (prop.Value.Type)
-                {
-                    case JTokenType.String:
-                        attr[prop.Key] = prop.Value.ToObject<string>();
-                        break;
-                    case JTokenType.Date:
-                        attr[prop.Key] = prop.Value.ToObject<DateTime>();
-                        break;
-                    case JTokenType.Uri:
-                        attr[prop.Key] = prop.Value.ToObject<Uri>();
-                        break;
-                    case JTokenType.Null:
-                        attr[prop.Key] = null;
-                        break;
-                    case JTokenType.Integer:
-                        attr[prop.Key] = prop.Value.ToObject<int>();
-                        break;
-                    default:
-                        attr[prop.Key] = (dynamic)prop.Value;
-                        break;
-                }
-            }
-            return ce;
+            var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true));
+            var jObject = JObject.Load(jsonReader);
+            return DecodeJObject(jObject, extensions);
         }
 
-        public static string ToJsonString(this CloudEvent cloudEvent)
+        public CloudEvent DecodeStructuredEvent(byte[] data, params ICloudEventExtension[] extensions)
         {
-            JObject jo = new JObject();
-            var attrs = cloudEvent.GetAttributes();
-            foreach (var attr in attrs)
+            var jsonText = Encoding.UTF8.GetString(data);
+            var jObject = JObject.Parse(jsonText);
+            return DecodeJObject(jObject, extensions);
+        }
+
+        public CloudEvent DecodeJObject(JObject jObject, params ICloudEventExtension[] extensions)
+        {
+            var cloudEvent = new CloudEvent(extensions);
+            var attributes = cloudEvent.GetAttributes();
+            attributes.Clear();
+            foreach (var keyValuePair in jObject)
             {
-                if (attr.Value is ContentType)
+                switch (keyValuePair.Value.Type)
                 {
-                    jo[attr.Key] = JToken.FromObject(((ContentType)attr.Value).ToString());
-                }                                                                          
-                else
-                {
-                    jo[attr.Key] = JToken.FromObject(attr.Value);
+                    case JTokenType.String:
+                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<string>();
+                        break;
+                    case JTokenType.Date:
+                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<DateTime>();
+                        break;
+                    case JTokenType.Uri:
+                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<Uri>();
+                        break;
+                    case JTokenType.Null:
+                        attributes[keyValuePair.Key] = null;
+                        break;
+                    case JTokenType.Integer:
+                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<int>();
+                        break;
+                    default:
+                        attributes[keyValuePair.Key] = (dynamic)keyValuePair.Value;
+                        break;
                 }
             }
-            return jo.ToString();
+            return cloudEvent;
+        }
+
+        public byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
+        {
+            contentType = new ContentType("application/cloudevents+json")
+            {
+                CharSet = Encoding.UTF8.EncodingName
+            };
+
+            JObject jObject = new JObject();
+            var attributes = cloudEvent.GetAttributes();
+            foreach (var keyValuePair in attributes)
+            {
+                if (keyValuePair.Value is ContentType)
+                {
+                    jObject[keyValuePair.Key] = JToken.FromObject(((ContentType)keyValuePair.Value).ToString());
+                }
+                else
+                {
+                    jObject[keyValuePair.Key] = JToken.FromObject(keyValuePair.Value);
+                }
+            }
+            return Encoding.UTF8.GetBytes(jObject.ToString());
+        }
+
+        public object DecodeAttribute(string name, byte[] data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte[] EncodeAttribute(string name, object value)
+        {
+            throw new NotImplementedException();
         }
     }
 }

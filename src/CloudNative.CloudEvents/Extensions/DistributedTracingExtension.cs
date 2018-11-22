@@ -1,6 +1,6 @@
-﻿
-
-using System.Collections.Generic;
+﻿// Copyright (c) Cloud Native Foundation. 
+// Licensed under the Apache 2.0 license.
+// See LICENSE file in the project root for full license information.
 
 namespace CloudNative.CloudEvents.Extensions
 {
@@ -9,9 +9,11 @@ namespace CloudNative.CloudEvents.Extensions
 
     public class DistributedTracingExtension : ICloudEventExtension
     {
-        IDictionary<string, object> attributes = new Dictionary<string, object>();
         public const string TraceParentAttributeName = "traceparent";
+
         public const string TraceStateAttributeName = "tracestate";
+
+        IDictionary<string, object> attributes = new Dictionary<string, object>();
 
         public DistributedTracingExtension(string traceParent)
         {
@@ -30,6 +32,23 @@ namespace CloudNative.CloudEvents.Extensions
             set => attributes[TraceStateAttributeName] = value;
         }
 
+        void ICloudEventExtension.Attach(CloudEvent cloudEvent)
+        {
+            var eventAttributes = cloudEvent.GetAttributes();
+            if (attributes == eventAttributes)
+            {
+                // already done
+                return;
+            }
+
+            foreach (var attr in attributes)
+            {
+                eventAttributes[attr.Key] = attr.Value;
+            }
+
+            attributes = eventAttributes;
+        }
+
         bool ICloudEventExtension.ValidateAndNormalize(string key, ref object value)
         {
             switch (key)
@@ -39,30 +58,18 @@ namespace CloudNative.CloudEvents.Extensions
                     {
                         return true;
                     }
+
                     throw new InvalidOperationException(Strings.ErrorTraceParentValueIsaNotAString);
                 case TraceStateAttributeName:
                     if (value == null || value is string)
                     {
                         return true;
-                    }          
+                    }
+
                     throw new InvalidOperationException(Strings.ErrorTraceParentValueIsaNotAString);
             }
-            return false;
-        }
 
-        void ICloudEventExtension.Attach(CloudEvent cloudEvent)
-        {
-            var eventAttributes = cloudEvent.GetAttributes();
-            if (attributes == eventAttributes)
-            {
-                // already done
-                return;
-            }
-            foreach (var attr in attributes)
-            {
-                eventAttributes[attr.Key] = attr.Value;
-            }
-            attributes = eventAttributes;
+            return false;
         }
     }
 }

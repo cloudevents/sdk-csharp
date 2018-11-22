@@ -1,13 +1,16 @@
+// Copyright (c) Cloud Native Foundation. 
+// Licensed under the Apache 2.0 license.
+// See LICENSE file in the project root for full license information.
+
 namespace CloudNative.CloudEvents.UnitTests
 {
-    using System;
     using System.Collections.Generic;
 
     public class ComExampleExtension2Extension : ICloudEventExtension
     {
-        IDictionary<string, object> attributes = new Dictionary<string, object>();
+        const string extensionAttribute = "comexampleextension2";
 
-        private const string extensionAttribute = "comexampleextension2";
+        IDictionary<string, object> attributes = new Dictionary<string, object>();
 
         public ComExampleExtension2Extension()
         {
@@ -17,6 +20,23 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             get => attributes[extensionAttribute] as ComExampleExtension2Data;
             set => attributes[extensionAttribute] = value;
+        }
+
+        void ICloudEventExtension.Attach(CloudEvent cloudEvent)
+        {
+            var eventAttributes = cloudEvent.GetAttributes();
+            if (attributes == eventAttributes)
+            {
+                // already done
+                return;
+            }
+
+            foreach (var attr in attributes)
+            {
+                eventAttributes[attr.Key] = attr.Value;
+            }
+
+            attributes = eventAttributes;
         }
 
         bool ICloudEventExtension.ValidateAndNormalize(string key, ref object value)
@@ -38,23 +58,6 @@ namespace CloudNative.CloudEvents.UnitTests
             }
 
             return false;
-        }
-
-        void ICloudEventExtension.Attach(CloudEvent cloudEvent)
-        {
-            var eventAttributes = cloudEvent.GetAttributes();
-            if (attributes == eventAttributes)
-            {
-                // already done
-                return;
-            }
-
-            foreach (var attr in attributes)
-            {
-                eventAttributes[attr.Key] = attr.Value;
-            }
-
-            attributes = eventAttributes;
         }
     }
 }

@@ -1,19 +1,23 @@
-﻿using System;
-using Xunit;
+﻿// Copyright (c) Cloud Native Foundation. 
+// Licensed under the Apache 2.0 license.
+// See LICENSE file in the project root for full license information.
 
 namespace CloudNative.CloudEvents.UnitTests
 {
+    using System;
     using System.Net.Mime;
+    using Xunit;
 
     public class ConstructorTest
     {
         [Fact]
         public void CreateBaseEvent1()
         {
-            var cloudEvent = new CloudEvent("com.github.pull.create", new Uri("https://github.com/cloudevents/spec/pull/123"))
+            var cloudEvent = new CloudEvent("com.github.pull.create",
+                new Uri("https://github.com/cloudevents/spec/pull/123"))
             {
                 Id = "A234-1234-1234",
-                Time = new DateTime(2018,4,5,17,31,0, DateTimeKind.Utc),
+                Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
                 ContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = "<much wow=\"xml\"/>"
             };
@@ -42,7 +46,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var cloudEvent = new CloudEvent(
                 "com.github.pull.create",
                 new Uri("https://github.com/cloudevents/spec/pull/123"),
-                "A234-1234-1234", 
+                "A234-1234-1234",
                 new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc))
             {
                 ContentType = new ContentType(MediaTypeNames.Text.Xml),
