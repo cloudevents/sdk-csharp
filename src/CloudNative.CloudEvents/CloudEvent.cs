@@ -38,7 +38,7 @@ namespace CloudNative.CloudEvents
         internal CloudEvent(IEnumerable<ICloudEventExtension> extensions)
         {
             attributes = new CloudEventAttributes(extensions);
-            SpecVersion = "0.1";
+            SpecVersion = "0.2";
             this.Extensions = new Dictionary<Type, ICloudEventExtension>();
             if (extensions != null)
             {
