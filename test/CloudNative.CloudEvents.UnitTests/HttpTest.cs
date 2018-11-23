@@ -64,7 +64,7 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
         [Fact]
-        async Task HttpStructuredClientTest()
+        async Task HttpStructuredClientSendTest()
         {
             var cloudEvent = new CloudEvent("com.github.pull.create",
                             new Uri("https://github.com/cloudevents/spec/pull/123"))
@@ -125,7 +125,7 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
         [Fact]
-        async Task HttpBinaryClientTest()
+        async Task HttpBinaryClientSendTest()
         {
             var cloudEvent = new CloudEvent("com.github.pull.create",
                             new Uri("https://github.com/cloudevents/spec/pull/123"))
@@ -190,5 +190,126 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
 
+        [Fact]
+        async Task HttpStructuredClientReceiveTest()
+        {
+            string ctx = Guid.NewGuid().ToString();
+            pendingRequests.TryAdd(ctx, async context =>
+            {
+
+                try
+                {
+                    var cloudEvent = new CloudEvent("com.github.pull.create",
+                        new Uri("https://github.com/cloudevents/spec/pull/123"))
+                    {
+                        Id = "A234-1234-1234",
+                        Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                        ContentType = new ContentType(MediaTypeNames.Text.Xml),
+                        Data = "<much wow=\"xml\"/>"
+                    };
+
+                    var attrs = cloudEvent.GetAttributes();
+                    attrs["comexampleextension1"] = "value";
+                    attrs["comexampleextension2"] = new { othervalue = 5 };
+
+
+                    await context.Response.CopyFromAsync(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                }
+                catch (Exception e)
+                {
+                    using (var sw = new StreamWriter(context.Response.OutputStream))
+                    {
+                        sw.Write(e.ToString());
+                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    }
+                }
+                context.Response.Close();
+            });
+
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add(testContextHeader, ctx);
+            var result = await httpClient.GetAsync(new Uri(listenerAddress + "ep"));
+
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+                var receivedCloudEvent = await result.ToCloudEvent();
+
+                Assert.Equal("0.1", receivedCloudEvent.SpecVersion);
+                Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+                Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
+                Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+                Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
+                    receivedCloudEvent.Time.Value.ToUniversalTime());
+                Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.ContentType);
+                Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
+
+                var attr = receivedCloudEvent.GetAttributes();
+                Assert.Equal("value", (string)attr["comexampleextension1"]);
+                Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
+            
+        }
+
+
+        [Fact]
+        async Task HttpBinaryClientReceiveTest()
+        {
+            string ctx = Guid.NewGuid().ToString();
+            pendingRequests.TryAdd(ctx, async context =>
+            {
+
+                try
+                {
+                    var cloudEvent = new CloudEvent("com.github.pull.create",
+                        new Uri("https://github.com/cloudevents/spec/pull/123"))
+                    {
+                        Id = "A234-1234-1234",
+                        Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                        ContentType = new ContentType(MediaTypeNames.Text.Xml),
+                        Data = "<much wow=\"xml\"/>"
+                    };
+
+                    var attrs = cloudEvent.GetAttributes();
+                    attrs["comexampleextension1"] = "value";
+                    attrs["comexampleextension2"] = new { othervalue = 5 };
+
+
+                    await context.Response.CopyFromAsync(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                }
+                catch (Exception e)
+                {
+                    using (var sw = new StreamWriter(context.Response.OutputStream))
+                    {
+                        sw.Write(e.ToString());
+                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    }
+                }
+                context.Response.Close();
+            });
+
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add(testContextHeader, ctx);
+            var result = await httpClient.GetAsync(new Uri(listenerAddress + "ep"));
+
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            var receivedCloudEvent = await result.ToCloudEvent();
+
+            Assert.Equal("0.1", receivedCloudEvent.SpecVersion);
+            Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+            Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
+            Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
+                receivedCloudEvent.Time.Value.ToUniversalTime());
+            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.ContentType);
+            using (var sr = new StreamReader((Stream)receivedCloudEvent.Data))
+            {
+                Assert.Equal("<much wow=\"xml\"/>", sr.ReadToEnd());
+            }
+
+            var attr = receivedCloudEvent.GetAttributes();
+            Assert.Equal("value", (string)attr["comexampleextension1"]);
+            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
+
+        }
     }
 }
