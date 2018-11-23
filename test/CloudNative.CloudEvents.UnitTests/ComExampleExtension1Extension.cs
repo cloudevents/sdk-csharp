@@ -55,5 +55,15 @@ namespace CloudNative.CloudEvents.UnitTests
 
             return false;
         }
+
+        public Type GetAttributeType(string name)
+        {
+            switch (name)
+            {
+                case extensionAttribute:
+                    return typeof(string);
+            }
+            return null;
+        }
     }
 }

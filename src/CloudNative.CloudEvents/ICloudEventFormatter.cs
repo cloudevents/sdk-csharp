@@ -4,16 +4,17 @@
 
 namespace CloudNative.CloudEvents
 {
+    using System.Collections.Generic;
     using System.IO;
     using System.Net.Mime;
 
 
     public interface ICloudEventFormatter
     {
-        CloudEvent DecodeStructuredEvent(Stream data, params ICloudEventExtension[] extensions);
-        CloudEvent DecodeStructuredEvent(byte[] data, params ICloudEventExtension[] extensions);
-        byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType);
-        object DecodeAttribute(string name, byte[] data);
-        byte[] EncodeAttribute(string name, object value);
+        CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions);
+        CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<ICloudEventExtension> extensions);
+        byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType, IEnumerable<ICloudEventExtension> extensions);
+        object DecodeAttribute(string name, byte[] data, IEnumerable<ICloudEventExtension> extensions);
+        byte[] EncodeAttribute(string name, object value, IEnumerable<ICloudEventExtension> extensions);
     }
 }

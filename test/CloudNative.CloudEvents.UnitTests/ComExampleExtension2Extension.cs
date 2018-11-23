@@ -4,6 +4,7 @@
 
 namespace CloudNative.CloudEvents.UnitTests
 {
+    using System;
     using System.Collections.Generic;
 
     public class ComExampleExtension2Extension : ICloudEventExtension
@@ -58,6 +59,16 @@ namespace CloudNative.CloudEvents.UnitTests
             }
 
             return false;
+        }
+
+        public Type GetAttributeType(string name)
+        {
+            switch (name)
+            {
+                case extensionAttribute:
+                    return typeof(ComExampleExtension2Data);
+            }
+            return null;
         }
     }
 }

@@ -5,6 +5,7 @@
 namespace CloudNative.CloudEvents
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Net.Mime;
     using System.Text;
@@ -13,7 +14,15 @@ namespace CloudNative.CloudEvents
 
     public class JsonEventFormatter : ICloudEventFormatter
     {
+
+        public const string MediaTypeSuffix = "+json";
+
         public CloudEvent DecodeStructuredEvent(Stream data, params ICloudEventExtension[] extensions)
+        {
+            return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
+        }
+
+        public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions = null)
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true));
             var jObject = JObject.Load(jsonReader);
@@ -22,12 +31,17 @@ namespace CloudNative.CloudEvents
 
         public CloudEvent DecodeStructuredEvent(byte[] data, params ICloudEventExtension[] extensions)
         {
+            return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
+        }
+
+        public CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<ICloudEventExtension> extensions = null)
+        {
             var jsonText = Encoding.UTF8.GetString(data);
             var jObject = JObject.Parse(jsonText);
             return DecodeJObject(jObject, extensions);
         }
 
-        public CloudEvent DecodeJObject(JObject jObject, params ICloudEventExtension[] extensions)
+        public CloudEvent DecodeJObject(JObject jObject, IEnumerable<ICloudEventExtension> extensions = null)
         {
             var cloudEvent = new CloudEvent(extensions);
             var attributes = cloudEvent.GetAttributes();
@@ -56,14 +70,15 @@ namespace CloudNative.CloudEvents
                         break;
                 }
             }
+
             return cloudEvent;
         }
 
-        public byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
+        public byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType, IEnumerable<ICloudEventExtension> extensions = null)
         {
             contentType = new ContentType("application/cloudevents+json")
             {
-                CharSet = Encoding.UTF8.EncodingName
+                CharSet = Encoding.UTF8.WebName
             };
 
             JObject jObject = new JObject();
@@ -79,17 +94,71 @@ namespace CloudNative.CloudEvents
                     jObject[keyValuePair.Key] = JToken.FromObject(keyValuePair.Value);
                 }
             }
+
             return Encoding.UTF8.GetBytes(jObject.ToString());
         }
 
-        public object DecodeAttribute(string name, byte[] data)
+        public object DecodeAttribute(string name, byte[] data, IEnumerable<ICloudEventExtension> extensions = null)
         {
-            throw new NotImplementedException();
+            switch (name)
+            {
+                case CloudEventAttributes.SpecVersionAttributeName:
+                case CloudEventAttributes.IdAttributeName:
+                case CloudEventAttributes.TypeAttributeName:
+                    return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string));
+                case CloudEventAttributes.TimeAttributeName:
+                    return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(DateTime));
+                case CloudEventAttributes.SourceAttributeName:
+                case CloudEventAttributes.SchemaUrlAttributeName:
+                    var uri = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string)) as string;
+                    return new Uri(uri);
+                case CloudEventAttributes.ContentTypeAttributeName:
+                    var s = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string)) as string;
+                    return new ContentType(s);
+            }
+
+            if (extensions != null)
+            {
+                foreach (var extension in extensions)
+                {
+                    Type type = extension.GetAttributeType(name);
+                    if (type != null)
+                    {
+                        return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), type);
+                    }
+                }
+            }
+
+            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data));
         }
 
-        public byte[] EncodeAttribute(string name, object value)
+        public byte[] EncodeAttribute(string name, object value, IEnumerable<ICloudEventExtension> extensions = null)
         {
-            throw new NotImplementedException();
+            if (name.Equals(CloudEventAttributes.DataAttributeName))
+            {
+                if (value is Stream)
+                {
+                    using (var buffer = new MemoryStream())
+                    {
+                        ((Stream)value).CopyTo(buffer);
+                        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(buffer.ToArray()));
+                    }
+                }
+            }
+
+            if (extensions != null)
+            {
+                foreach (var extension in extensions)
+                {
+                    Type type = extension.GetAttributeType(name);
+                    if (type != null)
+                    {
+                        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Convert.ChangeType(value, type)));
+                    }
+                }
+            }
+
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
         }
     }
 }

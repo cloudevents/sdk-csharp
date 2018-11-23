@@ -10,6 +10,8 @@ namespace CloudNative.CloudEvents
 
     public class CloudEvent
     {
+        public const string MediaType = "application/cloudevents";
+
         readonly IDictionary<string, object> attributes;
 
         /// <summary>
@@ -33,15 +35,18 @@ namespace CloudNative.CloudEvents
         /// Create a new CloudEvent instance
         /// </summary>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
-        internal CloudEvent(params ICloudEventExtension[] extensions)
+        internal CloudEvent(IEnumerable<ICloudEventExtension> extensions)
         {
             attributes = new CloudEventAttributes(extensions);
             SpecVersion = "0.1";
             this.Extensions = new Dictionary<Type, ICloudEventExtension>();
-            foreach (var extension in extensions)
+            if (extensions != null)
             {
-                this.Extensions.Add(extension.GetType(), extension);
-                extension.Attach(this);
+                foreach (var extension in extensions)
+                {
+                    this.Extensions.Add(extension.GetType(), extension);
+                    extension.Attach(this);
+                }
             }
         }
 
@@ -72,7 +77,7 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// Extensions registered with this event. 
         /// </summary>
-        protected Dictionary<Type, ICloudEventExtension> Extensions { get; private set; }
+        protected internal Dictionary<Type, ICloudEventExtension> Extensions { get; private set; }
 
         /// <summary>
         /// CloudEvent 'id' attribute. ID of the event. The semantics of this string are explicitly

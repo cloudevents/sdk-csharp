@@ -29,10 +29,10 @@ namespace CloudNative.CloudEvents
         public const string TypeAttributeName = "type";
 
         IDictionary<string, object> dict = new Dictionary<string, object>();
+        
+        IEnumerable<ICloudEventExtension> extensions;
 
-        ICloudEventExtension[] extensions;
-
-        public CloudEventAttributes(params ICloudEventExtension[] extensions)
+        public CloudEventAttributes(IEnumerable<ICloudEventExtension> extensions)
         {
             this.extensions = extensions;
         }
@@ -211,11 +211,14 @@ namespace CloudNative.CloudEvents
                 case DataAttributeName:
                     return true;
                 default:
-                    foreach (var extension in extensions)
+                    if (extensions != null)
                     {
-                        if (extension.ValidateAndNormalize(key, ref value))
+                        foreach (var extension in extensions)
                         {
-                            return true;
+                            if (extension.ValidateAndNormalize(key, ref value))
+                            {
+                                return true;
+                            }
                         }
                     }
 

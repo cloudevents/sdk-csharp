@@ -71,5 +71,16 @@ namespace CloudNative.CloudEvents.Extensions
 
             return false;
         }
+
+        public Type GetAttributeType(string name)
+        {
+            switch (name)
+            {
+                case TraceParentAttributeName:
+                case TraceStateAttributeName:
+                    return typeof(string);
+            }           
+            return null;
+        }
     }
 }
