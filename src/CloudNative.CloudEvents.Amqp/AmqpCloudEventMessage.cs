@@ -4,9 +4,13 @@
 
 namespace CloudNative.CloudEvents.Amqp
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using global::Amqp;
     using global::Amqp.Framing;
+    using global::Amqp.Types;
 
     public class AmqpCloudEventMessage : Message
     {
@@ -15,8 +19,9 @@ namespace CloudNative.CloudEvents.Amqp
             if (contentMode == ContentMode.Structured)
             {
                 this.BodySection = new Data
-                    { Binary = formatter.EncodeStructuredEvent(cloudEvent, out var contentType) };
-                this.Properties.ContentType = contentType.MediaType;
+                { Binary = formatter.EncodeStructuredEvent(cloudEvent, out var contentType) };
+                this.Properties = new Properties() { ContentType = contentType.MediaType };
+                this.ApplicationProperties = new ApplicationProperties();
                 MapHeaders(cloudEvent);
                 return;
             }
@@ -43,7 +48,8 @@ namespace CloudNative.CloudEvents.Amqp
                 this.BodySection = new AmqpValue() { Value = cloudEvent.Data };
             }
 
-            this.Properties.ContentType = cloudEvent.ContentType?.MediaType;
+            this.Properties = new Properties() { ContentType = cloudEvent.ContentType?.MediaType };
+            this.ApplicationProperties = new ApplicationProperties();
             MapHeaders(cloudEvent);
         }
 
@@ -51,11 +57,32 @@ namespace CloudNative.CloudEvents.Amqp
         {
             foreach (var attribute in cloudEvent.GetAttributes())
             {
-                if (attribute.Key != CloudEventAttributes.ContentTypeAttributeName &&
-                    attribute.Key != CloudEventAttributes.DataAttributeName)
+                switch (attribute.Key)
                 {
-                    this.ApplicationProperties.Map.Add("cloudEvents:" + attribute.Key, attribute.Value);
+                    case CloudEventAttributes.DataAttributeName:
+                    case CloudEventAttributes.ContentTypeAttributeName:
+                        break;
+                    default:
+                        if (attribute.Value is Uri)
+                        {
+                            this.ApplicationProperties.Map.Add("cloudEvents:" + attribute.Key, attribute.Value.ToString());
+                        }
+                        else if (attribute.Value is DateTime || attribute.Value is DateTime || attribute.Value is string)
+                        {
+                            this.ApplicationProperties.Map.Add("cloudEvents:" + attribute.Key, attribute.Value);
+                        }
+                        else
+                        {
+                            Map dict = new Map();
+                            foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(attribute.Value))
+                            {
+                                dict.Add(descriptor.Name,descriptor.GetValue(attribute.Value));
+                            }
+                            this.ApplicationProperties.Map.Add("cloudEvents:" + attribute.Key, dict);
+                        }
+                        break;
                 }
+
             }
         }
     }

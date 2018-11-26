@@ -5,10 +5,13 @@
 namespace CloudNative.CloudEvents.Amqp
 {
     using System;
+    using System.Collections.Generic;
+    using System.Dynamic;
     using System.IO;
     using System.Net.Mime;
     using System.Threading.Tasks;
     using global::Amqp;
+    using global::Amqp.Types;
 
     public static class AmqpClientExtensions
     {
@@ -19,7 +22,7 @@ namespace CloudNative.CloudEvents.Amqp
         static JsonEventFormatter jsonFormatter = new JsonEventFormatter();
 
         public static bool IsCloudEvent(this Message message)
-        {                                         
+        {
             return ((message.Properties.ContentType != null &&
                      message.Properties.ContentType.ToString().StartsWith(CloudEvent.MediaType)) ||
                     message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader));
@@ -65,8 +68,21 @@ namespace CloudNative.CloudEvents.Amqp
                     if (prop.Key is string &&
                         ((string)prop.Key).StartsWith(AmqpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        attributes[((string)prop.Key).Substring(AmqpHeaderPrefix.Length).ToLowerInvariant()] =
-                            prop.Value;
+                        if (prop.Value is Map)
+                        {
+                            IDictionary<string, object> exp = new ExpandoObject();
+                            foreach (var props in (Map)prop.Value)
+                            {
+                                exp[props.Key.ToString()] = props.Value;
+                            }
+                            attributes[((string)prop.Key).Substring(AmqpHeaderPrefix.Length).ToLowerInvariant()] =
+                                 exp;
+                        }
+                        else
+                        {
+                            attributes[((string)prop.Key).Substring(AmqpHeaderPrefix.Length).ToLowerInvariant()] =
+                                                     prop.Value;
+                        }
                     }
                 }
 
