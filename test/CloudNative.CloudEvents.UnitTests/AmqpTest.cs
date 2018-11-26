@@ -34,9 +34,11 @@ namespace CloudNative.CloudEvents.UnitTests
             attrs["comexampleextension2"] = new { othervalue = 5 };
 
             var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+            Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
 
             var message1 = Message.Decode(encodedAmqpMessage);
+            Assert.True(message1.IsCloudEvent());
             var receivedCloudEvent = message1.ToCloudEvent();
 
             Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
@@ -75,9 +77,11 @@ namespace CloudNative.CloudEvents.UnitTests
             attrs["comexampleextension2"] = new { othervalue = 5 };
 
             var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
 
             var message1 = Message.Decode(encodedAmqpMessage);
+            Assert.True(message1.IsCloudEvent());
             var receivedCloudEvent = message1.ToCloudEvent();
 
             Assert.Equal("0.2", receivedCloudEvent.SpecVersion);

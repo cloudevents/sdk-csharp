@@ -9,6 +9,7 @@ namespace CloudNative.CloudEvents
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Net.Http.Headers;
     using System.Net.Mime;
     using System.Text;
     using System.Threading.Tasks;
@@ -62,6 +63,13 @@ namespace CloudNative.CloudEvents
             return ((httpResponseMessage.Content.Headers.ContentType != null &&
                      httpResponseMessage.Content.Headers.ContentType.MediaType.StartsWith(CloudEvent.MediaType)) ||
                     httpResponseMessage.Headers.Contains(SpecVersionHttpHeader));
+        }
+
+        public static bool IsCloudEvent(this HttpListenerRequest httpListenerRequest)
+        {
+            return ((httpListenerRequest.Headers["content-type"] != null &&
+                     httpListenerRequest.Headers["content-type"].StartsWith(CloudEvent.MediaType)) ||
+                    httpListenerRequest.Headers.AllKeys.Contains(SpecVersionHttpHeader));
         }
 
         public static CloudEvent ToCloudEvent(this HttpResponseMessage httpResponseMessage,

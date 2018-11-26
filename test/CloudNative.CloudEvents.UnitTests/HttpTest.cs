@@ -148,6 +148,8 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 try
                 {
+                    Assert.True(context.Request.IsCloudEvent());
+
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
                     Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
@@ -229,6 +231,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var result = await httpClient.GetAsync(new Uri(listenerAddress + "ep"));
 
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.True(result.IsCloudEvent());
             var receivedCloudEvent = result.ToCloudEvent();
 
             Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
