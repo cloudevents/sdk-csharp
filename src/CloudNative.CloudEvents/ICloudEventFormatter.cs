@@ -13,7 +13,7 @@ namespace CloudNative.CloudEvents
     {
         CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions);
         CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<ICloudEventExtension> extensions);
-        byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType, IEnumerable<ICloudEventExtension> extensions);
+        byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType);
         object DecodeAttribute(string name, byte[] data, IEnumerable<ICloudEventExtension> extensions);
         byte[] EncodeAttribute(string name, object value, IEnumerable<ICloudEventExtension> extensions);
     }

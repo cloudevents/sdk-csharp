@@ -16,10 +16,8 @@ namespace CloudNative.CloudEvents
 
     public static class HttpClientExtension
     {
-        const string HttpHeaderPrefix = "ce-";
-
-        const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";
-
+        const string HttpHeaderPrefix = "ce-";                                           
+        const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";           
         static JsonEventFormatter jsonFormatter = new JsonEventFormatter();
 
         public static Task CopyFromAsync(this HttpListenerResponse httpListenerResponse, CloudEvent cloudEvent,
@@ -28,7 +26,7 @@ namespace CloudNative.CloudEvents
             if (contentMode == ContentMode.Structured)
             {
                 var buffer =
-                    formatter.EncodeStructuredEvent(cloudEvent, out var contentType, cloudEvent.Extensions.Values);
+                    formatter.EncodeStructuredEvent(cloudEvent, out var contentType);
                 httpListenerResponse.ContentType = contentType.ToString();
                 MapAttributesToListenerResponse(cloudEvent, httpListenerResponse);
                 return httpListenerResponse.OutputStream.WriteAsync(buffer, 0, buffer.Length);
@@ -46,7 +44,7 @@ namespace CloudNative.CloudEvents
             if (contentMode == ContentMode.Structured)
             {
                 var buffer =
-                    formatter.EncodeStructuredEvent(cloudEvent, out var contentType, cloudEvent.Extensions.Values);
+                    formatter.EncodeStructuredEvent(cloudEvent, out var contentType);
                 httpWebRequest.ContentType = contentType.ToString();
                 MapAttributesToWebRequest(cloudEvent, httpWebRequest);
                 await (httpWebRequest.GetRequestStream()).WriteAsync(buffer, 0, buffer.Length);
@@ -59,32 +57,32 @@ namespace CloudNative.CloudEvents
             await stream.CopyToAsync(httpWebRequest.GetRequestStream());
         }
 
-        public static bool HasCloudEvent(this HttpResponseMessage httpResponseMessage)
+        public static bool IsCloudEvent(this HttpResponseMessage httpResponseMessage)
         {
             return ((httpResponseMessage.Content.Headers.ContentType != null &&
                      httpResponseMessage.Content.Headers.ContentType.MediaType.StartsWith(CloudEvent.MediaType)) ||
                     httpResponseMessage.Headers.Contains(SpecVersionHttpHeader));
         }
 
-        public static Task<CloudEvent> ToCloudEvent(this HttpResponseMessage httpResponseMessage,
+        public static CloudEvent ToCloudEvent(this HttpResponseMessage httpResponseMessage,
             params ICloudEventExtension[] extensions)
         {
-            return ToCloudEventInternalAsync(httpResponseMessage, null, extensions);
+            return ToCloudEventInternal(httpResponseMessage, null, extensions);
         }
 
-        public static Task<CloudEvent> ToCloudEventAsync(this HttpResponseMessage httpResponseMessage,
+        public static CloudEvent ToCloudEvent(this HttpResponseMessage httpResponseMessage,
             ICloudEventFormatter formatter, params ICloudEventExtension[] extensions)
         {
-            return ToCloudEventInternalAsync(httpResponseMessage, formatter, extensions);
+            return ToCloudEventInternal(httpResponseMessage, formatter, extensions);
         }
 
-        public static Task<CloudEvent> ToCloudEventAsync(this HttpListenerRequest httpListenerRequest,
+        public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             params ICloudEventExtension[] extensions)
         {
-            return ToCloudEventAsync(httpListenerRequest, null, extensions);
+            return ToCloudEvent(httpListenerRequest, null, extensions);
         }
 
-        public static async Task<CloudEvent> ToCloudEventAsync(this HttpListenerRequest httpListenerRequest,
+        public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             ICloudEventFormatter formatter = null,
             params ICloudEventExtension[] extensions)
         {
@@ -235,7 +233,7 @@ namespace CloudNative.CloudEvents
             return stream;
         }
 
-        static async Task<CloudEvent> ToCloudEventInternalAsync(HttpResponseMessage httpResponseMessage,
+        static CloudEvent ToCloudEventInternal(HttpResponseMessage httpResponseMessage,
             ICloudEventFormatter formatter, ICloudEventExtension[] extensions)
         {
             if (httpResponseMessage.Content.Headers.ContentType != null &&
@@ -257,7 +255,7 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                return formatter.DecodeStructuredEvent(await httpResponseMessage.Content.ReadAsByteArrayAsync(),
+                return formatter.DecodeStructuredEvent(httpResponseMessage.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult(),
                     extensions);
             }
             else
@@ -286,7 +284,7 @@ namespace CloudNative.CloudEvents
                 cloudEvent.ContentType = httpResponseMessage.Content.Headers.ContentType != null
                     ? new ContentType(httpResponseMessage.Content.Headers.ContentType.ToString())
                     : null;
-                cloudEvent.Data = await httpResponseMessage.Content.ReadAsStreamAsync();
+                cloudEvent.Data = httpResponseMessage.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
                 return cloudEvent;
             }
         }

@@ -21,7 +21,7 @@ namespace CloudNative.CloudEvents
         {
             if (contentMode == ContentMode.Structured)
             {
-                inner = new InnerByteArrayContent(formatter.EncodeStructuredEvent(cloudEvent, out var contentType, cloudEvent.Extensions.Values));
+                inner = new InnerByteArrayContent(formatter.EncodeStructuredEvent(cloudEvent, out var contentType));
                 Headers.ContentType = new MediaTypeHeaderValue(contentType.MediaType);
                 MapHeaders(cloudEvent);
                 return;

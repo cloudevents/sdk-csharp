@@ -74,7 +74,7 @@ namespace CloudNative.CloudEvents
             return cloudEvent;
         }
 
-        public byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType, IEnumerable<ICloudEventExtension> extensions = null)
+        public byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
         {
             contentType = new ContentType("application/cloudevents+json")
             {

@@ -201,8 +201,66 @@ context.Response.StatusCode = (int)HttpStatusCode.OK;
 
 ### AMQP
 
-TBD
+The SDK provides extensions for the [AMQPNetLite](https://github.com/Azure/amqpnetlite) package. 
+
+For AMQP support, you must reference the `CloudNative.CloudEvents.Mqtt` assembly and 
+reference the namespace in your code with `using CloudNative.CloudEvents.Mqtt`.
+
+The `AmqpCloudEventMessage` extends the `AMQPNetLite.Message` class. The constructor
+allows creating a new AMQP message that holds a CloudEvent in either structured or binary 
+content mode. 
+
+``` C#
+
+var cloudEvent = new CloudEvent("com.example.myevent", new Uri("urn:example-com:mysource"))
+{
+    ContentType = new ContentType(MediaTypeNames.Application.Json),
+    Data = JsonConvert.SerializeObject("hey there!")
+};
+
+var message = new AmqpCloudEventMessage( cloudEvent, 
+                                         ContentMode.Structured, 
+                                         new JsonEventFormatter());
+
+```
+
+For mapping a received `Message` to a CloudEvent, you can use the `ToCloudEvent()` method:
+
+``` C#
+   var receivedCloudEvent = await message.ToCloudEvent();
+```
+  
+
 
 ## MQTT 
 
-TBD
+The SDK provides extensions for the [MQTTnet](https://github.com/chkr1011/MQTTnet) package.
+For MQTT support, you must reference the `CloudNative.CloudEvents.Mqtt` assembly and 
+reference the namespace in your code with `using CloudNative.CloudEvents.Mqtt`.
+
+The `MqttCloudEventMessage` extends the `MqttApplicationMessage` class. The constructor
+allows creating a new MQTT message that holds a CloudEvent in structured content mode. 
+
+``` C#
+
+var cloudEvent = new CloudEvent("com.example.myevent", new Uri("urn:example-com:mysource"))
+{
+    ContentType = new ContentType(MediaTypeNames.Application.Json),
+    Data = JsonConvert.SerializeObject("hey there!")
+};
+
+var message = new MqttCloudEventMessage( cloudEvent, 
+                                         new JsonEventFormatter());
+
+```
+
+For mapping a received `MqttApplicationMessage` to a CloudEvent, you can use the 
+`ToCloudEvent()` method:
+
+``` C#
+   var receivedCloudEvent = await message.ToCloudEvent();
+```
+  
+
+
+ 
