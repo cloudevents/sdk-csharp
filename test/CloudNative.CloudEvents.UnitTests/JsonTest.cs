@@ -13,7 +13,7 @@ namespace CloudNative.CloudEvents.UnitTests
     {
         const string json =
             "{\n" +
-            "    \"specversion\" : \"0.1\",\n" +
+            "    \"specversion\" : \"0.2\",\n" +
             "    \"type\" : \"com.github.pull.create\",\n" +
             "    \"source\" : \"https://github.com/cloudevents/spec/pull/123\",\n" +
             "    \"id\" : \"A234-1234-1234\",\n" +
@@ -48,7 +48,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(json));
-            Assert.Equal("0.1", cloudEvent.SpecVersion);
+            Assert.Equal("0.2", cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -68,7 +68,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(json), new ComExampleExtension1Extension(),
                 new ComExampleExtension2Extension());
-            Assert.Equal("0.1", cloudEvent.SpecVersion);
+            Assert.Equal("0.2", cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);

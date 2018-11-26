@@ -26,7 +26,7 @@ namespace CloudNative.CloudEvents.UnitTests
             attrs["comexampleextension1"] = "value";
             attrs["comexampleextension2"] = new { othervalue = 5 };
 
-            Assert.Equal("0.1", cloudEvent.SpecVersion);
+            Assert.Equal("0.2", cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.UnitTests
             attrs["comexampleextension1"] = "value";
             attrs["comexampleextension2"] = new { othervalue = 5 };
 
-            Assert.Equal("0.1", cloudEvent.SpecVersion);
+            Assert.Equal("0.2", cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -95,7 +95,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 Data = "<much wow=\"xml\"/>"
             };
 
-            Assert.Equal("0.1", cloudEvent.SpecVersion);
+            Assert.Equal("0.2", cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
