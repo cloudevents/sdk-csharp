@@ -12,6 +12,9 @@ namespace CloudNative.CloudEvents
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
+    /// <summary>
+    /// Formatter that implements the JSON Event Format
+    /// </summary>
     public class JsonEventFormatter : ICloudEventFormatter
     {
 

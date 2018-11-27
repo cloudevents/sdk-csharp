@@ -10,6 +10,9 @@ namespace CloudNative.CloudEvents
     using System.Globalization;
     using System.Net.Mime;
 
+    /// <summary>
+    /// The CloudEvents attributes
+    /// </summary>
     public class CloudEventAttributes : IDictionary<string, object>
     {
         public const string ContentTypeAttributeName = "contenttype";
@@ -32,7 +35,7 @@ namespace CloudNative.CloudEvents
         
         IEnumerable<ICloudEventExtension> extensions;
 
-        public CloudEventAttributes(IEnumerable<ICloudEventExtension> extensions)
+        internal CloudEventAttributes(IEnumerable<ICloudEventExtension> extensions)
         {
             this.extensions = extensions;
         }

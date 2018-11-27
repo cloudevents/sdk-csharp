@@ -123,8 +123,17 @@
   <data name="ErrorIdValueIsNotAString" xml:space="preserve">
     <value>The 'id' attribute value must be a string</value>
   </data>
+  <data name="ErrorSampledRateValueIsaNotAnInteger" xml:space="preserve">
+    <value>The 'sampledrate' attribute value must be an integer</value>
+  </data>
   <data name="ErrorSchemaUrlIsNotAUri" xml:space="preserve">
     <value>The 'schemaurl' attribute value must be a valid absolute or relative URI</value>
+  </data>
+  <data name="ErrorSequenceTypeValueIsaNotAString" xml:space="preserve">
+    <value>The 'sequencetype' attribute value must be an integer</value>
+  </data>
+  <data name="ErrorSequenceValueIsaNotAString" xml:space="preserve">
+    <value>The 'sequence' attribute value must be an integer</value>
   </data>
   <data name="ErrorSourceValueIsNotAUri" xml:space="preserve">
     <value>The 'source' attribute value must be a valid absolute or relative URI</value>

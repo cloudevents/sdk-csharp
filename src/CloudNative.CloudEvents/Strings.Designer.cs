@@ -79,11 +79,38 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;sampledrate&apos; attribute value must be an integer.
+        /// </summary>
+        internal static string ErrorSampledRateValueIsaNotAnInteger {
+            get {
+                return ResourceManager.GetString("ErrorSampledRateValueIsaNotAnInteger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The &apos;schemaurl&apos; attribute value must be a valid absolute or relative URI.
         /// </summary>
         internal static string ErrorSchemaUrlIsNotAUri {
             get {
                 return ResourceManager.GetString("ErrorSchemaUrlIsNotAUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;sequencetype&apos; attribute value must be an integer.
+        /// </summary>
+        internal static string ErrorSequenceTypeValueIsaNotAString {
+            get {
+                return ResourceManager.GetString("ErrorSequenceTypeValueIsaNotAString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;sequence&apos; attribute value must be an integer.
+        /// </summary>
+        internal static string ErrorSequenceValueIsaNotAString {
+            get {
+                return ResourceManager.GetString("ErrorSequenceValueIsaNotAString", resourceCulture);
             }
         }
         

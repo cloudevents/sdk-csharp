@@ -6,6 +6,9 @@ namespace CloudNative.CloudEvents
 {
     using System;
 
+    /// <summary>
+    /// Implemented for extension objects that reflect CloudEvent extension specifications.
+    /// </summary>
     public interface ICloudEventExtension
     {
         /// <summary>

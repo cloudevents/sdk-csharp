@@ -21,6 +21,14 @@ namespace CloudNative.CloudEvents
         const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";           
         static JsonEventFormatter jsonFormatter = new JsonEventFormatter();
 
+        /// <summary>
+        /// Copies the CloudEvent into this HttpListenerResponse instance
+        /// </summary>
+        /// <param name="httpListenerResponse">this</param>
+        /// <param name="cloudEvent">CloudEvent to copy</param>
+        /// <param name="contentMode">Content mode (structured or binary)</param>
+        /// <param name="formatter">Formatter</param>
+        /// <returns>Task</returns>
         public static Task CopyFromAsync(this HttpListenerResponse httpListenerResponse, CloudEvent cloudEvent,
             ContentMode contentMode, ICloudEventFormatter formatter)
         {
@@ -39,6 +47,14 @@ namespace CloudNative.CloudEvents
             return stream.CopyToAsync(httpListenerResponse.OutputStream);
         }
 
+        /// <summary>
+        /// Copies the CloudEvent into this HttpWebRequest instance
+        /// </summary>
+        /// <param name="httpWebRequest">this</param>
+        /// <param name="cloudEvent">CloudEvent to copy</param>
+        /// <param name="contentMode">Content mode (structured or binary)</param>
+        /// <param name="formatter">Formatter</param>
+        /// <returns>Task</returns>
         public static async Task CopyFromAsync(this HttpWebRequest httpWebRequest, CloudEvent cloudEvent,
             ContentMode contentMode, ICloudEventFormatter formatter)
         {
@@ -58,6 +74,11 @@ namespace CloudNative.CloudEvents
             await stream.CopyToAsync(httpWebRequest.GetRequestStream());
         }
 
+        /// <summary>
+        /// Indicates whether this HttpResponseMessage holds a CloudEvent
+        /// </summary>
+        /// <param name="httpResponseMessage"></param>
+        /// <returns>true, if the response is a CloudEvent</returns>
         public static bool IsCloudEvent(this HttpResponseMessage httpResponseMessage)
         {
             return ((httpResponseMessage.Content.Headers.ContentType != null &&
@@ -65,6 +86,9 @@ namespace CloudNative.CloudEvents
                     httpResponseMessage.Headers.Contains(SpecVersionHttpHeader));
         }
 
+        /// <summary>
+        /// Indicates whether this HttpListenerRequest holds a CloudEvent
+        /// </summary>
         public static bool IsCloudEvent(this HttpListenerRequest httpListenerRequest)
         {
             return ((httpListenerRequest.Headers["content-type"] != null &&
@@ -72,24 +96,52 @@ namespace CloudNative.CloudEvents
                     httpListenerRequest.Headers.AllKeys.Contains(SpecVersionHttpHeader));
         }
 
+        /// <summary>
+        /// Converts this response message into a CloudEvent object, with the given extensions.
+        /// </summary>
+        /// <param name="httpResponseMessage">Response message</param>
+        /// <param name="extensions">List of extension instances</param>
+        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpResponseMessage httpResponseMessage,
             params ICloudEventExtension[] extensions)
         {
             return ToCloudEventInternal(httpResponseMessage, null, extensions);
         }
 
+        /// <summary>
+        /// Converts this response message into a CloudEvent object, with the given extensions and
+        /// overriding the default formatter.
+        /// </summary>
+        /// <param name="httpResponseMessage">Response message</param>
+        /// <param name="formatter"></param>
+        /// <param name="extensions">List of extension instances</param>
+        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpResponseMessage httpResponseMessage,
             ICloudEventFormatter formatter, params ICloudEventExtension[] extensions)
         {
             return ToCloudEventInternal(httpResponseMessage, formatter, extensions);
         }
 
+        /// <summary>
+        /// Converts this listener request into a CloudEvent object, with the given extensions.
+        /// </summary>
+        /// <param name="httpListenerRequest">Listener request</param>
+        /// <param name="extensions">List of extension instances</param>
+        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             params ICloudEventExtension[] extensions)
         {
             return ToCloudEvent(httpListenerRequest, null, extensions);
         }
 
+        /// <summary>
+        /// Converts this listener request into a CloudEvent object, with the given extensions,
+        /// overriding the formatter.
+        /// </summary>
+        /// <param name="httpListenerRequest">Listener request</param>
+        /// <param name="formatter"></param>
+        /// <param name="extensions">List of extension instances</param>
+        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             ICloudEventFormatter formatter = null,
             params ICloudEventExtension[] extensions)

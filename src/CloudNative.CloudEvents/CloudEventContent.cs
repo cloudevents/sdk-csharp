@@ -12,11 +12,21 @@ namespace CloudNative.CloudEvents
     using System.Text;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// This class is for use with `HttpClient` and constructs content and headers for
+    /// a HTTP request from a CloudEvent.
+    /// </summary>
     public class CloudEventContent : HttpContent
     {
         IInnerContent inner;                      
         static JsonEventFormatter jsonFormatter = new JsonEventFormatter();
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="cloudEvent">CloudEvent</param>
+        /// <param name="contentMode">Content mode. Structured or binary.</param>
+        /// <param name="formatter">Event formatter</param>
         public CloudEventContent(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
         {
             if (contentMode == ContentMode.Structured)

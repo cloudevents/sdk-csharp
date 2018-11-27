@@ -8,6 +8,9 @@ namespace CloudNative.CloudEvents
     using System.Collections.Generic;
     using System.Net.Mime;
 
+    /// <summary>
+    /// Represents a CloudEvent 
+    /// </summary>
     public class CloudEvent
     {
         public const string MediaType = "application/cloudevents";

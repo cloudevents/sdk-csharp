@@ -15,7 +15,7 @@ namespace CloudNative.CloudEvents.Extensions
 
         IDictionary<string, object> attributes = new Dictionary<string, object>();
 
-        public DistributedTracingExtension(string traceParent)
+        public DistributedTracingExtension(string traceParent = null)
         {
             this.TraceParent = traceParent;
         }
@@ -43,9 +43,11 @@ namespace CloudNative.CloudEvents.Extensions
 
             foreach (var attr in attributes)
             {
-                eventAttributes[attr.Key] = attr.Value;
-            }
-
+                if (attr.Value != null)
+                {
+                    eventAttributes[attr.Key] = attr.Value;
+                }
+            }    
             attributes = eventAttributes;
         }
 

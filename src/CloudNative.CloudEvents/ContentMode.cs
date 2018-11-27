@@ -9,9 +9,13 @@ namespace CloudNative.CloudEvents
     /// </summary>
     public enum ContentMode
     {
-        // Structured mode. The complete CloudEvent is contained in the transport body
+        /// <summary>
+        /// Structured mode. The complete CloudEvent is contained in the transport body
+        /// </summary>
         Structured,
-        // Binary mode. The CloudEvent is projected onto the transport frame
+        /// <summary>
+        /// Binary mode. The CloudEvent is projected onto the transport frame
+        /// </summary>
         Binary
     }
 }
