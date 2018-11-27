@@ -34,7 +34,7 @@ namespace CloudNative.CloudEvents.UnitTests
             listener.Start();
             listener.GetContextAsync().ContinueWith(t =>
             {
-                if (t.IsCompletedSuccessfully)
+                if (t.IsCompleted)
                 {
                     HandleContext(t.Result);
                 }
@@ -56,7 +56,7 @@ namespace CloudNative.CloudEvents.UnitTests
 #pragma warning disable 4014
             listener.GetContextAsync().ContinueWith(t =>
             {
-                if (t.IsCompletedSuccessfully)
+                if (t.IsCompleted)
                 {
                     HandleContext(t.Result);
                 }

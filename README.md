@@ -1,4 +1,7 @@
+![Build](https://ci.appveyor.com/api/projects/status/github/cloudevents/sdk-csharp?svg=true)
+
 # sdk-csharp
+
 .NET Standard 2.0 (C#) SDK for CloudEvents
 
 The `CloudNative.CloudEvents` package provides utility methods and classes for creating, encoding, decoding, sending, and receiving CNCF CloudEvents.

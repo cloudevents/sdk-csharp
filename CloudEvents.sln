@@ -10,15 +10,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3C6E118F-05CA-41BA-B21E-4E17863F5826}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		appveyor.yml = appveyor.yml
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpSend", "samples\HttpSend\HttpSend.csproj", "{F1B9B769-DB6B-481F-905C-24FE3B12E00E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpSend", "samples\HttpSend\HttpSend.csproj", "{F1B9B769-DB6B-481F-905C-24FE3B12E00E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudNative.CloudEvents.Mqtt", "src\CloudNative.CloudEvents.Mqtt\CloudNative.CloudEvents.Mqtt.csproj", "{FBF5EF1F-FBF7-4D3C-B309-3344C74714AF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Mqtt", "src\CloudNative.CloudEvents.Mqtt\CloudNative.CloudEvents.Mqtt.csproj", "{FBF5EF1F-FBF7-4D3C-B309-3344C74714AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudNative.CloudEvents.Amqp", "src\CloudNative.CloudEvents.Amqp\CloudNative.CloudEvents.Amqp.csproj", "{39EF4DB0-9890-4CAD-A36E-F7E25D2E72EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Amqp", "src\CloudNative.CloudEvents.Amqp\CloudNative.CloudEvents.Amqp.csproj", "{39EF4DB0-9890-4CAD-A36E-F7E25D2E72EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
