@@ -1,0 +1,13 @@
+# main branch
+-
+    version: 0.1.{build}
+    clone_depth: 15
+    branches:
+        only:
+            - master
+    configuration: Debug
+    build:
+        project: CloudEvents.sln
+        verbosity: minimal
+    test:
+        assemblies: test\CloudNative.CloudEvents.UnitTests\bin\$(configuration)\netcoreapp2.1\CloudNative.CloudEvents.UnitTests.dll
