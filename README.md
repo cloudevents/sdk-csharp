@@ -10,18 +10,26 @@ The `CloudNative.CloudEvents` package provides utility methods and classes for c
 ## CloudEvent
 
 The `CloudEvent` class reflects the event envelope defined by the CNCF CloudEvents specification.
+It supports both version 0.1 and (yet to be finalized) version 0.2 of the CloudEvents specification,
+even though the strongly typed API already reflects the 0.2 naming.
 
-| CloudEvents attribute | Property name              | CLR type 
-|-----------------------|----------------------------|----------
-| id                    | `CloudEvent.Id`           | `System.String`   
-| type                  | `CloudEvent.Type`         | `System.String`   
-| specversion           | `CloudEvent.SpecVersion` | `System.String`   
-| time                  | `CloudEvent.Time`         | `System.DateTime`   
-| source                | `CloudEvent.Source`      | `System.Uri`   
-| schemaurl             | `CloudEvent.SchemaUrl`   | `System.Uri`
-| source                | `CloudEvent.Source`      | `System.Uri`      
-| contenttype           | `CloudEvent.ContentType` | `System.Net.Mime.ContentType`   
-| data                  | `CloudEvent.Data`        | `System.Object`      
+The default specification version is 0.2, you can override this by specifying the version explicitly: 
+`new CloudEvent(CloudEventsSpecVersion.V0_1)`. The `SpecVersion` property also allows the 
+version to be switched, meaning you can receive a 0.1 event, switch the version number, and forward
+it as a 0.2 event. 
+
+
+| 0.1  | 0.2 | Property name              | CLR type 
+|-----------------------|-----------------------|----------------------------|----------
+| eventID | id | `CloudEvent.Id` | `System.String` 
+| eventType | type | `CloudEvent.Type` | `System.String` 
+| cloudEventsVersion | specversion | `CloudEvent.SpecVersion` | `System.String` 
+| eventTime | time | `CloudEvent.Time` | `System.DateTime` 
+| source | source | `CloudEvent.Source` | `System.Uri` 
+| schemaUrl | schemaurl | `CloudEvent.SchemaUrl` | `System.Uri`
+| source | source | `CloudEvent.Source` | `System.Uri` 
+| contentType | contenttype | `CloudEvent.ContentType` | `System.Net.Mime.ContentType` 
+| data | data | `CloudEvent.Data` | `System.Object` 
 
 
 The `CloudEvent.Data` property is `object` typed, and may hold any valid serializable
