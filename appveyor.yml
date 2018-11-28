@@ -25,7 +25,7 @@ before_build:
   - cmd: dotnet restore CloudEvents.sln --verbosity m
 build_script:
   # output will be in ./src/bin/debug/netcoreapp1.1/publish
-  - cmd: dotnet publish CloudEvents.sln
+  - cmd: dotnet pack CloudEvents.sln
 after_build:
   # For once the build has completed
 artifacts:
@@ -45,5 +45,4 @@ deploy:
   skip_symbols: false
   artifact: /.*\.nupkg/
   on:
-      branch: master
       APPVEYOR_REPO_TAG: true
