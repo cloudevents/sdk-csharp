@@ -9,7 +9,6 @@ namespace CloudNative.CloudEvents
     using System.Linq;
     using System.Net;
     using System.Net.Http;
-    using System.Net.Http.Headers;
     using System.Net.Mime;
     using System.Text;
     using System.Threading.Tasks;
@@ -17,8 +16,12 @@ namespace CloudNative.CloudEvents
 
     public static class HttpClientExtension
     {
-        const string HttpHeaderPrefix = "ce-";                                           
-        const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";           
+        const string HttpHeaderPrefix = "ce-";
+
+        const string SpecVersionHttpHeader1 = HttpHeaderPrefix + "cloudEventsVersion";
+
+        const string SpecVersionHttpHeader2 = HttpHeaderPrefix + "specversion";
+
         static JsonEventFormatter jsonFormatter = new JsonEventFormatter();
 
         /// <summary>
@@ -81,9 +84,10 @@ namespace CloudNative.CloudEvents
         /// <returns>true, if the response is a CloudEvent</returns>
         public static bool IsCloudEvent(this HttpResponseMessage httpResponseMessage)
         {
-            return ((httpResponseMessage.Content.Headers.ContentType != null &&
-                     httpResponseMessage.Content.Headers.ContentType.MediaType.StartsWith(CloudEvent.MediaType)) ||
-                    httpResponseMessage.Headers.Contains(SpecVersionHttpHeader));
+            return (httpResponseMessage.Content.Headers.ContentType != null &&
+                    httpResponseMessage.Content.Headers.ContentType.MediaType.StartsWith(CloudEvent.MediaType)) ||
+                   httpResponseMessage.Headers.Contains(SpecVersionHttpHeader1) ||
+                   httpResponseMessage.Headers.Contains(SpecVersionHttpHeader2);
         }
 
         /// <summary>
@@ -91,9 +95,10 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public static bool IsCloudEvent(this HttpListenerRequest httpListenerRequest)
         {
-            return ((httpListenerRequest.Headers["content-type"] != null &&
-                     httpListenerRequest.Headers["content-type"].StartsWith(CloudEvent.MediaType)) ||
-                    httpListenerRequest.Headers.AllKeys.Contains(SpecVersionHttpHeader));
+            return (httpListenerRequest.Headers["content-type"] != null &&
+                    httpListenerRequest.Headers["content-type"].StartsWith(CloudEvent.MediaType)) ||
+                   httpListenerRequest.Headers[SpecVersionHttpHeader1] != null ||
+                   httpListenerRequest.Headers[SpecVersionHttpHeader2] != null;
         }
 
         /// <summary>
@@ -169,22 +174,43 @@ namespace CloudNative.CloudEvents
             }
             else
             {
-                var cloudEvent = new CloudEvent(extensions);
-                var attributes = cloudEvent.GetAttributes();
-                foreach (var httpResponseHeader in httpListenerRequest.Headers.AllKeys)
+                CloudEventsSpecVersion version = CloudEventsSpecVersion.Default;
+                if (httpListenerRequest.Headers[SpecVersionHttpHeader1] != null)
                 {
-                    if (httpResponseHeader.StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
+                    version = CloudEventsSpecVersion.V0_1;
+                }
+
+                if (httpListenerRequest.Headers[SpecVersionHttpHeader2] != null)
+                {
+                    version = httpListenerRequest.Headers[SpecVersionHttpHeader2] == "0.2"
+                        ? CloudEventsSpecVersion.V0_2
+                        : CloudEventsSpecVersion.Default;
+                }
+
+                var cloudEvent = new CloudEvent(version, extensions);
+                var attributes = cloudEvent.GetAttributes();
+                foreach (var httpRequestHeaders in httpListenerRequest.Headers.AllKeys)
+                {
+                    if (httpRequestHeaders.Equals(SpecVersionHttpHeader1,
+                            StringComparison.InvariantCultureIgnoreCase) ||
+                        httpRequestHeaders.Equals(SpecVersionHttpHeader2, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        string headerValue = httpListenerRequest.Headers[httpResponseHeader];
+                        continue;
+                    }
+
+                    if (httpRequestHeaders.StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        string headerValue = httpListenerRequest.Headers[httpRequestHeaders];
                         if (headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
                             headerValue.StartsWith("[") && headerValue.EndsWith("]"))
                         {
-                            attributes[httpResponseHeader.Substring(3).ToLowerInvariant()] =
+                            attributes[httpRequestHeaders.Substring(3).ToLowerInvariant()] =
                                 JsonConvert.DeserializeObject(headerValue);
                         }
                         else
                         {
-                            attributes[httpResponseHeader.Substring(3).ToLowerInvariant()] = headerValue;
+                            attributes[httpRequestHeaders.Substring(3).ToLowerInvariant()] = headerValue;
+                            attributes[httpRequestHeaders.Substring(3).ToLowerInvariant()] = headerValue;
                         }
                     }
                 }
@@ -201,35 +227,31 @@ namespace CloudNative.CloudEvents
         {
             foreach (var attribute in cloudEvent.GetAttributes())
             {
-                switch (attribute.Key)
+                if (!attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) &&
+                    !attribute.Key.Equals(CloudEventAttributes.ContentTypeAttributeName(cloudEvent.SpecVersion)))
                 {
-                    case CloudEventAttributes.DataAttributeName:
-                    case CloudEventAttributes.ContentTypeAttributeName:
-                        break;
-                    default:
-                        if (attribute.Value is string)
-                        {
-                            httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                                attribute.Value.ToString());
-                        }
-                        else if (attribute.Value is DateTime)
-                        {
-                            httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                                ((DateTime)attribute.Value).ToString("o"));
-                        }
-                        else if (attribute.Value is Uri || attribute.Value is int)
-                        {
-                            httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                                attribute.Value.ToString());
-                        }
-                        else
-                        {
-                            httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                                Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(attribute.Key, attribute.Value,
-                                    cloudEvent.Extensions.Values)));
-                        }
-
-                        break;
+                    if (attribute.Value is string)
+                    {
+                        httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
+                            attribute.Value.ToString());
+                    }
+                    else if (attribute.Value is DateTime)
+                    {
+                        httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
+                            ((DateTime)attribute.Value).ToString("o"));
+                    }
+                    else if (attribute.Value is Uri || attribute.Value is int)
+                    {
+                        httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
+                            attribute.Value.ToString());
+                    }
+                    else
+                    {
+                        httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
+                            Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, attribute.Key,
+                                attribute.Value,
+                                cloudEvent.Extensions.Values)));
+                    }
                 }
             }
         }
@@ -238,33 +260,29 @@ namespace CloudNative.CloudEvents
         {
             foreach (var attribute in cloudEvent.GetAttributes())
             {
-                switch (attribute.Key)
+                if (!attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) &&
+                    !attribute.Key.Equals(CloudEventAttributes.ContentTypeAttributeName(cloudEvent.SpecVersion)))
                 {
-                    case CloudEventAttributes.DataAttributeName:
-                    case CloudEventAttributes.ContentTypeAttributeName:
-                        break;
-                    default:
-                        if (attribute.Value is string)
-                        {
-                            httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key, attribute.Value.ToString());
-                        }
-                        else if (attribute.Value is DateTime)
-                        {
-                            httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                                ((DateTime)attribute.Value).ToString("o"));
-                        }
-                        else if (attribute.Value is Uri || attribute.Value is int)
-                        {
-                            httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key, attribute.Value.ToString());
-                        }
-                        else
-                        {
-                            httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                                Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(attribute.Key, attribute.Value,
-                                    cloudEvent.Extensions.Values)));
-                        }
-
-                        break;
+                    if (attribute.Value is string)
+                    {
+                        httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key, attribute.Value.ToString());
+                    }
+                    else if (attribute.Value is DateTime)
+                    {
+                        httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key,
+                            ((DateTime)attribute.Value).ToString("o"));
+                    }
+                    else if (attribute.Value is Uri || attribute.Value is int)
+                    {
+                        httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key, attribute.Value.ToString());
+                    }
+                    else
+                    {
+                        httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key,
+                            Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, attribute.Key,
+                                attribute.Value,
+                                cloudEvent.Extensions.Values)));
+                    }
                 }
             }
         }
@@ -286,7 +304,8 @@ namespace CloudNative.CloudEvents
             }
             else
             {
-                stream = new MemoryStream(formatter.EncodeAttribute(CloudEventAttributes.DataAttributeName,
+                stream = new MemoryStream(formatter.EncodeAttribute(cloudEvent.SpecVersion,
+                    CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion),
                     cloudEvent.Data, cloudEvent.Extensions.Values));
             }
 
@@ -315,29 +334,55 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                return formatter.DecodeStructuredEvent(httpResponseMessage.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult(),
+                return formatter.DecodeStructuredEvent(
+                    httpResponseMessage.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult(),
                     extensions);
             }
             else
             {
-                var cloudEvent = new CloudEvent(extensions);
+                CloudEventsSpecVersion version = CloudEventsSpecVersion.Default;
+                if (httpResponseMessage.Headers.Contains(SpecVersionHttpHeader1))
+                {
+                    version = CloudEventsSpecVersion.V0_1;
+                }
+
+                if (httpResponseMessage.Headers.Contains(SpecVersionHttpHeader2))
+                {
+                    version = httpResponseMessage.Headers.GetValues(SpecVersionHttpHeader2).First() == "0.2"
+                        ? CloudEventsSpecVersion.V0_2
+                        : CloudEventsSpecVersion.Default;
+                }
+
+                var cloudEvent = new CloudEvent(version, extensions);
                 var attributes = cloudEvent.GetAttributes();
                 foreach (var httpResponseHeader in httpResponseMessage.Headers)
                 {
+                    if (httpResponseHeader.Key.Equals(SpecVersionHttpHeader1,
+                            StringComparison.InvariantCultureIgnoreCase) ||
+                        httpResponseHeader.Key.Equals(SpecVersionHttpHeader2,
+                            StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+
                     if (httpResponseHeader.Key.StartsWith(HttpHeaderPrefix,
                         StringComparison.InvariantCultureIgnoreCase))
                     {
                         string headerValue = httpResponseHeader.Value.First();
-                        if (headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
+                        var name = httpResponseHeader.Key.Substring(3).ToLowerInvariant();
+
+                        if (headerValue.StartsWith("\"") && headerValue.EndsWith("\"") ||
+                            headerValue.StartsWith("'") && headerValue.EndsWith("'") ||
+                            headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
                             headerValue.StartsWith("[") && headerValue.EndsWith("]"))
                         {
-                            attributes[httpResponseHeader.Key.Substring(3).ToLowerInvariant()] =
-                                JsonConvert.DeserializeObject(headerValue);
+                            attributes[name] = jsonFormatter.DecodeAttribute(version, name,
+                                Encoding.UTF8.GetBytes(headerValue), extensions);
                         }
                         else
                         {
-                            attributes[httpResponseHeader.Key.Substring(3).ToLowerInvariant()] = headerValue;
-                        }
+                            attributes[name] = headerValue;
+                        }                  
                     }
                 }
 

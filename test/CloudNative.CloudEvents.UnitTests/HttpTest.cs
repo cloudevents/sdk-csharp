@@ -107,7 +107,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
             var receivedCloudEvent = result.ToCloudEvent();
 
-            Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.V0_2, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -152,7 +152,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
+                    Assert.Equal(CloudEventsSpecVersion.V0_2, receivedCloudEvent.SpecVersion);
                     Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
                     Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
                     Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -234,7 +234,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.True(result.IsCloudEvent());
             var receivedCloudEvent = result.ToCloudEvent();
 
-            Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.V0_2, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -274,7 +274,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 {
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
+                    Assert.Equal(CloudEventsSpecVersion.V0_2, receivedCloudEvent.SpecVersion);
                     Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
                     Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
                     Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -336,7 +336,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 {
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
+                    Assert.Equal(CloudEventsSpecVersion.V0_2, receivedCloudEvent.SpecVersion);
                     Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
                     Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
                     Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);

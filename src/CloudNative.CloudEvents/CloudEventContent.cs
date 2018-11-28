@@ -51,7 +51,7 @@ namespace CloudNative.CloudEvents
             }
             else
             {
-                inner = new InnerByteArrayContent(formatter.EncodeAttribute(CloudEventAttributes.DataAttributeName,
+                inner = new InnerByteArrayContent(formatter.EncodeAttribute(cloudEvent.SpecVersion, CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion),
                     cloudEvent.Data, cloudEvent.Extensions.Values));
             }
 
@@ -79,29 +79,27 @@ namespace CloudNative.CloudEvents
         {
             foreach (var attribute in cloudEvent.GetAttributes())
             {
-                switch (attribute.Key)
+                if (!(attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) ||
+                      attribute.Key.Equals(CloudEventAttributes.ContentTypeAttributeName(cloudEvent.SpecVersion))))
                 {
-                    case CloudEventAttributes.DataAttributeName:
-                    case CloudEventAttributes.ContentTypeAttributeName:
-                        break;
-                    default:
-                        if (attribute.Value is string)
-                        {
-                            Headers.Add("ce-" + attribute.Key, attribute.Value.ToString());
-                        }
-                        else if (attribute.Value is DateTime)
-                        {
-                            Headers.Add("ce-" + attribute.Key, ((DateTime)attribute.Value).ToString("o"));
-                        }
-                        else if (attribute.Value is Uri || attribute.Value is int)
-                        {
-                            Headers.Add("ce-" + attribute.Key, attribute.Value.ToString());
-                        }
-                        else
-                        {
-                            Headers.Add("ce-" + attribute.Key, Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(attribute.Key, attribute.Value, cloudEvent.Extensions.Values)));
-                        }
-                        break;
+                    if (attribute.Value is string)
+                    {
+                        Headers.Add("ce-" + attribute.Key, attribute.Value.ToString());
+                    }
+                    else if (attribute.Value is DateTime)
+                    {
+                        Headers.Add("ce-" + attribute.Key, ((DateTime)attribute.Value).ToString("o"));
+                    }
+                    else if (attribute.Value is Uri || attribute.Value is int)
+                    {
+                        Headers.Add("ce-" + attribute.Key, attribute.Value.ToString());
+                    }
+                    else
+                    {
+                        Headers.Add("ce-" + attribute.Key,
+                            Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, attribute.Key, attribute.Value,
+                                cloudEvent.Extensions.Values)));
+                    }
                 }
             }
         }

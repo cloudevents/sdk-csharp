@@ -35,6 +35,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType"></param>
         /// <returns></returns>
         byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType);
+      
         /// <summary>
         /// Decode an attribute from a byte array
         /// </summary>
@@ -42,7 +43,7 @@ namespace CloudNative.CloudEvents
         /// <param name="data"></param>
         /// <param name="extensions"></param>
         /// <returns></returns>
-        object DecodeAttribute(string name, byte[] data, IEnumerable<ICloudEventExtension> extensions);
+        object DecodeAttribute(CloudEventsSpecVersion specVersion, string name, byte[] data, IEnumerable<ICloudEventExtension> extensions);
         /// <summary>
         /// Encode an attribute into a byte array
         /// </summary>
@@ -50,6 +51,6 @@ namespace CloudNative.CloudEvents
         /// <param name="value"></param>
         /// <param name="extensions"></param>
         /// <returns></returns>
-        byte[] EncodeAttribute(string name, object value, IEnumerable<ICloudEventExtension> extensions);
+        byte[] EncodeAttribute(CloudEventsSpecVersion specVersion, string name, object value, IEnumerable<ICloudEventExtension> extensions);
     }
 }

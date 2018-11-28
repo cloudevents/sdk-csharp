@@ -15,7 +15,7 @@ namespace CloudNative.CloudEvents
     {
         public const string MediaType = "application/cloudevents";
 
-        readonly IDictionary<string, object> attributes;
+        readonly CloudEventAttributes attributes;
 
         /// <summary>
         /// Create a new CloudEvent instance.
@@ -26,7 +26,21 @@ namespace CloudNative.CloudEvents
         /// <param name="time">'time' of the CloudEvent</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
         public CloudEvent(string type, Uri source, string id = null, DateTime? time = null,
-            params ICloudEventExtension[] extensions) : this(extensions)
+            params ICloudEventExtension[] extensions) : this(CloudEventsSpecVersion.V0_2, type, source, id, time, extensions)
+        {
+        }
+
+        /// <summary>
+        /// Create a new CloudEvent instance.
+        /// </summary>
+        /// <param name="specVersion">CloudEvents specification version</param>
+        /// <param name="type">'type' of the CloudEvent</param>
+        /// <param name="source">'source' of the CloudEvent</param>
+        /// <param name="id">'id' of the CloudEvent</param>
+        /// <param name="time">'time' of the CloudEvent</param>
+        /// <param name="extensions">Extensions to be added to this CloudEvents</param>
+        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source, string id = null, DateTime? time = null,
+            params ICloudEventExtension[] extensions) : this(specVersion, extensions)
         {
             Type = type;
             Source = source;
@@ -37,11 +51,11 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// Create a new CloudEvent instance
         /// </summary>
+        /// <param name="specVersion">CloudEvents specification version</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
-        internal CloudEvent(IEnumerable<ICloudEventExtension> extensions)
+        internal CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<ICloudEventExtension> extensions)
         {
-            attributes = new CloudEventAttributes(extensions);
-            SpecVersion = "0.2";
+            attributes = new CloudEventAttributes(specVersion, extensions);
             this.Extensions = new Dictionary<Type, ICloudEventExtension>();
             if (extensions != null)
             {
@@ -61,8 +75,8 @@ namespace CloudNative.CloudEvents
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#contenttype"/>
         public ContentType ContentType
         {
-            get => attributes[CloudEventAttributes.ContentTypeAttributeName] as ContentType;
-            set => attributes[CloudEventAttributes.ContentTypeAttributeName] = value;
+            get => attributes[CloudEventAttributes.ContentTypeAttributeName(attributes.SpecVersion)] as ContentType;
+            set => attributes[CloudEventAttributes.ContentTypeAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
@@ -73,8 +87,8 @@ namespace CloudNative.CloudEvents
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#data-1"/>
         public object Data
         {
-            get => attributes[CloudEventAttributes.DataAttributeName];
-            set => attributes[CloudEventAttributes.DataAttributeName] = value;
+            get => attributes[CloudEventAttributes.DataAttributeName(attributes.SpecVersion)];
+            set => attributes[CloudEventAttributes.DataAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
@@ -89,8 +103,8 @@ namespace CloudNative.CloudEvents
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#id"/>
         public string Id
         {
-            get => attributes[CloudEventAttributes.IdAttributeName] as string;
-            set => attributes[CloudEventAttributes.IdAttributeName] = value;
+            get => attributes[CloudEventAttributes.IdAttributeName(attributes.SpecVersion)] as string;
+            set => attributes[CloudEventAttributes.IdAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
@@ -101,8 +115,8 @@ namespace CloudNative.CloudEvents
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#schemaurl"/>
         public Uri SchemaUrl
         {
-            get => attributes[CloudEventAttributes.SchemaUrlAttributeName] as Uri;
-            set => attributes[CloudEventAttributes.SchemaUrlAttributeName] = value;
+            get => attributes[CloudEventAttributes.SchemaUrlAttributeName(attributes.SpecVersion)] as Uri;
+            set => attributes[CloudEventAttributes.SchemaUrlAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
@@ -114,8 +128,8 @@ namespace CloudNative.CloudEvents
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#source"/>
         public Uri Source
         {
-            get => attributes[CloudEventAttributes.SourceAttributeName] as Uri;
-            set => attributes[CloudEventAttributes.SourceAttributeName] = value;
+            get => attributes[CloudEventAttributes.SourceAttributeName(attributes.SpecVersion)] as Uri;
+            set => attributes[CloudEventAttributes.SourceAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
@@ -123,10 +137,10 @@ namespace CloudNative.CloudEvents
         /// specification which the event uses. This enables the interpretation of the context.
         /// </summary>
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#specversion"/>
-        public string SpecVersion
+        public CloudEventsSpecVersion SpecVersion
         {
-            get => attributes[CloudEventAttributes.SpecVersionAttributeName] as string;
-            set => attributes[CloudEventAttributes.SpecVersionAttributeName] = value;
+            get => attributes.SpecVersion;
+            set => attributes.SpecVersion = value;
         }
 
         /// <summary>
@@ -135,8 +149,8 @@ namespace CloudNative.CloudEvents
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#time"/>
         public DateTime? Time
         {
-            get => (DateTime?)attributes[CloudEventAttributes.TimeAttributeName];
-            set => attributes[CloudEventAttributes.TimeAttributeName] = value;
+            get => (DateTime?)attributes[CloudEventAttributes.TimeAttributeName(attributes.SpecVersion)];
+            set => attributes[CloudEventAttributes.TimeAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
@@ -146,8 +160,8 @@ namespace CloudNative.CloudEvents
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#type"/>
         public string Type
         {
-            get => attributes[CloudEventAttributes.TypeAttributeName] as string;
-            set => attributes[CloudEventAttributes.TypeAttributeName] = value;
+            get => attributes[CloudEventAttributes.TypeAttributeName(attributes.SpecVersion)] as string;
+            set => attributes[CloudEventAttributes.TypeAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
