@@ -10,6 +10,14 @@ init:
   - cmd: git config --global core.autocrlf true
 install:
   # Install repo specific stuff here
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
 before_build:
   # Display .NET Core version
   - cmd: dotnet --version
@@ -20,10 +28,8 @@ build_script:
   - cmd: dotnet publish CloudEvents.sln
 after_build:
   # For once the build has completed
-#artifacts:
-# - path: '\src\bin\Debug\netcoreapp1.1\publish'
-#   name: WebSite
-#   type: WebDeployPackage
+artifacts:
+ - path: '\src\**\*.nupkg'
 test_script:
   # restore packages for our unit tests
   - cmd: dotnet restore CloudEvents.sln --verbosity m
@@ -32,4 +38,12 @@ test_script:
   - cmd: dotnet test 
 on_finish :
   # any cleanup in here
-deploy: off
+deploy:
+  provider: NuGet
+  api_key:
+    secure: 9tcziZ4PNbSDRWzzV9YhoJJKUYmmr7pZVf8t6jti/K2A+JLRij4wQCTeHU8vXaJH
+  skip_symbols: false
+  artifact: /.*\.nupkg/
+  on:
+      branch: master
+      APPVEYOR_REPO_TAG: true
