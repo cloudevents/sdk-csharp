@@ -9,7 +9,6 @@ namespace CloudNative.CloudEvents.Amqp
     using System.Dynamic;
     using System.IO;
     using System.Net.Mime;
-    using System.Threading.Tasks;
     using global::Amqp;
     using global::Amqp.Types;
 
@@ -17,7 +16,9 @@ namespace CloudNative.CloudEvents.Amqp
     {
         const string AmqpHeaderPrefix = "cloudEvents:";
 
-        const string SpecVersionAmqpHeader = AmqpHeaderPrefix + "specversion";
+        const string SpecVersionAmqpHeader1 = AmqpHeaderPrefix + "cloudEventsVersion";
+
+        const string SpecVersionAmqpHeader2 = AmqpHeaderPrefix + "specversion";
 
         static JsonEventFormatter jsonFormatter = new JsonEventFormatter();
 
@@ -25,7 +26,8 @@ namespace CloudNative.CloudEvents.Amqp
         {
             return ((message.Properties.ContentType != null &&
                      message.Properties.ContentType.ToString().StartsWith(CloudEvent.MediaType)) ||
-                    message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader));
+                    message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader1) ||
+                    message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader2));
         }
 
         public static CloudEvent ToCloudEvent(this Message message,
@@ -61,7 +63,14 @@ namespace CloudNative.CloudEvents.Amqp
             }
             else
             {
-                var cloudEvent = new CloudEvent(extensions);
+                var cloudEvent = new CloudEvent(
+                    message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader1)
+                        ? CloudEventsSpecVersion.V0_1
+                        : message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader2)
+                            ? (message.ApplicationProperties.Map[SpecVersionAmqpHeader2] as string == "0.2"
+                                ? CloudEventsSpecVersion.V0_2
+                                : CloudEventsSpecVersion.Default)
+                            : CloudEventsSpecVersion.Default, extensions);
                 var attributes = cloudEvent.GetAttributes();
                 foreach (var prop in message.ApplicationProperties.Map)
                 {
@@ -75,13 +84,14 @@ namespace CloudNative.CloudEvents.Amqp
                             {
                                 exp[props.Key.ToString()] = props.Value;
                             }
+
                             attributes[((string)prop.Key).Substring(AmqpHeaderPrefix.Length).ToLowerInvariant()] =
-                                 exp;
+                                exp;
                         }
                         else
                         {
                             attributes[((string)prop.Key).Substring(AmqpHeaderPrefix.Length).ToLowerInvariant()] =
-                                                     prop.Value;
+                                prop.Value;
                         }
                     }
                 }

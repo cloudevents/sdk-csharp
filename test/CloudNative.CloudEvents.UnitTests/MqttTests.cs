@@ -74,7 +74,7 @@ namespace CloudNative.CloudEvents.UnitTests
             await client.PublishAsync(new MqttCloudEventMessage(cloudEvent, new JsonEventFormatter()) { Topic = "abc" });
             var receivedCloudEvent = await tcs.Task;
 
-            Assert.Equal("0.2", receivedCloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.V0_2, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
