@@ -7,6 +7,7 @@ namespace CloudNative.CloudEvents.UnitTests
     using System;
     using System.Collections.Concurrent;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Net.Mime;
@@ -49,6 +50,13 @@ namespace CloudNative.CloudEvents.UnitTests
         async Task HandleContext(HttpListenerContext requestContext)
         {
             var ctxHeaderValue = requestContext.Request.Headers[testContextHeader];
+
+            if (requestContext.Request.IsWebHookValidationRequest())
+            {
+                await requestContext.HandleAsWebHookValidationRequest(null, null);
+                return;
+            }
+
             if (pendingRequests.TryRemove(ctxHeaderValue, out var pending))
             {
                 await pending(requestContext);
@@ -62,6 +70,18 @@ namespace CloudNative.CloudEvents.UnitTests
                 }
             });
 #pragma warning restore 4014
+        }
+
+        [Fact]
+        async Task HttpWebHookValidation()
+        {
+            var httpClient = new HttpClient();
+            var req = new HttpRequestMessage(HttpMethod.Options, new Uri(listenerAddress + "ep"));
+            req.Headers.Add("WebHook-Request-Origin", "example.com");
+            req.Headers.Add("WebHook-Request-Rate", "120");
+            var result = await httpClient.SendAsync( req );
+            Assert.Equal("example.com", result.Headers.GetValues("WebHook-Allowed-Origin").First());
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
         }
 
         [Fact]
