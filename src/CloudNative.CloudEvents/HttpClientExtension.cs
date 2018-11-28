@@ -78,6 +78,127 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
+        /// Handle the request as WebHook validation request
+        /// </summary>
+        /// <param name="httpRequestMessage">Request</param>
+        /// <param name="validateOrigin">Callback that returns whether the given origin may push events. If 'null', all origins are acceptable.</param>
+        /// <param name="validateRate">Callback that returns the acceptable request rate. If 'null', the rate is not limited.</param>
+        /// <returns>Response</returns>
+        public static async Task<HttpResponseMessage> HandleAsWebHookValidationRequest(
+            this HttpRequestMessage httpRequestMessage, Func<string, bool> validateOrigin,
+            Func<string, string> validateRate)
+        {
+            if (IsWebHookValidationRequest(httpRequestMessage))
+            {
+                var origin = httpRequestMessage.Headers.GetValues("WebHook-Request-Origin").FirstOrDefault();
+                var rate = httpRequestMessage.Headers.GetValues("WebHook-Request-Rate").FirstOrDefault();
+
+                if (origin != null && (validateOrigin == null || validateOrigin(origin)))
+                {
+                    if (rate != null)
+                    {
+                        if (validateRate != null)
+                        {
+                            rate = validateRate(rate);
+                        }
+                        else
+                        {
+                            rate = "*";
+                        }
+                    }
+
+                    if (httpRequestMessage.Headers.Contains("WebHook-Request-Callback"))
+                    {
+                        var uri = httpRequestMessage.Headers.GetValues("WebHook-Request-Callback").FirstOrDefault();
+                        try
+                        {
+                            HttpClient client = new HttpClient();
+                            var response = await client.GetAsync(new Uri(uri));
+                            return new HttpResponseMessage(response.StatusCode);
+                        }
+                        catch (Exception e)
+                        {
+                            return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                        }
+                    }
+                    else
+                    {
+                        var response = new HttpResponseMessage(HttpStatusCode.OK);
+                        response.Headers.Add("Allow", "POST");
+                        response.Headers.Add("WebHook-Allowed-Origin", origin);
+                        response.Headers.Add("WebHook-Allowed-Rate", rate);
+                        return response;
+                    }
+                }
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.MethodNotAllowed);
+        }
+
+        /// <summary>
+        /// Handle the request as WebHook validation request
+        /// </summary>
+        /// <param name="context">Request context</param>
+        /// <param name="validateOrigin">Callback that returns whether the given origin may push events. If 'null', all origins are acceptable.</param>
+        /// <param name="validateRate">Callback that returns the acceptable request rate. If 'null', the rate is not limited.</param>
+        /// <returns>Task</returns>
+        public static async Task HandleAsWebHookValidationRequest(this HttpListenerContext context,
+            Func<string, bool> validateOrigin, Func<string, string> validateRate)
+        {
+            if (IsWebHookValidationRequest(context.Request))
+            {
+                var origin = context.Request.Headers.Get("WebHook-Request-Origin");
+                var rate = context.Request.Headers.Get("WebHook-Request-Rate");
+
+                if (origin != null && (validateOrigin == null || validateOrigin(origin)))
+                {
+                    if (rate != null)
+                    {
+                        if (validateRate != null)
+                        {
+                            rate = validateRate(rate);
+                        }
+                        else
+                        {
+                            rate = "*";
+                        }
+                    }
+
+                    if (context.Request.Headers["WebHook-Request-Callback"] != null)
+                    {
+                        var uri = context.Request.Headers.Get("WebHook-Request-Callback");
+                        try
+                        {
+                            HttpClient client = new HttpClient();
+                            var response = await client.GetAsync(new Uri(uri));
+                            context.Response.StatusCode = (int)response.StatusCode;
+                            context.Response.Close();
+                            return;
+                        }
+                        catch (Exception e)
+                        {
+                            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                            context.Response.Close();
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = (int)HttpStatusCode.OK;
+                        context.Response.Headers.Add("Allow", "POST");
+                        context.Response.Headers.Add("WebHook-Allowed-Origin", origin);
+                        context.Response.Headers.Add("WebHook-Allowed-Rate", rate);
+                        context.Response.Close();                        
+                        return;
+                    }
+                }
+            }
+
+            context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+            context.Response.Close();
+        }
+
+        /// <summary>
         /// Indicates whether this HttpResponseMessage holds a CloudEvent
         /// </summary>
         /// <param name="httpResponseMessage"></param>
@@ -99,6 +220,24 @@ namespace CloudNative.CloudEvents
                     httpListenerRequest.Headers["content-type"].StartsWith(CloudEvent.MediaType)) ||
                    httpListenerRequest.Headers[SpecVersionHttpHeader1] != null ||
                    httpListenerRequest.Headers[SpecVersionHttpHeader2] != null;
+        }
+
+        /// <summary>
+        /// Indicates whether this HttpListenerRequest is a web hook validation request
+        /// </summary>
+        public static bool IsWebHookValidationRequest(this HttpRequestMessage httpRequestMessage)
+        {
+            return (httpRequestMessage.Method.Method.Equals("options", StringComparison.InvariantCultureIgnoreCase) &&
+                    httpRequestMessage.Headers.Contains("WebHook-Request-Origin"));
+        }
+
+        /// <summary>
+        /// Indicates whether this HttpListenerRequest is a web hook validation request
+        /// </summary>
+        public static bool IsWebHookValidationRequest(this HttpListenerRequest httpRequestMessage)
+        {
+            return (httpRequestMessage.HttpMethod.Equals("options", StringComparison.InvariantCultureIgnoreCase) &&
+                    httpRequestMessage.Headers["WebHook-Request-Origin"] != null);
         }
 
         /// <summary>
@@ -382,7 +521,7 @@ namespace CloudNative.CloudEvents
                         else
                         {
                             attributes[name] = headerValue;
-                        }                  
+                        }
                     }
                 }
 
