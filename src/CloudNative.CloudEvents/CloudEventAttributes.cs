@@ -47,7 +47,7 @@ namespace CloudNative.CloudEvents
                     return (val as string) == "0.1" ? CloudEventsSpecVersion.V0_1 : CloudEventsSpecVersion.V0_2;
                 }
 
-                return CloudEventsSpecVersion.V0_2;
+                return CloudEventsSpecVersion.Default;
             }
             set
             {
