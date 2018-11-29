@@ -205,7 +205,7 @@ namespace CloudNative.CloudEvents
         /// <returns>true, if the response is a CloudEvent</returns>
         public static bool IsCloudEvent(this HttpResponseMessage httpResponseMessage)
         {
-            return (httpResponseMessage.Content.Headers.ContentType != null &&
+            return (httpResponseMessage.Content != null && httpResponseMessage.Content.Headers.ContentType != null &&
                     httpResponseMessage.Content.Headers.ContentType.MediaType.StartsWith(CloudEvent.MediaType)) ||
                    httpResponseMessage.Headers.Contains(SpecVersionHttpHeader1) ||
                    httpResponseMessage.Headers.Contains(SpecVersionHttpHeader2);
@@ -375,7 +375,7 @@ namespace CloudNative.CloudEvents
             ICloudEventFormatter formatter = null,
             params ICloudEventExtension[] extensions)
         {
-            if (httpListenerRequest.Content.Headers.ContentType != null &&
+            if (httpListenerRequest.Content != null && httpListenerRequest.Content.Headers.ContentType != null &&
                 httpListenerRequest.Content.Headers.ContentType.MediaType.StartsWith(CloudEvent.MediaType,
                     StringComparison.InvariantCultureIgnoreCase))
             {
@@ -443,10 +443,10 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                cloudEvent.ContentType = httpListenerRequest.Content.Headers.ContentType != null
+                cloudEvent.ContentType = httpListenerRequest.Content?.Headers.ContentType != null
                     ? new ContentType(httpListenerRequest.Content.Headers.ContentType.MediaType)
                     : null;
-                cloudEvent.Data = httpListenerRequest.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+                cloudEvent.Data = httpListenerRequest.Content?.ReadAsStreamAsync().GetAwaiter().GetResult();
                 return cloudEvent;
             }
         }
@@ -466,7 +466,7 @@ namespace CloudNative.CloudEvents
                     else if (attribute.Value is DateTime)
                     {
                         httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                            ((DateTime)attribute.Value).ToString("o"));
+                            ((DateTime)attribute.Value).ToString("u"));
                     }
                     else if (attribute.Value is Uri || attribute.Value is int)
                     {
@@ -498,7 +498,7 @@ namespace CloudNative.CloudEvents
                     else if (attribute.Value is DateTime)
                     {
                         httpWebRequest.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                            ((DateTime)attribute.Value).ToString("o"));
+                            ((DateTime)attribute.Value).ToString("u"));
                     }
                     else if (attribute.Value is Uri || attribute.Value is int)
                     {
@@ -543,7 +543,7 @@ namespace CloudNative.CloudEvents
         static CloudEvent ToCloudEventInternal(HttpResponseMessage httpResponseMessage,
             ICloudEventFormatter formatter, ICloudEventExtension[] extensions)
         {
-            if (httpResponseMessage.Content.Headers.ContentType != null &&
+            if (httpResponseMessage.Content?.Headers.ContentType != null &&
                 httpResponseMessage.Content.Headers.ContentType.MediaType.StartsWith("application/cloudevents",
                     StringComparison.InvariantCultureIgnoreCase))
             {
@@ -614,10 +614,10 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                cloudEvent.ContentType = httpResponseMessage.Content.Headers.ContentType != null
+                cloudEvent.ContentType = httpResponseMessage.Content?.Headers.ContentType != null
                     ? new ContentType(httpResponseMessage.Content.Headers.ContentType.ToString())
                     : null;
-                cloudEvent.Data = httpResponseMessage.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+                cloudEvent.Data = httpResponseMessage.Content?.ReadAsStreamAsync().GetAwaiter().GetResult();
                 return cloudEvent;
             }
         }

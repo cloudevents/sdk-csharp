@@ -120,7 +120,11 @@ namespace CloudNative.CloudEvents
         {
             get
             {
-                return dict[key];
+                if (!dict.TryGetValue(key, out var result))
+                {
+                    return null;
+                }             
+                return result;
             } 
             set
             {
@@ -265,7 +269,7 @@ namespace CloudNative.CloudEvents
 
                 if (value is string)
                 {
-                    if (DateTime.TryParseExact((string)value, "o", CultureInfo.InvariantCulture,
+                    if (DateTime.TryParse((string)value, CultureInfo.InvariantCulture,
                         DateTimeStyles.AssumeUniversal, out var dateTimeVal))
                     {
                         value = dateTimeVal;
