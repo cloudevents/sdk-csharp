@@ -47,11 +47,13 @@ namespace CloudNative.CloudEvents
         public CloudEvent DecodeJObject(JObject jObject, IEnumerable<ICloudEventExtension> extensions = null)
         {
             CloudEventsSpecVersion specVersion = CloudEventsSpecVersion.Default;
-            if (jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1)))
+            if (jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1)) ||
+                jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1).ToLowerInvariant()))
             {
                 specVersion = CloudEventsSpecVersion.V0_1;
             }
-            if (jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)))
+            if (jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)) ||
+                jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2).ToLowerInvariant()))
             {
                 specVersion =
                     ((string)jObject[CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)] ==
@@ -64,8 +66,8 @@ namespace CloudNative.CloudEvents
             foreach (var keyValuePair in jObject)
             {
                 if (keyValuePair.Key.Equals(
-                        CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1)) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)))
+                        CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), StringComparison.InvariantCultureIgnoreCase) ||
+                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
                 }

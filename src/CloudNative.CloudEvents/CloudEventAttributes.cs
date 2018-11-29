@@ -7,6 +7,7 @@ namespace CloudNative.CloudEvents
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Globalization;
     using System.Net.Mime;
 
@@ -17,7 +18,7 @@ namespace CloudNative.CloudEvents
     {
         readonly CloudEventsSpecVersion specVersion;
 
-        IDictionary<string, object> dict = new Dictionary<string, object>();
+        IDictionary<string, object> dict = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
         IEnumerable<ICloudEventExtension> extensions;
 
@@ -71,44 +72,45 @@ namespace CloudNative.CloudEvents
                 // transform to new version
                 var copy = new Dictionary<string, object>(dict);
                 dict.Clear();
-                dict[SpecVersionAttributeName(value)] = value == CloudEventsSpecVersion.V0_1 ? "0.1" : "0.2";
+                this[SpecVersionAttributeName(value)] = value == CloudEventsSpecVersion.V0_1 ? "0.1" : "0.2";
                 foreach (var kv in copy)
                 {
-                    if (SpecVersionAttributeName(currentSpecVersion).Equals(kv.Key))
+                    if (SpecVersionAttributeName(CloudEventsSpecVersion.V0_2).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
+                        SpecVersionAttributeName(CloudEventsSpecVersion.V0_1).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))  
                     {
                         continue;
                     }
-                    if (ContentTypeAttributeName(currentSpecVersion).Equals(kv.Key))
+                    if (ContentTypeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[ContentTypeAttributeName(value)] = kv.Value;
+                        this[ContentTypeAttributeName(value)] = kv.Value;
                     }
-                    else if (DataAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (DataAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[DataAttributeName(value)] = kv.Value;
+                        this[DataAttributeName(value)] = kv.Value;
                     }
-                    else if (IdAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (IdAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[IdAttributeName(value)] = kv.Value;
+                        this[IdAttributeName(value)] = kv.Value;
                     }
-                    else if (SchemaUrlAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (SchemaUrlAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[SchemaUrlAttributeName(value)] = kv.Value;
+                        this[SchemaUrlAttributeName(value)] = kv.Value;
                     }
-                    else if (SourceAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (SourceAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[SourceAttributeName(value)] = kv.Value;
+                        this[SourceAttributeName(value)] = kv.Value;
                     }
-                    else if (TimeAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (TimeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[TimeAttributeName(value)] = kv.Value;
+                        this[TimeAttributeName(value)] = kv.Value;
                     }
-                    else if (TypeAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (TypeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[TypeAttributeName(value)] = kv.Value;
+                        this[TypeAttributeName(value)] = kv.Value;
                     }
                     else
                     {
-                        dict[kv.Key] = kv.Value;
+                        this[kv.Key] = kv.Value;
                     }
                 }              
             }
@@ -116,7 +118,10 @@ namespace CloudNative.CloudEvents
 
         public object this[string key]
         {
-            get => dict[key];
+            get
+            {
+                return dict[key];
+            } 
             set
             {
                 ValidateAndNormalize(key, ref value);
@@ -224,7 +229,7 @@ namespace CloudNative.CloudEvents
 
         internal virtual bool ValidateAndNormalize(string key, ref object value)
         {
-            if (key.Equals(TypeAttributeName(this.SpecVersion)))
+            if (key.Equals(TypeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is string)
                 {
@@ -233,7 +238,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorTypeValueIsNotAString);
             }
-            else if (key.Equals(SpecVersionAttributeName(this.SpecVersion)))
+            else if (key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is string)
                 {
@@ -242,7 +247,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorSpecVersionValueIsNotAString);
             }
-            else if (key.Equals(IdAttributeName(this.SpecVersion)))
+            else if (key.Equals(IdAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is string)
                 {
@@ -251,7 +256,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorIdValueIsNotAString);
             }
-            else if (key.Equals(TimeAttributeName(this.SpecVersion)))
+            else if (key.Equals(TimeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is null || value is DateTime)
                 {
@@ -270,7 +275,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorTimeValueIsNotATimestamp);
             }
-            else if (key.Equals(SourceAttributeName(this.SpecVersion)))
+            else if (key.Equals(SourceAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is Uri)
                 {
@@ -288,7 +293,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
             }
-            else if (key.Equals(SchemaUrlAttributeName(this.SpecVersion)))
+            else if (key.Equals(SchemaUrlAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is null || value is Uri)
                 {
@@ -306,7 +311,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
             }
-            else if (key.Equals(ContentTypeAttributeName(this.SpecVersion)))
+            else if (key.Equals(ContentTypeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is null || value is ContentType)
                 {
@@ -328,7 +333,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorContentTypeIsNotRFC2046);
             }
-            else if (key.Equals(DataAttributeName(this.SpecVersion)))
+            else if (key.Equals(DataAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 return true;
             }
