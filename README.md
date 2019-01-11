@@ -101,7 +101,7 @@ extensions like this:
 ``` C#
 public async Task<HttpResponseMessage> Run( HttpRequestMessage req, ILogger log)
 {
-    var cloudEvent = await req.ToCloudEventAsync(new DistributedTracingExtension());
+    var cloudEvent = req.ToCloudEvent(new DistributedTracingExtension());
 }
 ```
 
