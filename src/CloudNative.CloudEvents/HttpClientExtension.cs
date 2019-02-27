@@ -271,7 +271,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="httpListenerRequest">Listener request</param>
         /// <param name="extensions">List of extension instances</param>
-        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
+        /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             params ICloudEventExtension[] extensions)
         {
@@ -285,7 +285,7 @@ namespace CloudNative.CloudEvents
         /// <param name="httpListenerRequest">Listener request</param>
         /// <param name="formatter"></param>
         /// <param name="extensions">List of extension instances</param>
-        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
+        /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             ICloudEventFormatter formatter = null,
             params ICloudEventExtension[] extensions)
@@ -370,7 +370,7 @@ namespace CloudNative.CloudEvents
         /// <param name="httpListenerRequest">Listener request</param>
         /// <param name="formatter"></param>
         /// <param name="extensions">List of extension instances</param>
-        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
+        /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpRequestMessage httpListenerRequest,
             ICloudEventFormatter formatter = null,
             params ICloudEventExtension[] extensions)
