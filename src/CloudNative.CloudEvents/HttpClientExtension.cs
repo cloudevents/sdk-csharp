@@ -116,7 +116,7 @@ namespace CloudNative.CloudEvents
                             var response = await client.GetAsync(new Uri(uri));
                             return new HttpResponseMessage(response.StatusCode);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             return new HttpResponseMessage(HttpStatusCode.InternalServerError);
                         }
@@ -175,7 +175,7 @@ namespace CloudNative.CloudEvents
                             context.Response.Close();
                             return;
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                             context.Response.Close();
