@@ -55,7 +55,7 @@ namespace CloudNative.CloudEvents
                     cloudEvent.Data, cloudEvent.Extensions.Values));
             }
 
-            Headers.ContentType = new MediaTypeHeaderValue(cloudEvent.ContentType?.MediaType);
+            Headers.ContentType = new MediaTypeHeaderValue(cloudEvent.DataContentType?.MediaType);
             MapHeaders(cloudEvent);
         }
 
@@ -80,7 +80,7 @@ namespace CloudNative.CloudEvents
             foreach (var attribute in cloudEvent.GetAttributes())
             {
                 if (!(attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) ||
-                      attribute.Key.Equals(CloudEventAttributes.ContentTypeAttributeName(cloudEvent.SpecVersion))))
+                      attribute.Key.Equals(CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion))))
                 {
                     if (attribute.Value is string)
                     {

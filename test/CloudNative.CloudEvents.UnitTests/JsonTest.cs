@@ -24,7 +24,7 @@ namespace CloudNative.CloudEvents.UnitTests
             "    },\n" +
             "    \"contenttype\" : \"text/xml\",\n" +
             "    \"data\" : \"<much wow=\\\"xml\\\"/>\"\n" +
-            "}";
+            "}";                                          
 
         [Fact]
         public void ReserializeTest()
@@ -39,7 +39,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(cloudEvent2.Source, cloudEvent.Source);
             Assert.Equal(cloudEvent2.Id, cloudEvent.Id);
             Assert.Equal(cloudEvent2.Time.Value.ToUniversalTime(), cloudEvent.Time.Value.ToUniversalTime());
-            Assert.Equal(cloudEvent2.ContentType, cloudEvent.ContentType);
+            Assert.Equal(cloudEvent2.DataContentType, cloudEvent.DataContentType);
             Assert.Equal(cloudEvent2.Data, cloudEvent.Data);
         }
 
@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(cloudEvent2.Source, cloudEvent.Source);
             Assert.Equal(cloudEvent2.Id, cloudEvent.Id);
             Assert.Equal(cloudEvent2.Time.Value.ToUniversalTime(), cloudEvent.Time.Value.ToUniversalTime());
-            Assert.Equal(cloudEvent2.ContentType, cloudEvent.ContentType);
+            Assert.Equal(cloudEvent2.DataContentType, cloudEvent.DataContentType);
             Assert.Equal(cloudEvent2.Data, cloudEvent.Data);
         }
 
@@ -72,7 +72,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
             Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
                 cloudEvent.Time.Value.ToUniversalTime());
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.ContentType);
+            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
             var attr = cloudEvent.GetAttributes();
@@ -92,7 +92,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
             Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
                 cloudEvent.Time.Value.ToUniversalTime());
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.ContentType);
+            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
             Assert.Equal("value", cloudEvent.Extension<ComExampleExtension1Extension>().ComExampleExtension1);

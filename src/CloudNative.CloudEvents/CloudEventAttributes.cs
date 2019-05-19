@@ -25,7 +25,9 @@ namespace CloudNative.CloudEvents
         {
             this.extensions = extensions;
             this.specVersion = specVersion;
-            dict[SpecVersionAttributeName(specVersion)] = specVersion == CloudEventsSpecVersion.V0_1 ? "0.1" : "0.2";
+            dict[SpecVersionAttributeName(specVersion)] =
+                specVersion == CloudEventsSpecVersion.V0_1 ? "0.1" :
+                specVersion == CloudEventsSpecVersion.V0_2 ? "0.2" : "0.3";
         }
 
         int ICollection<KeyValuePair<string, object>>.Count => dict.Count;
@@ -42,9 +44,12 @@ namespace CloudNative.CloudEvents
             {
                 object val;
                 if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), out val) ||
-                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val))
+                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val) ||
+                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_3), out val))
                 {
-                    return (val as string) == "0.1" ? CloudEventsSpecVersion.V0_1 : CloudEventsSpecVersion.V0_2;
+                    return (val as string) == "0.1" ? CloudEventsSpecVersion.V0_1 :
+                        (val as string) == "0.2" ? CloudEventsSpecVersion.V0_2 :
+                        CloudEventsSpecVersion.V0_3;
                 }
 
                 return CloudEventsSpecVersion.Default;
@@ -60,9 +65,16 @@ namespace CloudNative.CloudEvents
                         return;
                     }
                 }
-                else if ( dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val))
+                else if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val))
                 {
                     if (value == CloudEventsSpecVersion.V0_2 && (val as string) == "0.2")
+                    {
+                        return;
+                    }
+                }
+                else if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_3), out val))
+                {
+                    if (value == CloudEventsSpecVersion.V0_3 && (val as string) == "0.3")
                     {
                         return;
                     }
@@ -71,16 +83,22 @@ namespace CloudNative.CloudEvents
                 // transform to new version
                 var copy = new Dictionary<string, object>(dict);
                 dict.Clear();
-                dict[SpecVersionAttributeName(value)] = value == CloudEventsSpecVersion.V0_1 ? "0.1" : "0.2";
+                dict[SpecVersionAttributeName(value)] =
+                    value == CloudEventsSpecVersion.V0_1 ? "0.1" :
+                    value == CloudEventsSpecVersion.V0_2 ? "0.2" : "0.3";
                 foreach (var kv in copy)
                 {
                     if (SpecVersionAttributeName(currentSpecVersion).Equals(kv.Key))
                     {
                         continue;
                     }
-                    if (ContentTypeAttributeName(currentSpecVersion).Equals(kv.Key))
+                    if (DataContentTypeAttributeName(currentSpecVersion).Equals(kv.Key))
                     {
-                        dict[ContentTypeAttributeName(value)] = kv.Value;
+                        dict[DataContentTypeAttributeName(value)] = kv.Value;
+                    }
+                    if (DataContentEncodingAttributeName(currentSpecVersion).Equals(kv.Key))
+                    {
+                        dict[DataContentEncodingAttributeName(value)] = kv.Value;
                     }
                     else if (DataAttributeName(currentSpecVersion).Equals(kv.Key))
                     {
@@ -98,6 +116,10 @@ namespace CloudNative.CloudEvents
                     {
                         dict[SourceAttributeName(value)] = kv.Value;
                     }
+                    else if (SubjectAttributeName(currentSpecVersion).Equals(kv.Key))
+                    {
+                        dict[SubjectAttributeName(value)] = kv.Value;
+                    }
                     else if (TimeAttributeName(currentSpecVersion).Equals(kv.Key))
                     {
                         dict[TimeAttributeName(value)] = kv.Value;
@@ -110,7 +132,7 @@ namespace CloudNative.CloudEvents
                     {
                         dict[kv.Key] = kv.Value;
                     }
-                }              
+                }
             }
         }
 
@@ -124,9 +146,16 @@ namespace CloudNative.CloudEvents
             }
         }
 
-        public static string ContentTypeAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
+        public static string DataContentTypeAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
-            return version == CloudEventsSpecVersion.V0_1 ? "contentType" : "contenttype";
+            return version == CloudEventsSpecVersion.V0_1 ? "contentType" : 
+                   version == CloudEventsSpecVersion.V0_2 ? "contenttype" : 
+                   "datacontenttype";
+        }
+
+        public static string DataContentEncodingAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
+        {
+            return "datacontentencoding";
         }
 
         public static string DataAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
@@ -147,6 +176,11 @@ namespace CloudNative.CloudEvents
         public static string SourceAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
             return "source";
+        }
+
+        public static string SubjectAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
+        {
+            return "subject";
         }
 
         public static string SpecVersionAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
@@ -288,6 +322,15 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
             }
+            else if (key.Equals(SubjectAttributeName(this.SpecVersion)))
+            {
+                if (value is null || value is string)
+                {
+                    return true;
+                }
+
+                throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
+            }
             else if (key.Equals(SchemaUrlAttributeName(this.SpecVersion)))
             {
                 if (value is null || value is Uri)
@@ -306,7 +349,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
             }
-            else if (key.Equals(ContentTypeAttributeName(this.SpecVersion)))
+            else if (key.Equals(DataContentTypeAttributeName(this.SpecVersion)))
             {
                 if (value is null || value is ContentType)
                 {
@@ -327,6 +370,14 @@ namespace CloudNative.CloudEvents
                 }
 
                 throw new InvalidOperationException(Strings.ErrorContentTypeIsNotRFC2046);
+            }
+            else if (key.Equals(DataContentEncodingAttributeName(this.SpecVersion)))
+            {
+                if (value is null || value is string)
+                {
+                    return true;
+                }
+                throw new InvalidOperationException(Strings.ErrorDataContentEncodingIsNotAString);
             }
             else if (key.Equals(DataAttributeName(this.SpecVersion)))
             {

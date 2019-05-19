@@ -56,16 +56,19 @@ namespace CloudNative.CloudEvents
                 specVersion =
                     ((string)jObject[CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)] ==
                      "0.2")
-                        ? CloudEventsSpecVersion.V0_2
-                        : CloudEventsSpecVersion.Default;
+                        ? CloudEventsSpecVersion.V0_2 :
+                        ((string)jObject[CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_3)] ==
+                         "0.3")
+                            ? CloudEventsSpecVersion.V0_3 : CloudEventsSpecVersion.Default;
             }
+
             var cloudEvent = new CloudEvent(specVersion, extensions);
             var attributes = cloudEvent.GetAttributes();
             foreach (var keyValuePair in jObject)
             {
-                if (keyValuePair.Key.Equals(
-                        CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1)) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)))
+                if (keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1)) ||
+                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)) ||
+                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_3)))
                 {
                     continue;
                 }
@@ -140,7 +143,7 @@ namespace CloudNative.CloudEvents
                 return new Uri(uri);
             }
 
-            if (name.Equals(CloudEventAttributes.ContentTypeAttributeName(specVersion)))
+            if (name.Equals(CloudEventAttributes.DataContentTypeAttributeName(specVersion)))
             {
                 var s = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string)) as string;
                 return new ContentType(s);

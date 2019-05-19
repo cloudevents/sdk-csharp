@@ -19,7 +19,7 @@ namespace CloudNative.CloudEvents {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Strings {
@@ -66,6 +66,15 @@ namespace CloudNative.CloudEvents {
         internal static string ErrorContentTypeIsNotRFC2046 {
             get {
                 return ResourceManager.GetString("ErrorContentTypeIsNotRFC2046", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;datacontentencoding&apos; field is not a string.
+        /// </summary>
+        internal static string ErrorDataContentEncodingIsNotAString {
+            get {
+                return ResourceManager.GetString("ErrorDataContentEncodingIsNotAString", resourceCulture);
             }
         }
         
@@ -129,6 +138,15 @@ namespace CloudNative.CloudEvents {
         internal static string ErrorSpecVersionValueIsNotAString {
             get {
                 return ResourceManager.GetString("ErrorSpecVersionValueIsNotAString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;subject&apos; attribute value must be a string.
+        /// </summary>
+        internal static string ErrorSubjectValueIsNotAString {
+            get {
+                return ResourceManager.GetString("ErrorSubjectValueIsNotAString", resourceCulture);
             }
         }
         

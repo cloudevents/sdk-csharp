@@ -68,8 +68,10 @@ namespace CloudNative.CloudEvents.Amqp
                         ? CloudEventsSpecVersion.V0_1
                         : message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader2)
                             ? (message.ApplicationProperties.Map[SpecVersionAmqpHeader2] as string == "0.2"
-                                ? CloudEventsSpecVersion.V0_2
-                                : CloudEventsSpecVersion.Default)
+                                ? CloudEventsSpecVersion.V0_2 :
+                                (message.ApplicationProperties.Map[SpecVersionAmqpHeader2] as string == "0.3"
+                                    ? CloudEventsSpecVersion.V0_3
+                                : CloudEventsSpecVersion.Default))
                             : CloudEventsSpecVersion.Default, extensions);
                 var attributes = cloudEvent.GetAttributes();
                 foreach (var prop in message.ApplicationProperties.Map)
@@ -96,7 +98,7 @@ namespace CloudNative.CloudEvents.Amqp
                     }
                 }
 
-                cloudEvent.ContentType = message.Properties.ContentType != null
+                cloudEvent.DataContentType = message.Properties.ContentType != null
                     ? new ContentType(message.Properties.ContentType)
                     : null;
                 cloudEvent.Data = message.Body;

@@ -47,7 +47,7 @@ namespace CloudNative.CloudEvents.Amqp
                 this.BodySection = new AmqpValue() { Value = cloudEvent.Data };
             }
 
-            this.Properties = new Properties() { ContentType = cloudEvent.ContentType?.MediaType };
+            this.Properties = new Properties() { ContentType = cloudEvent.DataContentType?.MediaType };
             this.ApplicationProperties = new ApplicationProperties();
             MapHeaders(cloudEvent);
         }
@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.Amqp
             foreach (var attribute in cloudEvent.GetAttributes())
             {
                 if (!attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) &&
-                    !attribute.Key.Equals(CloudEventAttributes.ContentTypeAttributeName(cloudEvent.SpecVersion)))
+                    !attribute.Key.Equals(CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion)))
                 {
                     if (attribute.Value is Uri)
                     {
