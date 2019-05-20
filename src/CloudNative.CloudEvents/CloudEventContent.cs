@@ -88,7 +88,7 @@ namespace CloudNative.CloudEvents
                     }
                     else if (attribute.Value is DateTime)
                     {
-                        Headers.Add("ce-" + attribute.Key, ((DateTime)attribute.Value).ToString("o"));
+                        Headers.Add("ce-" + attribute.Key, ((DateTime)attribute.Value).ToString("u"));
                     }
                     else if (attribute.Value is Uri || attribute.Value is int)
                     {
