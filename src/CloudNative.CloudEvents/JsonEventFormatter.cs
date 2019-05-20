@@ -112,7 +112,12 @@ namespace CloudNative.CloudEvents
             var attributes = cloudEvent.GetAttributes();
             foreach (var keyValuePair in attributes)
             {
-                if (keyValuePair.Value is ContentType)
+                if (keyValuePair.Value == null)
+                {
+                    continue;
+                }
+
+                if (keyValuePair.Value is ContentType && !string.IsNullOrEmpty(((ContentType)keyValuePair.Value).MediaType))
                 {
                     jObject[keyValuePair.Key] = JToken.FromObject(((ContentType)keyValuePair.Value).ToString());
                 }
@@ -121,7 +126,6 @@ namespace CloudNative.CloudEvents
                     jObject[keyValuePair.Key] = JToken.FromObject(keyValuePair.Value);
                 }
             }
-
             return Encoding.UTF8.GetBytes(jObject.ToString());
         }
 
