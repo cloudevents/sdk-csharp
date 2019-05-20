@@ -32,7 +32,7 @@ namespace HttpSend
         {
             var cloudEvent = new CloudEvent(this.Type, new Uri(this.Source))
             {
-                ContentType = new ContentType(MediaTypeNames.Application.Json),
+                DataContentType = new ContentType(MediaTypeNames.Application.Json),
                 Data = JsonConvert.SerializeObject("hey there!")
             };
 

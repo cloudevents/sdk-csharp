@@ -26,7 +26,7 @@ namespace CloudNative.CloudEvents
         /// <param name="time">'time' of the CloudEvent</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
         public CloudEvent(string type, Uri source, string id = null, DateTime? time = null,
-            params ICloudEventExtension[] extensions) : this(CloudEventsSpecVersion.V0_2, type, source, id, time, extensions)
+            params ICloudEventExtension[] extensions) : this(CloudEventsSpecVersion.Default, type, source, id, time, extensions)
         {
         }
 
@@ -49,6 +49,22 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
+        /// Create a new CloudEvent instance.
+        /// </summary>
+        /// <param name="specVersion">CloudEvents specification version</param>
+        /// <param name="type">'type' of the CloudEvent</param>
+        /// <param name="source">'source' of the CloudEvent</param>
+        /// <param name="subject">'subject' of the CloudEvent</param>
+        /// <param name="id">'id' of the CloudEvent</param>
+        /// <param name="time">'time' of the CloudEvent</param>
+        /// <param name="extensions">Extensions to be added to this CloudEvents</param>
+        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source, string subject, string id = null, DateTime? time = null,
+            params ICloudEventExtension[] extensions) : this(specVersion, type, source, id, time, extensions)
+        {
+            Subject = subject;
+        }
+
+        /// <summary>
         /// Create a new CloudEvent instance
         /// </summary>
         /// <param name="specVersion">CloudEvents specification version</param>
@@ -68,15 +84,32 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// CloudEvent 'contenttype' attribute. Content type of the 'data' attribute value.
+        /// CloudEvent 'datacontenttype' attribute. Content type of the 'data' attribute value.
         /// This attribute enables the data attribute to carry any type of content, whereby
         /// format and encoding might differ from that of the chosen event format.
         /// </summary>
-        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#contenttype"/>
+        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#datacontenttype"/>
+        public ContentType DataContentType
+        {
+            get => attributes[CloudEventAttributes.DataContentTypeAttributeName(attributes.SpecVersion)] as ContentType;
+            set => attributes[CloudEventAttributes.DataContentTypeAttributeName(attributes.SpecVersion)] = value;
+        }
+
+        /// <summary>
+        /// CloudEvent 'datacontentencoding' attribute.
+        /// </summary>
+        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#datacontentencoding"/>
+        public string DataContentEncoding
+        {
+            get => attributes[CloudEventAttributes.DataContentEncodingAttributeName(attributes.SpecVersion)] as string;
+            set => attributes[CloudEventAttributes.DataContentEncodingAttributeName(attributes.SpecVersion)] = value;
+        }
+
+        [Obsolete("Cloud events 0.1 and 0.2 name replaced by 'DataContentType1'. Will be removed in an upcoming release.")]
         public ContentType ContentType
         {
-            get => attributes[CloudEventAttributes.ContentTypeAttributeName(attributes.SpecVersion)] as ContentType;
-            set => attributes[CloudEventAttributes.ContentTypeAttributeName(attributes.SpecVersion)] = value;
+            get => DataContentType;
+            set => DataContentType = value;
         }
 
         /// <summary>
@@ -117,6 +150,16 @@ namespace CloudNative.CloudEvents
         {
             get => attributes[CloudEventAttributes.SchemaUrlAttributeName(attributes.SpecVersion)] as Uri;
             set => attributes[CloudEventAttributes.SchemaUrlAttributeName(attributes.SpecVersion)] = value;
+        }
+
+        /// <summary>
+        /// CloudEvents 'subject' attribute. 
+        /// </summary>
+        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#subject"/>
+        public string Subject
+        {
+            get => attributes[CloudEventAttributes.SubjectAttributeName(attributes.SpecVersion)] as string;
+            set => attributes[CloudEventAttributes.SubjectAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>

@@ -45,7 +45,7 @@ namespace CloudNative.CloudEvents
             }
 
             Stream stream = MapDataAttributeToStream(cloudEvent, formatter);
-            httpListenerResponse.ContentType = cloudEvent.ContentType.ToString();
+            httpListenerResponse.ContentType = cloudEvent.DataContentType.ToString();
             MapAttributesToListenerResponse(cloudEvent, httpListenerResponse);
             return stream.CopyToAsync(httpListenerResponse.OutputStream);
         }
@@ -72,7 +72,7 @@ namespace CloudNative.CloudEvents
             }
 
             Stream stream = MapDataAttributeToStream(cloudEvent, formatter);
-            httpWebRequest.ContentType = cloudEvent.ContentType.ToString();
+            httpWebRequest.ContentType = cloudEvent.DataContentType.ToString();
             MapAttributesToWebRequest(cloudEvent, httpWebRequest);
             await stream.CopyToAsync(httpWebRequest.GetRequestStream());
         }
@@ -322,8 +322,8 @@ namespace CloudNative.CloudEvents
                 if (httpListenerRequest.Headers[SpecVersionHttpHeader2] != null)
                 {
                     version = httpListenerRequest.Headers[SpecVersionHttpHeader2] == "0.2"
-                        ? CloudEventsSpecVersion.V0_2
-                        : CloudEventsSpecVersion.Default;
+                        ? CloudEventsSpecVersion.V0_2 : httpListenerRequest.Headers[SpecVersionHttpHeader2] == "0.3"
+                            ? CloudEventsSpecVersion.V0_3 : CloudEventsSpecVersion.Default;
                 }
 
                 var cloudEvent = new CloudEvent(version, extensions);
@@ -354,7 +354,7 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                cloudEvent.ContentType = httpListenerRequest.ContentType != null
+                cloudEvent.DataContentType = httpListenerRequest.ContentType != null
                     ? new ContentType(httpListenerRequest.ContentType)
                     : null;
                 cloudEvent.Data = httpListenerRequest.InputStream;
@@ -456,7 +456,7 @@ namespace CloudNative.CloudEvents
             foreach (var attribute in cloudEvent.GetAttributes())
             {
                 if (!attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) &&
-                    !attribute.Key.Equals(CloudEventAttributes.ContentTypeAttributeName(cloudEvent.SpecVersion)))
+                    !attribute.Key.Equals(CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion)))
                 {
                     if (attribute.Value is string)
                     {
@@ -489,7 +489,7 @@ namespace CloudNative.CloudEvents
             foreach (var attribute in cloudEvent.GetAttributes())
             {
                 if (!attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) &&
-                    !attribute.Key.Equals(CloudEventAttributes.ContentTypeAttributeName(cloudEvent.SpecVersion)))
+                    !attribute.Key.Equals(CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion)))
                 {
                     if (attribute.Value is string)
                     {
@@ -577,8 +577,8 @@ namespace CloudNative.CloudEvents
                 if (httpResponseMessage.Headers.Contains(SpecVersionHttpHeader2))
                 {
                     version = httpResponseMessage.Headers.GetValues(SpecVersionHttpHeader2).First() == "0.2"
-                        ? CloudEventsSpecVersion.V0_2
-                        : CloudEventsSpecVersion.Default;
+                        ? CloudEventsSpecVersion.V0_2 : httpResponseMessage.Headers.GetValues(SpecVersionHttpHeader2).First() == "0.3"
+                            ? CloudEventsSpecVersion.V0_3 : CloudEventsSpecVersion.Default;
                 }
 
                 var cloudEvent = new CloudEvent(version, extensions);
@@ -614,7 +614,7 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                cloudEvent.ContentType = httpResponseMessage.Content?.Headers.ContentType != null
+                cloudEvent.DataContentType = httpResponseMessage.Content.Headers.ContentType != null
                     ? new ContentType(httpResponseMessage.Content.Headers.ContentType.ToString())
                     : null;
                 cloudEvent.Data = httpResponseMessage.Content?.ReadAsStreamAsync().GetAwaiter().GetResult();

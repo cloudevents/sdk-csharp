@@ -14,39 +14,39 @@ namespace CloudNative.CloudEvents.UnitTests
     {
         const string jsonDistTrace =
            "{\n" +
-           "    \"specversion\" : \"0.2\",\n" +
+           "    \"specversion\" : \"0.3\",\n" +
            "    \"type\" : \"com.github.pull.create\",\n" +
            "    \"source\" : \"https://github.com/cloudevents/spec/pull/123\",\n" +
            "    \"id\" : \"A234-1234-1234\",\n" +
            "    \"time\" : \"2018-04-05T17:31:00Z\",\n" +
            "    \"traceparent\" : \"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\",\n" +
            "    \"tracestate\" : \"rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4=\",\n" +
-           "    \"contenttype\" : \"text/plain\",\n" +
+           "    \"datacontenttype\" : \"text/plain\",\n" +
            "    \"data\" : \"test\"\n" +
            "}";
 
         const string jsonSequence =
             "{\n" +
-            "    \"specversion\" : \"0.2\",\n" +
+            "    \"specversion\" : \"0.3\",\n" +
             "    \"type\" : \"com.github.pull.create\",\n" +
             "    \"source\" : \"https://github.com/cloudevents/spec/pull/123\",\n" +
             "    \"id\" : \"A234-1234-1234\",\n" +
             "    \"time\" : \"2018-04-05T17:31:00Z\",\n" +
             "    \"sequencetype\" : \"Integer\",\n" +
             "    \"sequence\" : \"25\",\n" +
-            "    \"contenttype\" : \"text/plain\",\n" +
+            "    \"datacontenttype\" : \"text/plain\",\n" +
             "    \"data\" : \"test\"\n" +
             "}";
 
         const string jsonSampledRate =
             "{\n" +
-            "    \"specversion\" : \"0.2\",\n" +
+            "    \"specversion\" : \"0.3\",\n" +
             "    \"type\" : \"com.github.pull.create\",\n" +
             "    \"source\" : \"https://github.com/cloudevents/spec/pull/123\",\n" +
             "    \"id\" : \"A234-1234-1234\",\n" +
             "    \"time\" : \"2018-04-05T17:31:00Z\",\n" +
             "    \"sampledrate\" : \"1\",\n" +
-            "    \"contenttype\" : \"text/plain\",\n" +
+            "    \"datacontenttype\" : \"text/plain\",\n" +
             "    \"data\" : \"test\"\n" +
             "}";
 
@@ -55,7 +55,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonDistTrace), new DistributedTracingExtension());
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -74,7 +74,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out var contentType);
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, new DistributedTracingExtension());
 
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -90,7 +90,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonSequence), new SequenceExtension());
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -109,7 +109,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out var contentType);
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, new SequenceExtension());
 
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -125,7 +125,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonSequence), new IntegerSequenceExtension());
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -143,7 +143,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out var contentType);
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, new IntegerSequenceExtension());
 
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -158,7 +158,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonSampledRate), new SamplingExtension());
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
@@ -176,7 +176,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out var contentType);
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, new SamplingExtension());
 
-            Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.Default, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
