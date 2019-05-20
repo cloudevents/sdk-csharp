@@ -21,7 +21,7 @@ it as a 0.3 event.
 
 
 | 0.1  | 0.2 | 0.3 | Property name              | CLR type 
-|-----------------------|-----------------------|----------------------------|----------
+|------|-----|-----|----------------------------|----------
 | eventID | id | id | `CloudEvent.Id` | `System.String` 
 | eventType | type | type | `CloudEvent.Type` | `System.String` 
 | cloudEventsVersion | specversion | specversion | `CloudEvent.SpecVersion` | `System.String` 
