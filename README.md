@@ -216,8 +216,8 @@ context.Response.StatusCode = (int)HttpStatusCode.OK;
 
 The SDK provides extensions for the [AMQPNetLite](https://github.com/Azure/amqpnetlite) package. 
 
-For AMQP support, you must reference the `CloudNative.CloudEvents.Mqtt` assembly and 
-reference the namespace in your code with `using CloudNative.CloudEvents.Mqtt`.
+For AMQP support, you must reference the `CloudNative.CloudEvents.Amqp` assembly and 
+reference the namespace in your code with `using CloudNative.CloudEvents.Amqp`.
 
 The `AmqpCloudEventMessage` extends the `AMQPNetLite.Message` class. The constructor
 allows creating a new AMQP message that holds a CloudEvent in either structured or binary 
