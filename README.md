@@ -27,7 +27,7 @@ it as a 0.3 event.
 | cloudEventsVersion | specversion | specversion | `CloudEvent.SpecVersion` | `System.String` 
 | eventTime | time | time | `CloudEvent.Time` | `System.DateTime` 
 | source | source | source | `CloudEvent.Source` | `System.Uri` 
-| - | - | subject | `CloudEvent.Source` | `System.String` 
+| - | - | subject | `CloudEvent.Subject` | `System.String` 
 | schemaUrl | schemaurl | schemaurl | `CloudEvent.SchemaUrl` | `System.Uri`
 | contentType | contenttype | datacontenttype | `CloudEvent.ContentType` | `System.Net.Mime.ContentType` 
 | - | - | datacontentencoding | `CloudEvent.DataContentEncoding` | `System.String` | 
