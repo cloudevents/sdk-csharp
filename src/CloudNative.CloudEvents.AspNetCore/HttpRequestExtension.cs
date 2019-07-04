@@ -75,9 +75,18 @@ namespace CloudNative.CloudEvents
 
                 if (httpRequest.Headers[SpecVersionHttpHeader2] != StringValues.Empty)
                 {
-                    version = httpRequest.Headers[SpecVersionHttpHeader2] == "0.2"
-                        ? CloudEventsSpecVersion.V0_2
-                        : CloudEventsSpecVersion.Default;
+                    switch (httpRequest.Headers[SpecVersionHttpHeader2])
+                    {
+                        case "0.2":
+                            version = CloudEventsSpecVersion.V0_2;
+                            break;
+                        case "0.3":
+                            version = CloudEventsSpecVersion.V0_3;
+                            break;
+                        default:
+                            version = CloudEventsSpecVersion.Default;
+                            break;
+                    }
                 }
 
                 var cloudEvent = new CloudEvent(version, extensions);
@@ -108,7 +117,7 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                cloudEvent.ContentType = httpRequest.ContentType != null
+                cloudEvent.DataContentType = httpRequest.ContentType != null
                     ? new ContentType(httpRequest.ContentType)
                     : null;
                 cloudEvent.Data = httpRequest.Body;
