@@ -35,9 +35,15 @@ namespace CloudNative.CloudEvents
 
             var request = context.HttpContext.Request;
 
-            var cloudEvent = request.ToCloudEvent(new JsonEventFormatter());
-
-            return InputFormatterResult.SuccessAsync(cloudEvent);
+            try
+            {
+                var cloudEvent = request.ToCloudEvent();
+                return InputFormatterResult.SuccessAsync(cloudEvent);
+            }
+            catch (Exception)
+            {
+                return InputFormatterResult.FailureAsync();
+            }
         }
 
         protected override bool CanReadType(Type type)
