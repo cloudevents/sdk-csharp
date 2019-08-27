@@ -126,6 +126,9 @@
   <data name="ErrorIdValueIsNotAString" xml:space="preserve">
     <value>The 'id' attribute value must be a string</value>
   </data>
+  <data name="ErrorPartitioningKeyValueIsaNotAString" xml:space="preserve">
+    <value>The 'key' attribute value must be a string</value>
+  </data>
   <data name="ErrorSampledRateValueIsaNotAnInteger" xml:space="preserve">
     <value>The 'sampledrate' attribute value must be an integer</value>
   </data>

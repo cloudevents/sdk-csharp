@@ -214,7 +214,13 @@ namespace CloudNative.CloudEvents
         /// <returns>Extension instance if registered</returns>
         public T Extension<T>()
         {
-            return (T)Extensions[typeof(T)];
+            var key = typeof(T);
+            if (Extensions.TryGetValue(key, out var extension))
+            {
+                return (T)extension;
+            }
+
+            return default(T);
         }
 
         /// <summary>
