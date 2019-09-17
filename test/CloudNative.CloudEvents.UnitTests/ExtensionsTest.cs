@@ -50,6 +50,19 @@ namespace CloudNative.CloudEvents.UnitTests
             "    \"data\" : \"test\"\n" +
             "}";
 
+
+        const string jsonPartitioningKey =
+            "{\n" +
+            "    \"specversion\" : \"0.3\",\n" +
+            "    \"type\" : \"com.github.pull.create\",\n" +
+            "    \"source\" : \"https://github.com/cloudevents/spec/pull/123\",\n" +
+            "    \"id\" : \"A234-1234-1234\",\n" +
+            "    \"time\" : \"2018-04-05T17:31:00Z\",\n" +
+            "    \"partitionkey\" : \"1\",\n" +
+            "    \"datacontenttype\" : \"text/plain\",\n" +
+            "    \"data\" : \"test\"\n" +
+            "}";
+
         [Fact]
         public void DistTraceParse()
         {
@@ -184,6 +197,26 @@ namespace CloudNative.CloudEvents.UnitTests
                 cloudEvent.Time.Value.ToUniversalTime());
 
             Assert.Equal(1, cloudEvent.Extension<SamplingExtension>().SampledRate.Value);
+        }
+
+        [Fact]
+        public void PartitioningParse()
+        {
+            var jsonFormatter = new JsonEventFormatter();
+            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonPartitioningKey), new PartitioningExtension());
+
+            Assert.Equal("1", cloudEvent.Extension<PartitioningExtension>().PartitioningKeyValue);
+        }
+
+        [Fact]
+        public void PartitioningJsonTranscode()
+        {
+            var jsonFormatter = new JsonEventFormatter();
+            var cloudEvent1 = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonPartitioningKey));
+            var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out var contentType);
+            var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, new PartitioningExtension());
+
+            Assert.Equal("1", cloudEvent.Extension<PartitioningExtension>().PartitioningKeyValue);
         }
     }
 }

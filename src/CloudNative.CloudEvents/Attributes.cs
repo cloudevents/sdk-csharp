@@ -6,3 +6,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("CloudNative.CloudEvents.Amqp")]
 [assembly: InternalsVisibleTo("CloudNative.CloudEvents.Mqtt")]
+[assembly: InternalsVisibleTo("CloudNative.CloudEvents.Kafka")]
