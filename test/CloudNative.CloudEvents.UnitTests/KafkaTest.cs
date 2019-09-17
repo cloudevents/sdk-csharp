@@ -27,7 +27,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var jsonEventFormatter = new JsonEventFormatter();
 
-            var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V0_3,
+            var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V1_0,
                 "com.github.pull.create",
                 source: new Uri("https://github.com/cloudevents/spec/pull"),
                 subject: "123")
@@ -40,8 +40,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
-
+       
             var message = new KafkaCloudEventMessage(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
 
             Assert.True(message.IsCloudEvent());
@@ -66,7 +65,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attr = receivedCloudEvent.GetAttributes();
             Assert.Equal("value", (string)attr["comexampleextension1"]);
-            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
         }
 
         [Fact]
@@ -89,7 +87,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
             cloudEvent.Extension<PartitioningExtension>().PartitioningKeyValue = "hello much wow";
 
             var message = new KafkaCloudEventMessage(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
@@ -115,7 +112,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attr = receivedCloudEvent.GetAttributes();
             Assert.Equal("value", (string)attr["comexampleextension1"]);
-            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
         }
 
         private class HeadersConverter : JsonConverter
