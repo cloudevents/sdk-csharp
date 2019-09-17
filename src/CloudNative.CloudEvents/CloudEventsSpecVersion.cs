@@ -9,6 +9,7 @@ namespace CloudNative.CloudEvents
         V0_1,
         V0_2,
         V0_3,
-        Default = V0_3
+        V1_0,
+        Default = V1_0
     }
 }

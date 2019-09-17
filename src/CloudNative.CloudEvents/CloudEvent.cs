@@ -88,28 +88,11 @@ namespace CloudNative.CloudEvents
         /// This attribute enables the data attribute to carry any type of content, whereby
         /// format and encoding might differ from that of the chosen event format.
         /// </summary>
-        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#datacontenttype"/>
+        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#contenttype"/>
         public ContentType DataContentType
         {
             get => attributes[CloudEventAttributes.DataContentTypeAttributeName(attributes.SpecVersion)] as ContentType;
             set => attributes[CloudEventAttributes.DataContentTypeAttributeName(attributes.SpecVersion)] = value;
-        }
-
-        /// <summary>
-        /// CloudEvent 'datacontentencoding' attribute.
-        /// </summary>
-        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#datacontentencoding"/>
-        public string DataContentEncoding
-        {
-            get => attributes[CloudEventAttributes.DataContentEncodingAttributeName(attributes.SpecVersion)] as string;
-            set => attributes[CloudEventAttributes.DataContentEncodingAttributeName(attributes.SpecVersion)] = value;
-        }
-
-        [Obsolete("Cloud events 0.1 and 0.2 name replaced by 'DataContentType1'. Will be removed in an upcoming release.")]
-        public ContentType ContentType
-        {
-            get => DataContentType;
-            set => DataContentType = value;
         }
 
         /// <summary>
@@ -146,20 +129,10 @@ namespace CloudNative.CloudEvents
         /// different URL.
         /// </summary>
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#schemaurl"/>
-        public Uri SchemaUrl
+        public Uri DataSchema
         {
-            get => attributes[CloudEventAttributes.SchemaUrlAttributeName(attributes.SpecVersion)] as Uri;
-            set => attributes[CloudEventAttributes.SchemaUrlAttributeName(attributes.SpecVersion)] = value;
-        }
-
-        /// <summary>
-        /// CloudEvents 'subject' attribute. 
-        /// </summary>
-        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#subject"/>
-        public string Subject
-        {
-            get => attributes[CloudEventAttributes.SubjectAttributeName(attributes.SpecVersion)] as string;
-            set => attributes[CloudEventAttributes.SubjectAttributeName(attributes.SpecVersion)] = value;
+            get => attributes[CloudEventAttributes.DataSchemaAttributeName(attributes.SpecVersion)] as Uri;
+            set => attributes[CloudEventAttributes.DataSchemaAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>
@@ -184,6 +157,20 @@ namespace CloudNative.CloudEvents
         {
             get => attributes.SpecVersion;
             set => attributes.SpecVersion = value;
+        }
+
+        /// <summary>
+        /// CloudEvents 'subject' attribute. This describes the subject of the event in the context
+        /// of the event producer (identified by source). In publish-subscribe scenarios, a subscriber
+        /// will typically subscribe to events emitted by a source, but the source identifier alone
+        /// might not be sufficient as a qualifier for any specific event if the source context has
+        /// internal sub-structure.
+        /// </summary>
+        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#subject"/>
+        public string Subject
+        {
+            get => attributes[CloudEventAttributes.SubjectAttributeName(attributes.SpecVersion)] as string;
+            set => attributes[CloudEventAttributes.SubjectAttributeName(attributes.SpecVersion)] = value;
         }
 
         /// <summary>

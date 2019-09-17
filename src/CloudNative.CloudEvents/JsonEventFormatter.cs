@@ -5,8 +5,10 @@
 namespace CloudNative.CloudEvents
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Net.Mime;
     using System.Text;
     using Newtonsoft.Json;
@@ -68,11 +70,22 @@ namespace CloudNative.CloudEvents
             var attributes = cloudEvent.GetAttributes();
             foreach (var keyValuePair in jObject)
             {
-                if (keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1)) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_3)))
+                // skip the version since we set that above
+                if (keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), StringComparison.InvariantCultureIgnoreCase) ||
+                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), StringComparison.InvariantCultureIgnoreCase) ||
+                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V1_0), StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
+                }
+
+                if (specVersion == CloudEventsSpecVersion.V1_0)
+                {
+                    // handle base64 encoded binaries
+                    if (keyValuePair.Key.Equals("data_base64"))
+                    {
+                        attributes["data"] = Convert.FromBase64String(keyValuePair.Value.ToString());
+                        continue;
+                    }
                 }
 
                 switch (keyValuePair.Value.Type)
@@ -121,6 +134,26 @@ namespace CloudNative.CloudEvents
                 {
                     jObject[keyValuePair.Key] = JToken.FromObject(((ContentType)keyValuePair.Value).ToString());
                 }
+                else if (cloudEvent.SpecVersion == CloudEventsSpecVersion.V1_0 &&
+                         keyValuePair.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)))
+                {
+                    if (keyValuePair.Value is Stream)
+                    {
+                        using (var sr = new BinaryReader((Stream)keyValuePair.Value))
+                        {
+                            jObject["data_base64"] = Convert.ToBase64String(sr.ReadBytes((int)sr.BaseStream.Length));
+                        }
+                    }
+                    else if (keyValuePair.Value is IEnumerable<byte>)
+                    {
+                        jObject["data_base64"] =
+                            Convert.ToBase64String(((IEnumerable<byte>)keyValuePair.Value).ToArray());
+                    }
+                    else
+                    {
+                        jObject["data"] = JToken.FromObject(keyValuePair.Value);
+                    }   
+                }
                 else
                 {
                     jObject[keyValuePair.Key] = JToken.FromObject(keyValuePair.Value);
@@ -132,7 +165,8 @@ namespace CloudNative.CloudEvents
         public object DecodeAttribute(CloudEventsSpecVersion specVersion, string name, byte[] data, IEnumerable<ICloudEventExtension> extensions = null)
         {
             if (name.Equals(CloudEventAttributes.IdAttributeName(specVersion)) ||
-                name.Equals(CloudEventAttributes.TypeAttributeName(specVersion)))
+                name.Equals(CloudEventAttributes.TypeAttributeName(specVersion)) ||
+                name.Equals(CloudEventAttributes.SubjectAttributeName(specVersion)))
             {
                 return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string));
             }
@@ -143,7 +177,7 @@ namespace CloudNative.CloudEvents
             }
 
             if (name.Equals(CloudEventAttributes.SourceAttributeName(specVersion)) ||
-                name.Equals(CloudEventAttributes.SchemaUrlAttributeName(specVersion)))
+                name.Equals(CloudEventAttributes.DataSchemaAttributeName(specVersion)))
             {
                 var uri = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string)) as string;
                 return new Uri(uri);

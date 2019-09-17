@@ -53,7 +53,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
 
              var client = new MqttFactory().CreateMqttClient();
 
@@ -85,7 +84,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attr = receivedCloudEvent.GetAttributes();
             Assert.Equal("value", (string)attr["comexampleextension1"]);
-            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
             
 
 
