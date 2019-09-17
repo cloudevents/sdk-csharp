@@ -77,7 +77,7 @@ namespace CloudNative.CloudEvents.Amqp
                     if (prop.Key is string &&
                         ((string)prop.Key).StartsWith(AmqpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        if (prop.Value is Map)
+                        if (cloudEvent.SpecVersion != CloudEventsSpecVersion.V1_0 && prop.Value is Map)
                         {
                             IDictionary<string, object> exp = new ExpandoObject();
                             foreach (var props in (Map)prop.Value)
@@ -96,7 +96,7 @@ namespace CloudNative.CloudEvents.Amqp
                     }
                 }
 
-                cloudEvent.ContentType = message.Properties.ContentType != null
+                cloudEvent.DataContentType = message.Properties.ContentType != null
                     ? new ContentType(message.Properties.ContentType)
                     : null;
                 cloudEvent.Data = message.Body;

@@ -133,6 +133,15 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;subject&apos; attribute value must be a string.
+        /// </summary>
+        internal static string ErrorSubjectValueIsNotAString {
+            get {
+                return ResourceManager.GetString("ErrorSubjectValueIsNotAString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The &apos;time&apos; attribute value must be a valid ISO8601 timestamp expression.
         /// </summary>
         internal static string ErrorTimeValueIsNotATimestamp {

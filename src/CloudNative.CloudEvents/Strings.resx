@@ -141,6 +141,9 @@
   <data name="ErrorSpecVersionValueIsNotAString" xml:space="preserve">
     <value>The 'specversion' attribute value must be a string</value>
   </data>
+  <data name="ErrorSubjectValueIsNotAString" xml:space="preserve">
+    <value>The 'subject' attribute value must be a string</value>
+  </data>
   <data name="ErrorTimeValueIsNotATimestamp" xml:space="preserve">
     <value>The 'time' attribute value must be a valid ISO8601 timestamp expression</value>
   </data>
