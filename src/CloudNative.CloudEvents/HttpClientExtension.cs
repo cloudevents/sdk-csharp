@@ -340,15 +340,16 @@ namespace CloudNative.CloudEvents
                     if (httpRequestHeaders.StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
                     {
                         string headerValue = httpListenerRequest.Headers[httpRequestHeaders];
-                        if (headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
-                            headerValue.StartsWith("[") && headerValue.EndsWith("]"))
+                        // maps in headers have been abolished in 1.0
+                        if (version != CloudEventsSpecVersion.V1_0 &&
+                            (headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
+                            headerValue.StartsWith("[") && headerValue.EndsWith("]")))
                         {
                             attributes[httpRequestHeaders.Substring(3)] =
                                 JsonConvert.DeserializeObject(headerValue);
                         }
                         else
                         {
-                            attributes[httpRequestHeaders.Substring(3)] = headerValue;
                             attributes[httpRequestHeaders.Substring(3)] = headerValue;
                         }
                     }
@@ -429,21 +430,22 @@ namespace CloudNative.CloudEvents
                         StringComparison.InvariantCultureIgnoreCase))
                     {
                         string headerValue = httpListenerRequest.Headers.GetValues(httpRequestHeaders.Key).First();
-                        if (headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
-                            headerValue.StartsWith("[") && headerValue.EndsWith("]"))
+                        // maps in headers have been abolished in version 1.0 
+                        if (version != CloudEventsSpecVersion.V1_0 &&
+                            (headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
+                            headerValue.StartsWith("[") && headerValue.EndsWith("]")))
                         {
                             attributes[httpRequestHeaders.Key.Substring(3)] =
                                 JsonConvert.DeserializeObject(headerValue);
                         }
                         else
                         {
-                            attributes[httpRequestHeaders.Key.Substring(3)] = headerValue;
-                            attributes[httpRequestHeaders.Key.Substring(3)] = headerValue;
+                             attributes[httpRequestHeaders.Key.Substring(3)] = headerValue;
                         }
                     }
                 }
 
-                cloudEvent.ContentType = httpListenerRequest.Content?.Headers.ContentType != null
+                cloudEvent.DataContentType = httpListenerRequest.Content?.Headers.ContentType != null
                     ? new ContentType(httpListenerRequest.Content.Headers.ContentType.MediaType)
                     : null;
                 cloudEvent.Data = httpListenerRequest.Content?.ReadAsStreamAsync().GetAwaiter().GetResult();
@@ -599,10 +601,11 @@ namespace CloudNative.CloudEvents
                         string headerValue = httpResponseHeader.Value.First();
                         var name = httpResponseHeader.Key.Substring(3);
 
-                        if (headerValue.StartsWith("\"") && headerValue.EndsWith("\"") ||
+                        // abolished structures in headers in 1.0
+                        if (version != CloudEventsSpecVersion.V1_0 && (headerValue.StartsWith("\"") && headerValue.EndsWith("\"") ||
                             headerValue.StartsWith("'") && headerValue.EndsWith("'") ||
                             headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
-                            headerValue.StartsWith("[") && headerValue.EndsWith("]"))
+                            headerValue.StartsWith("[") && headerValue.EndsWith("]")))
                         {
                             attributes[name] = jsonFormatter.DecodeAttribute(version, name,
                                 Encoding.UTF8.GetBytes(headerValue), extensions);
@@ -614,7 +617,7 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                cloudEvent.DataContentType = httpResponseMessage.Content.Headers.ContentType != null
+                cloudEvent.DataContentType = httpResponseMessage.Content?.Headers.ContentType != null
                     ? new ContentType(httpResponseMessage.Content.Headers.ContentType.ToString())
                     : null;
                 cloudEvent.Data = httpResponseMessage.Content?.ReadAsStreamAsync().GetAwaiter().GetResult();

@@ -26,9 +26,8 @@ namespace CloudNative.CloudEvents
         {
             this.extensions = extensions;
             this.specVersion = specVersion;
-            dict[SpecVersionAttributeName(specVersion)] =
-                specVersion == CloudEventsSpecVersion.V0_1 ? "0.1" :
-                specVersion == CloudEventsSpecVersion.V0_2 ? "0.2" : "0.3";
+            dict[SpecVersionAttributeName(specVersion)] = (specVersion == CloudEventsSpecVersion.V0_1 ? "0.1" :
+                (specVersion == CloudEventsSpecVersion.V0_2 ? "0.2" : "1.0"));
         }
 
         int ICollection<KeyValuePair<string, object>>.Count => dict.Count;
@@ -46,17 +45,21 @@ namespace CloudNative.CloudEvents
                 object val;
                 if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), out val) ||
                     dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val) ||
-                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_3), out val))
+                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V1_0), out val))
                 {
-                    return (val as string) == "0.1" ? CloudEventsSpecVersion.V0_1 :
-                        (val as string) == "0.2" ? CloudEventsSpecVersion.V0_2 :
-                        CloudEventsSpecVersion.V0_3;
+                    return (val as string) == "0.1" ? CloudEventsSpecVersion.V0_1 : 
+                           (val as string) == "0.2" ? CloudEventsSpecVersion.V0_2 : CloudEventsSpecVersion.V1_0;
+
                 }
 
                 return CloudEventsSpecVersion.Default;
             }
             set
             {
+                // this setter sets the version and initiates a transform to the new target version if
+                // required. The transformation may fail under some circumstances where CloudEvents 
+                // versions are in mutual conflict
+
                 var currentSpecVersion = SpecVersion;
                 object val;
                 if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), out val))
@@ -66,42 +69,33 @@ namespace CloudNative.CloudEvents
                         return;
                     }
                 }
-                else if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val))
+                else if ( dict.TryGetValue(SpecVersionAttributeName(), out val)) // 0.2 and 1.0 are the same
                 {
                     if (value == CloudEventsSpecVersion.V0_2 && (val as string) == "0.2")
                     {
                         return;
                     }
-                }
-                else if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_3), out val))
-                {
-                    if (value == CloudEventsSpecVersion.V0_3 && (val as string) == "0.3")
+                    if (value == CloudEventsSpecVersion.V1_0 && (val as string) == "1.0")
                     {
                         return;
                     }
-                }
+                }                                                                      
 
                 // transform to new version
                 var copy = new Dictionary<string, object>(dict);
                 dict.Clear();
-
-                dict[SpecVersionAttributeName(value)] =
-                    value == CloudEventsSpecVersion.V0_1 ? "0.1" :
-                    value == CloudEventsSpecVersion.V0_2 ? "0.2" : "0.3";
+                this[SpecVersionAttributeName(value)] = value == CloudEventsSpecVersion.V0_1 ? "0.1" : (value == CloudEventsSpecVersion.V0_2 ? "0.2" : "1.0");
                 foreach (var kv in copy)
                 {
                     if (SpecVersionAttributeName(CloudEventsSpecVersion.V0_2).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
-                        SpecVersionAttributeName(CloudEventsSpecVersion.V0_1).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))  
+                        SpecVersionAttributeName(CloudEventsSpecVersion.V0_1).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
+                        SpecVersionAttributeName(CloudEventsSpecVersion.V1_0).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))  
                     {
                         continue;
                     }
-                    if (DataContentTypeAttributeName(currentSpecVersion).Equals(kv.Key))
+                    if (DataContentTypeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[DataContentTypeAttributeName(value)] = kv.Value;
-                    }
-                    if (DataContentEncodingAttributeName(currentSpecVersion).Equals(kv.Key))
-                    {
-                        dict[DataContentEncodingAttributeName(value)] = kv.Value;
+                        this[DataContentTypeAttributeName(value)] = kv.Value;
                     }
                     else if (DataAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -111,19 +105,19 @@ namespace CloudNative.CloudEvents
                     {
                         this[IdAttributeName(value)] = kv.Value;
                     }
-                    else if (SchemaUrlAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
+                    else if (DataSchemaAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        this[SchemaUrlAttributeName(value)] = kv.Value;
+                        this[DataSchemaAttributeName(value)] = kv.Value;
                     }
                     else if (SourceAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
                         this[SourceAttributeName(value)] = kv.Value;
                     }
-                    else if (SubjectAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (SubjectAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        dict[SubjectAttributeName(value)] = kv.Value;
+                        this[SubjectAttributeName(value)] = kv.Value;
                     }
-                    else if (TimeAttributeName(currentSpecVersion).Equals(kv.Key))
+                    else if (TimeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
                     {
                         this[TimeAttributeName(value)] = kv.Value;
                     }
@@ -158,14 +152,8 @@ namespace CloudNative.CloudEvents
 
         public static string DataContentTypeAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
-            return version == CloudEventsSpecVersion.V0_1 ? "contentType" : 
-                   version == CloudEventsSpecVersion.V0_2 ? "contenttype" : 
-                   "datacontenttype";
-        }
-
-        public static string DataContentEncodingAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
-        {
-            return "datacontentencoding";
+            return version == CloudEventsSpecVersion.V0_1 ? "contentType" :
+                (version == CloudEventsSpecVersion.V0_2 ? "contenttype" : "datacontenttype");
         }
 
         public static string DataAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
@@ -178,9 +166,10 @@ namespace CloudNative.CloudEvents
             return version == CloudEventsSpecVersion.V0_1 ? "eventID" : "id";
         }
 
-        public static string SchemaUrlAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
+        public static string DataSchemaAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
-            return version == CloudEventsSpecVersion.V0_1 ? "schemaUrl" : "schemaurl";
+            return version == CloudEventsSpecVersion.V0_1 ? "schemaUrl" : 
+                   (version == CloudEventsSpecVersion.V0_2 ? "schemaurl" : "dataschema");
         }
 
         public static string SourceAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
@@ -196,6 +185,11 @@ namespace CloudNative.CloudEvents
         public static string SpecVersionAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
             return version == CloudEventsSpecVersion.V0_1 ? "cloudEventsVersion" : "specversion";
+        }
+
+        public static string SubjectAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
+        {
+            return "subject";
         }
 
         public static string TimeAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
@@ -332,16 +326,16 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
             }
-            else if (key.Equals(SubjectAttributeName(this.SpecVersion)))
+            else if (key.Equals(SubjectAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
-                if (value is null || value is string)
+                if (value is string)
                 {
                     return true;
                 }
 
-                throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
+                throw new InvalidOperationException(Strings.ErrorSubjectValueIsNotAString);
             }
-            else if (key.Equals(SchemaUrlAttributeName(this.SpecVersion)))
+            else if (key.Equals(DataSchemaAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is null || value is Uri)
                 {
@@ -359,7 +353,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorSchemaUrlIsNotAUri);
             }
-            else if (key.Equals(DataContentTypeAttributeName(this.SpecVersion)))
+            else if (key.Equals(DataContentTypeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 if (value is null || value is ContentType)
                 {
@@ -381,15 +375,7 @@ namespace CloudNative.CloudEvents
 
                 throw new InvalidOperationException(Strings.ErrorContentTypeIsNotRFC2046);
             }
-            else if (key.Equals(DataContentEncodingAttributeName(this.SpecVersion)))
-            {
-                if (value is null || value is string)
-                {
-                    return true;
-                }
-                throw new InvalidOperationException(Strings.ErrorDataContentEncodingIsNotAString);
-            }
-            else if (key.Equals(DataAttributeName(this.SpecVersion)))
+            else if (key.Equals(DataAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
                 return true;
             }

@@ -33,8 +33,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
-
+            
             var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
@@ -55,7 +54,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attr = receivedCloudEvent.GetAttributes();
             Assert.Equal("value", (string)attr["comexampleextension1"]);
-            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
         }
 
         [Fact]
@@ -77,8 +75,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
-
+            
             var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
@@ -98,7 +95,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attr = receivedCloudEvent.GetAttributes();
             Assert.Equal("value", (string)attr["comexampleextension1"]);
-            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
+            
         }
     }
 }

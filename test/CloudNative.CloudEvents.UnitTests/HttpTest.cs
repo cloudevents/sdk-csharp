@@ -103,8 +103,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var attrs = cloudEvent.GetAttributes();
                     attrs["comexampleextension1"] = "value";
-                    attrs["comexampleextension2"] = new { othervalue = 5 };
-
+ 
                     await context.Response.CopyFromAsync(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                 }
@@ -127,7 +126,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
             var receivedCloudEvent = result.ToCloudEvent();
 
-            Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -141,7 +140,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attr = receivedCloudEvent.GetAttributes();
             Assert.Equal("value", (string)attr["comexampleextension1"]);
-            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
         }
 
         [Fact]
@@ -158,8 +156,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
-
+  
             string ctx = Guid.NewGuid().ToString();
             var content = new CloudEventContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
             content.Headers.Add(testContextHeader, ctx);
@@ -172,7 +169,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+                    Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
                     Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
                     Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
                     Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -187,7 +184,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var attr = receivedCloudEvent.GetAttributes();
                     Assert.Equal("value", (string)attr["comexampleextension1"]);
-                    Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
                     context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                 }
                 catch (Exception e)
@@ -229,8 +225,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var attrs = cloudEvent.GetAttributes();
                     attrs["comexampleextension1"] = "value";
-                    attrs["comexampleextension2"] = new { othervalue = 5 };
-
+    
                     await context.Response.CopyFromAsync(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                 }
@@ -254,7 +249,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.True(result.IsCloudEvent());
             var receivedCloudEvent = result.ToCloudEvent();
 
-            Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+            Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -265,7 +260,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attr = receivedCloudEvent.GetAttributes();
             Assert.Equal("value", (string)attr["comexampleextension1"]);
-            Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
         }
 
         [Fact]
@@ -282,8 +276,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
-
+        
             string ctx = Guid.NewGuid().ToString();
             var content = new CloudEventContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
             content.Headers.Add(testContextHeader, ctx);
@@ -294,7 +287,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 {
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+                    Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
                     Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
                     Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
                     Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -305,7 +298,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var attr = receivedCloudEvent.GetAttributes();
                     Assert.Equal("value", (string)attr["comexampleextension1"]);
-                    Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
                     context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                 }
                 catch (Exception e)
@@ -342,8 +334,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-            attrs["comexampleextension2"] = new { othervalue = 5 };
-
+            
             string ctx = Guid.NewGuid().ToString();
             HttpWebRequest httpWebRequest = WebRequest.CreateHttp(listenerAddress + "ep");
             httpWebRequest.Method = "POST";
@@ -356,7 +347,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 {
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+                    Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
                     Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
                     Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
                     Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
@@ -367,7 +358,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var attr = receivedCloudEvent.GetAttributes();
                     Assert.Equal("value", (string)attr["comexampleextension1"]);
-                    Assert.Equal(5, (int)((dynamic)attr["comexampleextension2"]).othervalue);
                     context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                 }
                 catch (Exception e)
