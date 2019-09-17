@@ -27,7 +27,7 @@ namespace CloudNative.CloudEvents
             this.extensions = extensions;
             this.specVersion = specVersion;
             dict[SpecVersionAttributeName(specVersion)] = (specVersion == CloudEventsSpecVersion.V0_1 ? "0.1" :
-                (specVersion == CloudEventsSpecVersion.V0_2 ? "0.2" : "1.0"));
+                (specVersion == CloudEventsSpecVersion.V0_2 ? "0.2" : (specVersion == CloudEventsSpecVersion.V0_3 ? "0.3" : "1.0")));
         }
 
         int ICollection<KeyValuePair<string, object>>.Count => dict.Count;
@@ -45,10 +45,12 @@ namespace CloudNative.CloudEvents
                 object val;
                 if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), out val) ||
                     dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val) ||
+                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_3), out val) ||
                     dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V1_0), out val))
                 {
                     return (val as string) == "0.1" ? CloudEventsSpecVersion.V0_1 : 
-                           (val as string) == "0.2" ? CloudEventsSpecVersion.V0_2 : CloudEventsSpecVersion.V1_0;
+                           (val as string) == "0.2" ? CloudEventsSpecVersion.V0_2 :
+                           (val as string) == "0.3" ? CloudEventsSpecVersion.V0_3 : CloudEventsSpecVersion.V1_0;
 
                 }
 
@@ -69,25 +71,24 @@ namespace CloudNative.CloudEvents
                         return;
                     }
                 }
-                else if ( dict.TryGetValue(SpecVersionAttributeName(), out val)) // 0.2 and 1.0 are the same
+                else if ( dict.TryGetValue(SpecVersionAttributeName(), out val)) // 0.2, 0.3 and 1.0 are the same
                 {
-                    if (value == CloudEventsSpecVersion.V0_2 && (val as string) == "0.2")
+                    if ((value == CloudEventsSpecVersion.V0_2 && (val as string) == "0.2") ||
+                        (value == CloudEventsSpecVersion.V0_3 && (val as string) == "0.3") ||
+                        (value == CloudEventsSpecVersion.V1_0 && (val as string) == "1.0"))
                     {
                         return;
-                    }
-                    if (value == CloudEventsSpecVersion.V1_0 && (val as string) == "1.0")
-                    {
-                        return;
-                    }
+                    }                                        
                 }                                                                      
 
                 // transform to new version
                 var copy = new Dictionary<string, object>(dict);
                 dict.Clear();
-                this[SpecVersionAttributeName(value)] = value == CloudEventsSpecVersion.V0_1 ? "0.1" : (value == CloudEventsSpecVersion.V0_2 ? "0.2" : "1.0");
+                this[SpecVersionAttributeName(value)] = value == CloudEventsSpecVersion.V0_1 ? "0.1" : (value == CloudEventsSpecVersion.V0_2 ? "0.2" : (value == CloudEventsSpecVersion.V0_3 ? "0.3" : "1.0"));
                 foreach (var kv in copy)
                 {
                     if (SpecVersionAttributeName(CloudEventsSpecVersion.V0_2).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
+                        SpecVersionAttributeName(CloudEventsSpecVersion.V0_3).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
                         SpecVersionAttributeName(CloudEventsSpecVersion.V0_1).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
                         SpecVersionAttributeName(CloudEventsSpecVersion.V1_0).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))  
                     {
@@ -169,17 +170,12 @@ namespace CloudNative.CloudEvents
         public static string DataSchemaAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
             return version == CloudEventsSpecVersion.V0_1 ? "schemaUrl" : 
-                   (version == CloudEventsSpecVersion.V0_2 ? "schemaurl" : "dataschema");
+                   (version == CloudEventsSpecVersion.V0_2 || version == CloudEventsSpecVersion.V0_3 ? "schemaurl" : "dataschema");
         }
 
         public static string SourceAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
             return "source";
-        }
-
-        public static string SubjectAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
-        {
-            return "subject";
         }
 
         public static string SpecVersionAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)

@@ -20,7 +20,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
 
             var jsonEventFormatter = new JsonEventFormatter();
-            var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V0_3,
+            var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V1_0,
                 "com.github.pull.create",
                 source: new Uri("https://github.com/cloudevents/spec/pull"),
                 subject: "123")
