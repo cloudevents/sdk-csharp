@@ -47,7 +47,7 @@ CLR type. The following types have special handling:
 Any other data type is transformed using the given event formatter for the operation
 or the JSON formatter by default before being added to the transport payload body.
 
-All extension attributes can reached via the `CloudEvent.GetAttributes()` method,
+All extension attributes can be reached via the `CloudEvent.GetAttributes()` method,
 which returns the internal attribute collection. The internal collection performs 
 all required validations.
 
@@ -57,19 +57,19 @@ If a CloudEvents-prefixed transport header, like an HTTP header, is `string` typ
 ## Extensions
 
 CloudEvent extensions are represented by implementations of the `ICloudEventExtension` 
-interface. The SDK includes strongly typed implementations for all offical CloudEvents
+interface. The SDK includes strongly-typed implementations for all offical CloudEvents
 extensions:
 
 * `DistributedTracingExtension` for [distributed tracing](https://github.com/cloudevents/spec/blob/master/extensions/distributed-tracing.md)
 * `SampledRateExtension` for [sampled rate](https://github.com/cloudevents/spec/blob/master/extensions/sampled-rate.md)
 * `SequenceExtension` for [sequence](https://github.com/cloudevents/spec/blob/master/extensions/sequence.md)
 
-Extension classes provides type-safe access to the extension attributes, and implement the 
-required validations as well as type mappings. An extension object is always created as an 
+Extension classes provide type-safe access to the extension attributes as well as implement the 
+required validations and type mappings. An extension object is always created as an 
 independent entity and is then attached to a `CloudEvent` instance. Once attached, the 
 extension object's attributes are merged into the `CloudEvent` instance.
 
-This snippet shows how to create a `CloudEvent` with an extensions: 
+This snippet shows how to create a `CloudEvent` with an extension: 
 
 ``` C#
  var cloudEvent = new CloudEvent(
@@ -93,11 +93,11 @@ The extension can later be accessed via the `Extension<T>()` method:
 ```
 
 All APIs where a `CloudEvent` is constructed from an incoming event (or request or 
-response), allow for extension instances to be added to the respective methods, and
-the extensions are invoked in the mapping process, for instance to extract information
-from headers that deviate from the CloudEvents default mapping.   
+response) allow for extension instances to be added via their respective methods, and
+the extensions are invoked in the mapping process (for instance, to extract information
+from headers that deviate from the CloudEvents default mapping).   
 
-For instance, the server-side mapping for `HttpRequestMessage` allows adding 
+For example, the server-side mapping for `HttpRequestMessage` allows adding 
 extensions like this:
 
 ``` C#
@@ -109,9 +109,9 @@ public async Task<HttpResponseMessage> Run( HttpRequestMessage req, ILogger log)
 
 ## Transport Bindings
 
-This SDK helps with mapping CloudEvents from and to messages or transport frames of 
-popular .NET clients, but without getting in the way of your application's choices of 
-whether you want to send an event via HTTP PUT or POST or how you want to handle 
+This SDK helps with mapping CloudEvents to and from messages or transport frames of 
+popular .NET clients in such a way as to be agnostic of your application's choices of 
+how you want to send an event (be it via HTTP PUT or POST) or how you want to handle 
 settlement of transfers in AMQP or MQTT. The transport binding classes and extensions 
 therefore don't wrap the send and receive operations; you still use the native 
 API of the respective library.
@@ -123,7 +123,7 @@ the [`HttpContent`](https://docs.microsoft.com/en-us/dotnet/api/system.net.http.
 abstraction to wrap payloads for sending requests that carry entity bodies. 
 
 This SDK provides a [`CloudEventContent`] class derived from `HttpContent` that can be
-created from a `CloudEvent` instance, the desired `ContentMode` and an event formatter.
+created from a `CloudEvent` instance, the desired `ContentMode`, and an event formatter.
 
 ``` C#
 
@@ -143,7 +143,7 @@ var result = (await httpClient.PostAsync(this.Url, content));
 
 For responses, `HttpClient` puts all custom headers onto the `HttpResponseMessage` rather
 than on the carried `HttpContent` instance. Therefore, if an event is retrieved with 
-`HttpClient`, for instance from a queue-like structure, the `CloudEvent` is created from
+`HttpClient` (for instance, from a queue-like structure) the `CloudEvent` is created from
 the response message object rather than the content object using the `ToCloudEvent()` 
 extension method on `HttpResponseMessage`:
 
@@ -160,7 +160,7 @@ if (HttpStatusCode.OK == result.StatusCode) {
 ### HTTP - System.Net.HttpWebRequest
 
 If your application uses the `HttpWebRequest` client, you can copy a CloudEvent into
-the request structure in structured or binary mode:
+the request payload in structured or binary mode:
 
 ``` C#
 
@@ -169,7 +169,7 @@ httpWebRequest.Method = "POST";
 await httpWebRequest.CopyFromAsync(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
 ```
  
-Mind that the `Method` property must be set to an HTTP method that allows an entity body
+Bear in mind that the `Method` property must be set to an HTTP method that allows an entity body
 to be sent, otherwise the copy operation will fail. 
 
 ### HTTP - System.Net.HttpListener (HttpRequestMessage)
