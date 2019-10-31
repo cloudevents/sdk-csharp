@@ -99,7 +99,6 @@ Global
 		{39EF4DB0-9890-4CAD-A36E-F7E25D2E72EF}.Release|x64.Build.0 = Release|Any CPU
 		{39EF4DB0-9890-4CAD-A36E-F7E25D2E72EF}.Release|x86.ActiveCfg = Release|Any CPU
 		{39EF4DB0-9890-4CAD-A36E-F7E25D2E72EF}.Release|x86.Build.0 = Release|Any CPU
-<<<<<<< HEAD
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -112,7 +111,6 @@ Global
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Release|x64.Build.0 = Release|Any CPU
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Release|x86.ActiveCfg = Release|Any CPU
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Release|x86.Build.0 = Release|Any CPU
-=======
 		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -125,9 +123,6 @@ Global
 		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|x64.Build.0 = Release|Any CPU
 		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|x86.ActiveCfg = Release|Any CPU
 		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|x86.Build.0 = Release|Any CPU
-<<<<<<< HEAD
->>>>>>> dde2c54... add support for parsing ASP.NET Core HTTP requests into CloudEvents
-=======
 		{9760D744-D1BF-40E3-BD6F-7F639BFB9188}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9760D744-D1BF-40E3-BD6F-7F639BFB9188}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9760D744-D1BF-40E3-BD6F-7F639BFB9188}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -152,7 +147,6 @@ Global
 		{9639E4FD-0438-4901-B57F-EFF773B19D5A}.Release|x64.Build.0 = Release|Any CPU
 		{9639E4FD-0438-4901-B57F-EFF773B19D5A}.Release|x86.ActiveCfg = Release|Any CPU
 		{9639E4FD-0438-4901-B57F-EFF773B19D5A}.Release|x86.Build.0 = Release|Any CPU
->>>>>>> 66259c5... Added sample along with some integration tests
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
