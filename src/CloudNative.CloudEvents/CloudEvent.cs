@@ -69,7 +69,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="specVersion">CloudEvents specification version</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
-        internal CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<ICloudEventExtension> extensions)
+        public CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<ICloudEventExtension> extensions)
         {
             attributes = new CloudEventAttributes(specVersion, extensions);
             this.Extensions = new Dictionary<Type, ICloudEventExtension>();
