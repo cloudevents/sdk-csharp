@@ -1,5 +1,5 @@
 # main branch
-version: 0.9.{build}
+version: 1.0.{build}
 clone_depth: 15
 
 branches:
