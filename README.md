@@ -30,7 +30,7 @@ for you.
 | **time**            | `CloudEvent.Time`        | `System.DateTime`             |
 | **source**          | `CloudEvent.Source`      | `System.Uri`                  |
 | **subject**         | `CloudEvent.Subject`     | `System.String`               |
-| **schema**          | `CloudEvent.SchemaUrl`   | `System.Uri`                  |
+| **dataschema**      | `CloudEvent.DataSchema`  | `System.Uri`                  |
 | **datacontenttype** | `CloudEvent.ContentType` | `System.Net.Mime.ContentType` |
 | **data**            | `CloudEvent.Data`        | `System.Object`               |
 
