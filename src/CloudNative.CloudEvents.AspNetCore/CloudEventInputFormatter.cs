@@ -21,7 +21,7 @@ namespace CloudNative.CloudEvents
             SupportedEncodings.Add(Encoding.Unicode);
         }
 
-        public override Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context, Encoding encoding)
+        public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context, Encoding encoding)
         {
             if (context == null)
             {
@@ -37,12 +37,12 @@ namespace CloudNative.CloudEvents
 
             try
             {
-                var cloudEvent = request.ToCloudEvent();
-                return InputFormatterResult.SuccessAsync(cloudEvent);
+                var cloudEvent = await request.ReadCloudEventAsync();
+                return await InputFormatterResult.SuccessAsync(cloudEvent);
             }
             catch (Exception)
             {
-                return InputFormatterResult.FailureAsync();
+                return await InputFormatterResult.FailureAsync();
             }
         }
 

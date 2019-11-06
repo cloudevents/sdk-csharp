@@ -9,6 +9,7 @@ namespace CloudNative.CloudEvents
     using Newtonsoft.Json;
     using System;
     using System.Net.Mime;
+    using System.Threading.Tasks;
 
     public static class HttpRequestExtension
     {
@@ -26,10 +27,10 @@ namespace CloudNative.CloudEvents
         /// <param name="httpRequest">HTTP request</param>
         /// <param name="extensions">List of extension instances</param>
         /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
-        public static CloudEvent ToCloudEvent(this HttpRequest httpRequest,
+        public static ValueTask<CloudEvent> ReadCloudEventAsync(this HttpRequest httpRequest,
             params ICloudEventExtension[] extensions)
         {
-            return ToCloudEvent(httpRequest, null, extensions);
+            return ReadCloudEventAsync(httpRequest, null, extensions);
         }
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace CloudNative.CloudEvents
         /// <param name="formatter"></param>
         /// <param name="extensions">List of extension instances</param>
         /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
-        public static CloudEvent ToCloudEvent(this HttpRequest httpRequest,
+        public static async ValueTask<CloudEvent> ReadCloudEventAsync(this HttpRequest httpRequest,
             ICloudEventFormatter formatter = null,
             params ICloudEventExtension[] extensions)
         {
@@ -63,7 +64,7 @@ namespace CloudNative.CloudEvents
                     }
                 }
 
-                return formatter.DecodeStructuredEvent(httpRequest.Body, extensions);
+                return await formatter.DecodeStructuredEventAsync(httpRequest.Body, extensions);
             }
             else
             {
@@ -103,7 +104,9 @@ namespace CloudNative.CloudEvents
                     if (httpRequestHeader.StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
                     {
                         string headerValue = httpRequest.Headers[httpRequestHeader];
-                        if (headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
+                        // maps in headers have been abolished in 1.0
+                        if (version != CloudEventsSpecVersion.V1_0 &&
+                            headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
                             headerValue.StartsWith("[") && headerValue.EndsWith("]"))
                         {
                             attributes[httpRequestHeader.Substring(3)] =
@@ -111,7 +114,6 @@ namespace CloudNative.CloudEvents
                         }
                         else
                         {
-                            attributes[httpRequestHeader.Substring(3)] = headerValue;
                             attributes[httpRequestHeader.Substring(3)] = headerValue;
                         }
                     }
@@ -124,6 +126,5 @@ namespace CloudNative.CloudEvents
                 return cloudEvent;
             }
         }
-
     }
 }
