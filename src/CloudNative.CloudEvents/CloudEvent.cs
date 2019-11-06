@@ -124,11 +124,11 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// CloudEvents 'schemaurl' attribute. A link to the schema that the data attribute
+        /// CloudEvents 'dataschema' attribute. A link to the schema that the data attribute
         /// adheres to. Incompatible changes to the schema SHOULD be reflected by a
-        /// different URL.
+        /// different URI.
         /// </summary>
-        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#schemaurl"/>
+        /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#dataschema"/>
         public Uri DataSchema
         {
             get => attributes[CloudEventAttributes.DataSchemaAttributeName(attributes.SpecVersion)] as Uri;
