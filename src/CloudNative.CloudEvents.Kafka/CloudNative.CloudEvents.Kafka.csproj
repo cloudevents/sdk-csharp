@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageVersion>0.1</PackageVersion>
+    <PackageVersion>1.0</PackageVersion>
     <Description>Kafka extensions for CloudNative.CloudEvents</Description>
     <Copyright>Copyright Cloud Native Foundation</Copyright>
     <RepositoryUrl>https://github.com/cloudevents/sdk-csharp</RepositoryUrl>
