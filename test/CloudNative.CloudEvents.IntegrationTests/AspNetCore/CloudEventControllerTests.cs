@@ -24,10 +24,15 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
         public async Task Controller_WithValidCloudEvent_DeserializesUsingPipeline()
         {
             // Arrange
+            var expectedExtensionKey = "comexampleextension1";
+            var expectedExtensionValue = Guid.NewGuid().ToString();
             var cloudEvent = new CloudEvent("test-type", new Uri("urn:integration-tests"))
             {
                 Id = Guid.NewGuid().ToString(),
             };
+            var attrs = cloudEvent.GetAttributes();
+            attrs[expectedExtensionKey] = expectedExtensionValue;
+
             var content = new CloudEventContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
 
             // Act
@@ -36,6 +41,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
             // Assert
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
             Assert.Contains(cloudEvent.Id, await result.Content.ReadAsStringAsync());
+            Assert.Contains($"\"{expectedExtensionKey}\":\"{expectedExtensionValue}\"", await result.Content.ReadAsStringAsync());
         }
     }
 }

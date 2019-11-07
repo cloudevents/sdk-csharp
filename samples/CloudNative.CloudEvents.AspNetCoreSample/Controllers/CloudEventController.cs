@@ -7,6 +7,7 @@ namespace CloudNative.CloudEvents.AspNetCoreSample.Controllers
     using System.Collections.Generic;
     using CloudNative.CloudEvents;
     using Microsoft.AspNetCore.Mvc;
+    using Newtonsoft.Json;
 
     [Route("api/events")]
     [ApiController]
@@ -15,7 +16,7 @@ namespace CloudNative.CloudEvents.AspNetCoreSample.Controllers
         [HttpPost("receive")]
         public ActionResult<IEnumerable<string>> ReceiveCloudEvent([FromBody] CloudEvent cloudEvent)
         {
-            return Ok($"Received event with ID {cloudEvent.Id}");
+            return Ok($"Received event with ID {cloudEvent.Id}, attributes: {JsonConvert.SerializeObject(cloudEvent.GetAttributes())}");
         }
     }
 }
