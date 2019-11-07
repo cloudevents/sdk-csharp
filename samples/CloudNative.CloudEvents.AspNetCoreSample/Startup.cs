@@ -25,7 +25,7 @@ namespace CloudNative.CloudEvents.AspNetCoreSample
         {
             services.AddControllers(opts =>
             {
-                opts.InputFormatters.Insert(0, new CloudEventInputFormatter());
+                opts.InputFormatters.Insert(0, new CloudEventJsonInputFormatter());
             });
         }
 

@@ -10,9 +10,9 @@ namespace CloudNative.CloudEvents
     using Microsoft.AspNetCore.Mvc.Formatters;
     using Microsoft.Net.Http.Headers;
 
-    public class CloudEventInputFormatter : TextInputFormatter
+    public class CloudEventJsonInputFormatter : TextInputFormatter
     {
-        public CloudEventInputFormatter()
+        public CloudEventJsonInputFormatter()
         {
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/cloudevents"));

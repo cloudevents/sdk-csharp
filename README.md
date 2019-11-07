@@ -224,14 +224,14 @@ var cloudEvent = await HttpContext.Request.ReadCloudEventAsync();
 ### HTTP - ASP.NET Core MVC
 
 If you would like to deserialize CloudEvents in actions directly, you can register the
-`CloudEventInputFormatter` in the MVC options:
+`CloudEventJsonInputFormatter` in the MVC options:
 
 ```C#
 public void ConfigureServices(IServiceCollection services)
 {
     services.AddMvc(opts =>
     {
-        opts.InputFormatters.Insert(0, new CloudEventInputFormatter());
+        opts.InputFormatters.Insert(0, new CloudEventJsonInputFormatter());
     });
 }
 ```
