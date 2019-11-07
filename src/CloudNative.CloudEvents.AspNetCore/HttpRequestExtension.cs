@@ -8,7 +8,9 @@ namespace CloudNative.CloudEvents
     using Microsoft.Extensions.Primitives;
     using Newtonsoft.Json;
     using System;
+    using System.IO;
     using System.Net.Mime;
+    using System.Text;
     using System.Threading.Tasks;
 
     public static class HttpRequestExtension
@@ -122,7 +124,7 @@ namespace CloudNative.CloudEvents
                 cloudEvent.DataContentType = httpRequest.ContentType != null
                     ? new ContentType(httpRequest.ContentType)
                     : null;
-                cloudEvent.Data = httpRequest.Body;
+                cloudEvent.Data = await new StreamReader(httpRequest.Body, Encoding.UTF8).ReadToEndAsync();
                 return cloudEvent;
             }
         }
