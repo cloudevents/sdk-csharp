@@ -215,13 +215,13 @@ context.Response.StatusCode = (int)HttpStatusCode.OK;
 ### HTTP - Microsoft.AspNetCore.Http.HttpRequest
 
 On the server-side, you can extract a CloudEvent from the server-side `HttpRequest` 
-with the `ToCloudEvent()` extension.
+with the `ReadCloudEventAsync()` extension.
 
 ```C#
-var cloudEvent = HttpContext.Request.ToCloudEvent();
+var cloudEvent = await HttpContext.Request.ReadCloudEventAsync();
 ``` 
 
-### HTTP - ASP.Net Core MVC
+### HTTP - ASP.NET Core MVC
 
 If you would like to deserialize CloudEvents in actions directly, you can register the
 `CloudEventInputFormatter` in the MVC options:
