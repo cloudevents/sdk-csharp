@@ -1,6 +1,7 @@
 # main branch
 version: 0.9.{build}
 clone_depth: 15
+image: Visual Studio 2019
 
 branches:
    only:
