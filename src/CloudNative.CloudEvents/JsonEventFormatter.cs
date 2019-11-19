@@ -5,12 +5,12 @@
 namespace CloudNative.CloudEvents
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Net.Mime;
     using System.Text;
+    using System.Threading.Tasks;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
@@ -25,6 +25,13 @@ namespace CloudNative.CloudEvents
         public CloudEvent DecodeStructuredEvent(Stream data, params ICloudEventExtension[] extensions)
         {
             return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
+        }
+
+        public async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<ICloudEventExtension> extensions)
+        {
+            var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true));
+            var jObject = await JObject.LoadAsync(jsonReader);
+            return DecodeJObject(jObject, extensions);
         }
 
         public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions = null)

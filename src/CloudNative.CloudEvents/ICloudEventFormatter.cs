@@ -7,6 +7,7 @@ namespace CloudNative.CloudEvents
     using System.Collections.Generic;
     using System.IO;
     using System.Net.Mime;
+    using System.Threading.Tasks;
 
 
     /// <summary>
@@ -21,6 +22,13 @@ namespace CloudNative.CloudEvents
         /// <param name="extensions"></param>
         /// <returns></returns>
         CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions);
+        /// <summary>
+        /// Decode a structured event from a stream asynchonously
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="extensions"></param>
+        /// <returns></returns>
+        Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<ICloudEventExtension> extensions);
         /// <summary>
         /// Decode a structured event from a byte array
         /// </summary>

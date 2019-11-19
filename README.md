@@ -208,6 +208,42 @@ await context.Response.CopyFromAsync(cloudEvent,
 context.Response.StatusCode = (int)HttpStatusCode.OK;
 ```
 
+### HTTP - Microsoft.AspNetCore.Http.HttpRequest
+
+On the server-side, you can extract a CloudEvent from the server-side `HttpRequest` 
+with the `ReadCloudEventAsync()` extension.
+
+```C#
+var cloudEvent = await HttpContext.Request.ReadCloudEventAsync();
+``` 
+
+### HTTP - ASP.NET Core MVC
+
+If you would like to deserialize CloudEvents in actions directly, you can register the
+`CloudEventJsonInputFormatter` in the MVC options:
+
+```C#
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddMvc(opts =>
+    {
+        opts.InputFormatters.Insert(0, new CloudEventJsonInputFormatter());
+    });
+}
+```
+
+This formatter will only intercept parameters where CloudEvent is the expected type.
+
+You can then receive CloudEvent objects in controller actions:
+
+```C#
+[HttpPost("resource")]
+public IActionResult ReceiveCloudEvent([FromBody] CloudEvent cloudEvent)
+{
+    return Ok();
+}
+```
+
 ### AMQP
 
 The SDK provides extensions for the [AMQPNetLite](https://github.com/Azure/amqpnetlite) package.

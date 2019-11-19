@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageVersion>0.1</PackageVersion>
+    <Description>ASP.Net Core extensions for CloudNative.CloudEvents</Description>
+    <Copyright>Copyright Cloud Native Foundation</Copyright>
+    <RepositoryUrl>https://github.com/cloudevents/sdk-csharp</RepositoryUrl>
+    <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.1.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
+  </ItemGroup>
+
+</Project>
