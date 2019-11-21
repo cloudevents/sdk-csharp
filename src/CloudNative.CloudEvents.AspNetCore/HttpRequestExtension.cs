@@ -55,7 +55,8 @@ namespace CloudNative.CloudEvents
                 if (formatter == null)
                 {
                     // if we didn't get a formatter, pick one
-                    if (httpRequest.ContentType.EndsWith(JsonEventFormatter.MediaTypeSuffix,
+                    var contentType = httpRequest.ContentType.Split(';')[0].Trim();
+                    if (contentType.EndsWith(JsonEventFormatter.MediaTypeSuffix,
                         StringComparison.InvariantCultureIgnoreCase))
                     {
                         formatter = jsonFormatter;
