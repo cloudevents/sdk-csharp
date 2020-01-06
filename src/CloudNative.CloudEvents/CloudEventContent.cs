@@ -84,7 +84,7 @@ namespace CloudNative.CloudEvents
                 {
                     if (attribute.Value is string)
                     {
-                        Headers.Add("ce-" + attribute.Key, attribute.Value.ToString());
+                        Headers.Add("ce-" + attribute.Key, WebUtility.UrlEncode(attribute.Value.ToString()));
                     }
                     else if (attribute.Value is DateTime)
                     {
@@ -97,8 +97,9 @@ namespace CloudNative.CloudEvents
                     else
                     {
                         Headers.Add("ce-" + attribute.Key,
-                            Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, attribute.Key, attribute.Value,
-                                cloudEvent.Extensions.Values)));
+                            WebUtility.UrlEncode(
+                                Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, attribute.Key, attribute.Value,
+                                    cloudEvent.Extensions.Values))));
                     }
                 }
             }

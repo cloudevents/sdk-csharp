@@ -29,7 +29,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
             // Arrange
             var expectedExtensionKey = "comexampleextension1";
             var expectedExtensionValue = Guid.NewGuid().ToString();
-            var cloudEvent = new CloudEvent("test-type", new Uri("urn:integration-tests"))
+            var cloudEvent = new CloudEvent("test-type-æøå", new Uri("urn:integration-tests"))
             {
                 Id = Guid.NewGuid().ToString(),
             };
@@ -45,6 +45,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
             // Assert
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
             Assert.Contains(cloudEvent.Id, await result.Content.ReadAsStringAsync());
+            Assert.Contains(cloudEvent.Type, await result.Content.ReadAsStringAsync());
             Assert.Contains($"\"{expectedExtensionKey}\":\"{expectedExtensionValue}\"", await result.Content.ReadAsStringAsync());
         }
     }
