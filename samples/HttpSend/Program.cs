@@ -13,6 +13,8 @@ namespace HttpSend
     using McMaster.Extensions.CommandLineUtils;
     using Newtonsoft.Json;
 
+    // This application uses the McMaster.Extensions.CommandLineUtils library for parsing the command
+    // line and calling the application code. The [Option] attributes designate the parameters.
     class Program
     {
         [Option(Description = "CloudEvents 'source' (default: urn:example-com:mysource:abc)", LongName = "source",
@@ -38,6 +40,9 @@ namespace HttpSend
             var content = new CloudEventContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
 
             var httpClient = new HttpClient();
+            // your application remains in charge of adding any further headers or 
+            // other information required to authenticate/authorize or otherwise
+            // dispatch the call at the server.
             var result = (await httpClient.PostAsync(this.Url, content));
 
             Console.WriteLine(result.StatusCode);

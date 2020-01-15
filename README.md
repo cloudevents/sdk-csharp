@@ -7,6 +7,16 @@
 The `CloudNative.CloudEvents` package provides utility methods and classes for creating, encoding,
 decoding, sending, and receiving [CNCF CloudEvents](https://github.com/cloudevents/spec).
 
+## A few gotchas highlighted for the impatient who don't usually read docs
+
+1. The [CloudEvent](src/CloudNative.CloudEvents/CloudEvent.cs) class is not meant to be used with 
+   object serializers like JSON.NET and does not have a default constructor to underline this. If you need to serialize or deserialize a CloudEvent directly, always use an [ICloudEventFormatter](src/CloudNative.CloudEvents/ICloudEventFormatter.cs) like the [JsonEventFormatter](src/CloudNative.CloudEvents/JsonEventFormatter.cs).
+2. The transport integration is provided in the form of extensions and the objective of those extensions
+   is to map the CloudEvent to and from the respective protocol message, like an [HTTP request](src/CloudNative.CloudEvents/CloudEventContent.cs) or [response](src/CloudNative.CloudEvents/HttpClientExtension.cs#L249)
+   object, but the application is otherwise fully in control of the client. Therefore, the extensions do not
+   add security headers or credentials or any other headers or properties that may be required to interact
+   with a particular product or service. Adding this information is up to the application.
+
 ## CloudEvent
 
 The `CloudEvent` class reflects the event envelope defined by the 
