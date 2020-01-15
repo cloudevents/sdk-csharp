@@ -276,7 +276,8 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
-        
+            attrs["utf8examplevalue"] = "æøå";
+
             string ctx = Guid.NewGuid().ToString();
             var content = new CloudEventContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
             content.Headers.Add(testContextHeader, ctx);
@@ -298,6 +299,8 @@ namespace CloudNative.CloudEvents.UnitTests
 
                     var attr = receivedCloudEvent.GetAttributes();
                     Assert.Equal("value", (string)attr["comexampleextension1"]);
+                    Assert.Equal("%C3%A6%C3%B8%C3%A5", content.Headers.Single(h => h.Key == "ce-utf8examplevalue").Value.Single());
+                    Assert.Equal("æøå", (string)attr["utf8examplevalue"]);
                     context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                 }
                 catch (Exception e)

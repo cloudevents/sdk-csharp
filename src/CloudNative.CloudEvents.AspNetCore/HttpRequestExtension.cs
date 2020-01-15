@@ -9,6 +9,7 @@ namespace CloudNative.CloudEvents
     using Newtonsoft.Json;
     using System;
     using System.IO;
+    using System.Net;
     using System.Net.Mime;
     using System.Text;
     using System.Threading.Tasks;
@@ -106,7 +107,7 @@ namespace CloudNative.CloudEvents
 
                     if (httpRequestHeader.StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        string headerValue = httpRequest.Headers[httpRequestHeader];
+                        string headerValue = WebUtility.UrlDecode(httpRequest.Headers[httpRequestHeader]);
                         // maps in headers have been abolished in 1.0
                         if (version != CloudEventsSpecVersion.V1_0 &&
                             headerValue.StartsWith("{") && headerValue.EndsWith("}") ||
