@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageVersion>1.0</PackageVersion>
+    <Description>Avro extensions for CloudNative.CloudEvents</Description>
+    <Copyright>Copyright Cloud Native Foundation</Copyright>
+    <RepositoryUrl>https://github.com/cloudevents/sdk-csharp</RepositoryUrl>
+    <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Apache.Avro" Version="1.9.1" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="AvroSchema.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="AvroSchema.json" />
+  </ItemGroup>
+
+</Project>
