@@ -1,5 +1,10 @@
 ![Build](https://ci.appveyor.com/api/projects/status/github/cloudevents/sdk-csharp?svg=true)
 
+## Status
+
+This SDK current supports the following versions of CloudEvents:
+- v1.0
+
 # sdk-csharp
 
 .NET Standard 2.0 (C#) SDK for CloudEvents
@@ -313,3 +318,17 @@ For mapping a received `MqttApplicationMessage` to a CloudEvent, you can use the
 ```C#
    var receivedCloudEvent = await message.ToCloudEvent();
 ```
+
+## Community
+
+- There are bi-weekly calls immediately following the [Serverless/CloudEvents
+  call](https://github.com/cloudevents/spec#meeting-time) at
+  9am PT (US Pacific). Which means they will typically start at 10am PT, but
+  if the other call ends early then the SDK call will start early as well.
+  See the [CloudEvents meeting minutes](https://docs.google.com/document/d/1OVF68rpuPK5shIHILK9JOqlZBbfe91RNzQ7u_P7YCDE/edit#)
+  to determine which week will have the call.
+- Slack: #cloudeventssdk channel under
+  [CNCF's Slack workspace](https://slack.cncf.io/).
+- Contact for additional information: Clemens Vasters (`@Clemens Vasters`
+  on slack).
+
