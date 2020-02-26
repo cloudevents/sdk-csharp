@@ -7,6 +7,14 @@
 The `CloudNative.CloudEvents` package provides utility methods and classes for creating, encoding,
 decoding, sending, and receiving [CNCF CloudEvents](https://github.com/cloudevents/spec).
 
+## Installation
+
+You can easily install the SDK via [NuGet](https://www.nuget.org/packages/CloudNative.CloudEvents/):
+
+```shell
+PM > Install-Package CloudNative.CloudEvents
+```
+
 ## A few gotchas highlighted for the impatient who don't usually read docs
 
 1. The [CloudEvent](src/CloudNative.CloudEvents/CloudEvent.cs) class is not meant to be used with 
