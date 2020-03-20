@@ -329,6 +329,6 @@ For mapping a received `MqttApplicationMessage` to a CloudEvent, you can use the
   to determine which week will have the call.
 - Slack: #cloudeventssdk channel under
   [CNCF's Slack workspace](https://slack.cncf.io/).
+- Email: https://lists.cncf.io/g/cncf-cloudevents-sdk
 - Contact for additional information: Clemens Vasters (`@Clemens Vasters`
   on slack).
-
