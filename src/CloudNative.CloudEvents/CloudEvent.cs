@@ -6,6 +6,7 @@ namespace CloudNative.CloudEvents
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Net.Mime;
 
     /// <summary>
@@ -72,15 +73,16 @@ namespace CloudNative.CloudEvents
         public CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<ICloudEventExtension> extensions)
         {
             attributes = new CloudEventAttributes(specVersion, extensions);
-            this.Extensions = new Dictionary<Type, ICloudEventExtension>();
+            var extensionMap = new Dictionary<Type, ICloudEventExtension>();
             if (extensions != null)
             {
                 foreach (var extension in extensions)
                 {
-                    this.Extensions.Add(extension.GetType(), extension);
+                    extensionMap.Add(extension.GetType(), extension);
                     extension.Attach(this);
                 }
             }
+            Extensions = new ReadOnlyDictionary<Type, ICloudEventExtension>(extensionMap);
         }
 
         /// <summary>
@@ -110,7 +112,7 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// Extensions registered with this event. 
         /// </summary>
-        protected internal Dictionary<Type, ICloudEventExtension> Extensions { get; private set; }
+        public IReadOnlyDictionary<Type, ICloudEventExtension> Extensions { get; private set; }
 
         /// <summary>
         /// CloudEvent 'id' attribute. ID of the event. The semantics of this string are explicitly
