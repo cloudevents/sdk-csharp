@@ -4,9 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageVersion>1.0</PackageVersion>
     <Description>MQTT extensions for CloudNative.CloudEvents</Description>
-    <Copyright>Copyright Cloud Native Foundation</Copyright>
-    <RepositoryUrl>https://github.com/cloudevents/sdk-csharp</RepositoryUrl>
-    <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

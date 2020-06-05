@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <!-- Build properties -->
+    <Deterministic>True</Deterministic>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    
+    <!-- Package properties -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/cloudevents/sdk-csharp</RepositoryUrl>
+    <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
+    <Copyright>Copyright Cloud Native Foundation</Copyright>
+  </PropertyGroup>
+</Project>
