@@ -33,11 +33,11 @@ namespace CloudNative.CloudEvents.UnitTests
                 Prefixes = { listenerAddress }
             };
             listener.Start();
-            listener.GetContextAsync().ContinueWith(t =>
+            listener.GetContextAsync().ContinueWith(async t =>
             {
                 if (t.IsCompleted)
                 {
-                    HandleContext(t.Result);
+                    await HandleContext(t.Result);
                 }
             });
         }
@@ -61,15 +61,13 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 await pending(requestContext);
             }
-#pragma warning disable 4014
-            listener.GetContextAsync().ContinueWith(t =>
+            await listener.GetContextAsync().ContinueWith(async t =>
             {
                 if (t.IsCompleted)
                 {
-                    HandleContext(t.Result);
+                    await HandleContext(t.Result);
                 }
             });
-#pragma warning restore 4014
         }
 
         [Fact]
@@ -161,7 +159,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var content = new CloudEventContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
             content.Headers.Add(testContextHeader, ctx);
 
-            pendingRequests.TryAdd(ctx, async context =>
+            pendingRequests.TryAdd(ctx, context =>
             {
                 try
                 {
@@ -196,6 +194,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 }
 
                 context.Response.Close();
+                return Task.CompletedTask;
             });
 
             var httpClient = new HttpClient();
@@ -282,7 +281,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var content = new CloudEventContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
             content.Headers.Add(testContextHeader, ctx);
 
-            pendingRequests.TryAdd(ctx, async context =>
+            pendingRequests.TryAdd(ctx, context =>
             {
                 try
                 {
@@ -313,6 +312,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 }
 
                 context.Response.Close();
+                return Task.CompletedTask;
             });
 
             var httpClient = new HttpClient();
@@ -344,7 +344,7 @@ namespace CloudNative.CloudEvents.UnitTests
             await httpWebRequest.CopyFromAsync(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
             httpWebRequest.Headers.Add(testContextHeader, ctx);
 
-            pendingRequests.TryAdd(ctx, async context =>
+            pendingRequests.TryAdd(ctx, context =>
             {
                 try
                 {
@@ -373,6 +373,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 }
 
                 context.Response.Close();
+                return Task.CompletedTask;
             });
 
             var result = (HttpWebResponse)await httpWebRequest.GetResponseAsync();

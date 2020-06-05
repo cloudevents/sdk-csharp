@@ -40,9 +40,9 @@ namespace CloudNative.CloudEvents
             return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
         }
 
-        public async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<ICloudEventExtension> extensions)
+        public Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<ICloudEventExtension> extensions)
         {
-            return DecodeStructuredEvent(data, extensions);
+            return Task.FromResult(DecodeStructuredEvent(data, extensions));
         }
 
         public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions = null)
