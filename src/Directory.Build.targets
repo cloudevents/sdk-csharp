@@ -8,8 +8,9 @@
     <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
   </ItemGroup>
   
-  <!-- Use SourceLink for all production projects -->
+  <!-- Use SourceLink for all production projects, and include the licence file -->
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+    <None Include="$(RepoRoot)/LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>
