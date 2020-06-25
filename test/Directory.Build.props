@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Disable deterministic source paths for test projects -->
+    <DeterministicSourcePaths>False</DeterministicSourcePaths>
+  </PropertyGroup>
+</Project>

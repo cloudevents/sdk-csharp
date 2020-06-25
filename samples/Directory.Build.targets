@@ -1,0 +1,6 @@
+<Project>
+  <!-- Use SourceLink for all production projects, as a simple way of handling DeterministicSourcePaths -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+  </ItemGroup>
+</Project>
