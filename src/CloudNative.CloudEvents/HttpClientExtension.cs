@@ -12,6 +12,7 @@ namespace CloudNative.CloudEvents
     using System.Net.Mime;
     using System.Text;
     using System.Threading.Tasks;
+    using System.Xml;
     using Newtonsoft.Json;
 
     public static class HttpClientExtension
@@ -469,7 +470,7 @@ namespace CloudNative.CloudEvents
                     else if (attribute.Value is DateTime)
                     {
                         httpListenerResponse.Headers.Add(HttpHeaderPrefix + attribute.Key,
-                            ((DateTime)attribute.Value).ToString("u"));
+                            XmlConvert.ToString((DateTime)attribute.Value, XmlDateTimeSerializationMode.Utc));
                     }
                     else if (attribute.Value is Uri || attribute.Value is int)
                     {
