@@ -29,5 +29,22 @@ namespace CloudNative.CloudEvents.UnitTests
             string attributeName = CloudEventAttributes.SpecVersionAttributeName();
             Assert.Throws<InvalidOperationException>(() => attributes[attributeName] = null);
         }
+
+        [Fact]
+        public void Dictionary_Add_NullValue()
+        {
+            IDictionary<string, object> attributes = new CloudEventAttributes(CloudEventsSpecVersion.Default, emptyExtensions);
+            string attributeName = CloudEventAttributes.TypeAttributeName();
+            Assert.Throws<ArgumentNullException>(() => attributes.Add(attributeName, null));
+        }
+
+        [Fact]
+        public void Collection_Add_NullValue()
+        {
+            ICollection<KeyValuePair<string, object>> attributes = new CloudEventAttributes(CloudEventsSpecVersion.Default, emptyExtensions);
+            string attributeName = CloudEventAttributes.TypeAttributeName();
+            var pair = KeyValuePair.Create(attributeName, default(object));
+            Assert.Throws<InvalidOperationException>(() => attributes.Add(pair));
+        }
     }
 }
