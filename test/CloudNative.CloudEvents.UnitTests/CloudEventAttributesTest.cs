@@ -46,5 +46,21 @@ namespace CloudNative.CloudEvents.UnitTests
             var pair = KeyValuePair.Create(attributeName, default(object));
             Assert.Throws<InvalidOperationException>(() => attributes.Add(pair));
         }
+
+        [Fact]
+        public void Clear_PreservesSpecVersion()
+        {
+            IDictionary<string, object> attributes = new CloudEventAttributes(CloudEventsSpecVersion.Default, emptyExtensions);
+            string specVersionAttributeName = CloudEventAttributes.SpecVersionAttributeName();
+            string specVersionValue = (string) attributes[specVersionAttributeName];
+            attributes[CloudEventAttributes.TypeAttributeName()] = "some event type";
+            Assert.Equal(2, attributes.Count);
+            attributes.Clear();
+
+            // We'd normally expect an empty dictionary now, but CloudEventAttributes always preserves the spec version.
+            var entry = Assert.Single(attributes);
+            Assert.Equal(CloudEventAttributes.SpecVersionAttributeName(), entry.Key);
+            Assert.Equal(specVersionValue, entry.Value);
+        }
     }
 }

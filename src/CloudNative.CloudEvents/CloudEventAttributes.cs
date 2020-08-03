@@ -232,7 +232,12 @@ namespace CloudNative.CloudEvents
 
         void ICollection<KeyValuePair<string, object>>.Clear()
         {
+            // Clearing the collection doesn't remove the spec version attribute.
+            // Preserve it, clear the dictionary, then put it back.
+            string specAttributeName = SpecVersionAttributeName(this.SpecVersion);
+            string specAttributeValue = (string) this[specAttributeName];
             dict.Clear();
+            dict[specAttributeName] = specAttributeValue;
         }
 
         bool ICollection<KeyValuePair<string, object>>.Contains(KeyValuePair<string, object> item)
