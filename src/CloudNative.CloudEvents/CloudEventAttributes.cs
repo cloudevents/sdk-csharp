@@ -211,12 +211,21 @@ namespace CloudNative.CloudEvents
         void ICollection<KeyValuePair<string, object>>.Add(KeyValuePair<string, object> item)
         {
             object value = item.Value;
+            // Note: can't throw ArgumentNullException as the null value is only part of the argument.
+            if (value is null)
+            {
+                throw new InvalidOperationException(Strings.ErrorCannotAddNullAttributeValue);
+            }
             ValidateAndNormalize(item.Key, ref value);
             dict.Add(item.Key, value);
         }
 
         void IDictionary<string, object>.Add(string key, object value)
         {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value), Strings.ErrorCannotAddNullAttributeValue);
+            }
             ValidateAndNormalize(key, ref value);
             dict.Add(key, value);
         }
@@ -266,7 +275,7 @@ namespace CloudNative.CloudEvents
             return dict.TryGetValue(key, out value);
         }
 
-        internal virtual bool ValidateAndNormalize(string key, ref object value)
+        private bool ValidateAndNormalize(string key, ref object value)
         {
             if (key.Equals(TypeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
@@ -297,7 +306,7 @@ namespace CloudNative.CloudEvents
             }
             else if (key.Equals(TimeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
-                if (value is null || value is DateTime)
+                if (value is DateTime)
                 {
                     return true;
                 }
@@ -343,7 +352,7 @@ namespace CloudNative.CloudEvents
             }
             else if (key.Equals(DataSchemaAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
-                if (value is null || value is Uri)
+                if (value is Uri)
                 {
                     return true;
                 }
@@ -361,7 +370,7 @@ namespace CloudNative.CloudEvents
             }
             else if (key.Equals(DataContentTypeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
-                if (value is null || value is ContentType)
+                if (value is ContentType)
                 {
                     return true;
                 }

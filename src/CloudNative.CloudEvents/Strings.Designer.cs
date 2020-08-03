@@ -61,6 +61,15 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Null values cannot be added as attributes.
+        /// </summary>
+        internal static string ErrorCannotAddNullAttributeValue {
+            get {
+                return ResourceManager.GetString("ErrorCannotAddNullAttributeValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The &apos;contenttype&apos; attribute value must be a content-type expression compliant with RFC2046.
         /// </summary>
         internal static string ErrorContentTypeIsNotRFC2046 {
