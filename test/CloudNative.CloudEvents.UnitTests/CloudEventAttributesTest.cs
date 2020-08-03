@@ -62,5 +62,23 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(CloudEventAttributes.SpecVersionAttributeName(), entry.Key);
             Assert.Equal(specVersionValue, entry.Value);
         }
+
+        [Fact]
+        public void Dictionary_Remove_SpecVersion()
+        {
+            IDictionary<string, object> attributes = new CloudEventAttributes(CloudEventsSpecVersion.Default, emptyExtensions);
+            string specVersionAttributeName = CloudEventAttributes.SpecVersionAttributeName();
+            Assert.Throws<InvalidOperationException>(() => attributes.Remove(specVersionAttributeName));
+        }
+
+        [Fact]
+        public void Collection_Remove_SpecVersion()
+        {
+            ICollection<KeyValuePair<string, object>> attributes = new CloudEventAttributes(CloudEventsSpecVersion.Default, emptyExtensions);
+            string specVersionAttributeName = CloudEventAttributes.SpecVersionAttributeName();
+            // The value part is irrelevant; we throw on any attempt to remove a pair with a key that's the spec attribute version.
+            var pair = KeyValuePair.Create(specVersionAttributeName, new object());
+            Assert.Throws<InvalidOperationException>(() => attributes.Remove(pair));
+        }
     }
 }

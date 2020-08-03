@@ -267,11 +267,19 @@ namespace CloudNative.CloudEvents
 
         bool ICollection<KeyValuePair<string, object>>.Remove(KeyValuePair<string, object> item)
         {
+            if (item.Key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeCleared);
+            }
             return dict.Remove(item);
         }
 
         bool IDictionary<string, object>.Remove(string key)
         {
+            if (key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeCleared);
+            }
             return dict.Remove(key);
         }
 
