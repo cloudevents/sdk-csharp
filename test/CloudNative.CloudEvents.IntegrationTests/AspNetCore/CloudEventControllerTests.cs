@@ -4,12 +4,11 @@
 
 namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
 {
-    using System;
-    using System.Net;
-    using System.Net.Http.Headers;
-    using System.Threading.Tasks;
     using CloudNative.CloudEvents.AspNetCoreSample;
     using Microsoft.AspNetCore.Mvc.Testing;
+    using System;
+    using System.Net;
+    using System.Threading.Tasks;
     using Xunit;
 
     public class CloudEventControllerTests : IClassFixture<WebApplicationFactory<Startup>>
@@ -22,9 +21,9 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
         }
 
         [Theory]
-        [InlineData("application/cloudevents+json")]
-        [InlineData("application/json")]
-        public async Task Controller_WithValidCloudEvent_DeserializesUsingPipeline(string contentType)
+        [InlineData(ContentMode.Structured)]
+        [InlineData(ContentMode.Binary)]
+        public async Task Controller_WithValidCloudEvent_DeserializesUsingPipeline(ContentMode contentMode)
         {
             // Arrange
             var expectedExtensionKey = "comexampleextension1";
@@ -36,8 +35,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
             var attrs = cloudEvent.GetAttributes();
             attrs[expectedExtensionKey] = expectedExtensionValue;
 
-            var content = new CloudEventContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
-            content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            var content = new CloudEventContent(cloudEvent, contentMode, new JsonEventFormatter());
 
             // Act
             var result = await _factory.CreateClient().PostAsync("/api/events/receive", content);
