@@ -146,6 +146,16 @@ namespace CloudNative.CloudEvents
             } 
             set
             {
+                if (value is null)
+                {
+                    if (key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeCleared);
+                    }
+                    dict.Remove(key);
+                    return;
+                }
+
                 ValidateAndNormalize(key, ref value);
                 dict[key] = value;
             }
