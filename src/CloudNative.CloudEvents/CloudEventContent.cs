@@ -33,7 +33,6 @@ namespace CloudNative.CloudEvents
             {
                 inner = new InnerByteArrayContent(formatter.EncodeStructuredEvent(cloudEvent, out var contentType));
                 Headers.ContentType = new MediaTypeHeaderValue(contentType.MediaType);
-                MapHeaders(cloudEvent);
                 return;
             }
 
@@ -55,7 +54,7 @@ namespace CloudNative.CloudEvents
                     cloudEvent.Data, cloudEvent.Extensions.Values));
             }
 
-            Headers.ContentType = new MediaTypeHeaderValue(cloudEvent.DataContentType?.MediaType);
+            Headers.ContentType = new MediaTypeHeaderValue(cloudEvent.DataContentType?.MediaType ?? "application/json");
             MapHeaders(cloudEvent);
         }
 
