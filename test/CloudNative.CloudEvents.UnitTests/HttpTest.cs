@@ -301,8 +301,19 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 try
                 {
-                    // Structured events do not contain any CloudEvent HTTP headers.
-                    Assert.Empty(context.Request.Headers.AllKeys.Where(key => key.StartsWith("ce-")));
+                    // Structured events contain a copy of the CloudEvent attributes as HTTP headers.
+                    var headers = context.Request.Headers;
+                    Assert.Equal("1.0", headers["ce-specversion"]);
+                    Assert.Equal("com.github.pull.create", headers["ce-type"]);
+                    Assert.Equal("https://github.com/cloudevents/spec/pull/123", headers["ce-source"]);
+                    Assert.Equal("A234-1234-1234", headers["ce-id"]);
+                    Assert.Equal("2018-04-05T17:31:00Z", headers["ce-time"]);
+                    // Note that datacontenttype is mapped in this case, but would not be included in binary mode.
+                    Assert.Equal("text/xml", headers["ce-datacontenttype"]);
+                    Assert.Equal("application/cloudevents+json", context.Request.ContentType);
+                    Assert.Equal("value", headers["ce-comexampleextension1"]);
+                    // The non-ASCII attribute value should have been URL-encoded using UTF-8 for the header.
+                    Assert.Equal("%C3%A6%C3%B8%C3%A5", headers["ce-utf8examplevalue"]);
 
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
