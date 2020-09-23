@@ -9,8 +9,10 @@ namespace CloudNative.CloudEvents
     using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using System.Net.Mime;
     using System.Text;
     using System.Threading.Tasks;
+    using System.Xml;
 
     /// <summary>
     /// This class is for use with `HttpClient` and constructs content and headers for
@@ -32,6 +34,8 @@ namespace CloudNative.CloudEvents
             if (contentMode == ContentMode.Structured)
             {
                 inner = new InnerByteArrayContent(formatter.EncodeStructuredEvent(cloudEvent, out var contentType));
+                // This is optional in the specification, but can be useful.
+                MapHeaders(cloudEvent, includeDataContentType: true);
                 Headers.ContentType = new MediaTypeHeaderValue(contentType.MediaType);
                 return;
             }
@@ -55,7 +59,7 @@ namespace CloudNative.CloudEvents
             }
 
             Headers.ContentType = new MediaTypeHeaderValue(cloudEvent.DataContentType?.MediaType ?? "application/json");
-            MapHeaders(cloudEvent);
+            MapHeaders(cloudEvent, includeDataContentType: false);
         }
 
         interface IInnerContent
@@ -74,32 +78,40 @@ namespace CloudNative.CloudEvents
             return inner.InnerTryComputeLength(out length);
         }
 
-        void MapHeaders(CloudEvent cloudEvent)
+        void MapHeaders(CloudEvent cloudEvent, bool includeDataContentType)
         {
+            string specVersionAttributeName = CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion);
+            string dataContentTypeAttributeName = CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion);
+
             foreach (var attribute in cloudEvent.GetAttributes())
             {
-                if (!(attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) ||
-                      attribute.Key.Equals(CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion))))
+                string key = attribute.Key;
+                string headerName = "ce-" + key;
+                object value = attribute.Value;
+
+                // Never map the spec attribute to a header
+                if (key == specVersionAttributeName)
                 {
-                    if (attribute.Value is string)
+                    continue;
+                }
+                // Only map the data content type attribute to a header if we've been asked to
+                else if (key == dataContentTypeAttributeName && !includeDataContentType)
+                {
+                    continue;
+                }
+                else
+                {
+                    string headerValue = attribute.Value switch
                     {
-                        Headers.Add("ce-" + attribute.Key, WebUtility.UrlEncode(attribute.Value.ToString()));
-                    }
-                    else if (attribute.Value is DateTime)
-                    {
-                        Headers.Add("ce-" + attribute.Key, ((DateTime)attribute.Value).ToString("u"));
-                    }
-                    else if (attribute.Value is Uri || attribute.Value is int)
-                    {
-                        Headers.Add("ce-" + attribute.Key, attribute.Value.ToString());
-                    }
-                    else
-                    {
-                        Headers.Add("ce-" + attribute.Key,
-                            WebUtility.UrlEncode(
-                                Encoding.UTF8.GetString(jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, attribute.Key, attribute.Value,
-                                    cloudEvent.Extensions.Values))));
-                    }
+                        string text => WebUtility.UrlEncode(text),
+                        ContentType contentType => contentType.ToString(),
+                        DateTime dt => XmlConvert.ToString(dt, XmlDateTimeSerializationMode.Utc),
+                        Uri uri => uri.ToString(),
+                        int integer => integer.ToString(),
+                        _ => WebUtility.UrlEncode(Encoding.UTF8.GetString(
+                                jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, key, value, cloudEvent.Extensions.Values)))
+                    };
+                    Headers.Add(headerName, headerValue);
                 }
             }
         }
