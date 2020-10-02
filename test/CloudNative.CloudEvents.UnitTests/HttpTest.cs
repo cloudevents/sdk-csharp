@@ -130,6 +130,11 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
             Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
                 receivedCloudEvent.Time.Value.ToUniversalTime());
+
+            // Verify ce-time text format follows RFC 3339 specification. 
+            var ce_time_str = result.Headers.Where(hdr => hdr.Key == "ce-time").First().Value.First();
+            Assert.Equal("2018-04-05T17:31:00Z", ce_time_str);
+
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.DataContentType);
             using (var sr = new StreamReader((Stream)receivedCloudEvent.Data))
             {
