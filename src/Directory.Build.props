@@ -1,5 +1,11 @@
 <Project>
   <PropertyGroup>
+    <!-- 
+      - During beta, we use the same version number for all
+      - packages. See PROCESSES.md for details.
+      -->
+    <Version>2.0.0-beta.1</Version>
+    
     <!-- Make the repository root available for other properties -->
     <RepoRoot>$([System.IO.Path]::GetDirectoryName($([MSBuild]::GetPathOfFileAbove('.gitignore', '$(MSBuildThisFileDirectory)'))))</RepoRoot>
 
