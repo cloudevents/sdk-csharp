@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <!-- Disable deterministic source paths for test projects -->
+    <!-- Disable deterministic source paths for sample projects -->
     <DeterministicSourcePaths>False</DeterministicSourcePaths>
 
-    <!-- Never pack any test projects -->
+    <!-- Never pack any sample projects -->
     <IsPackable>False</IsPackable>
   </PropertyGroup>
 </Project>
