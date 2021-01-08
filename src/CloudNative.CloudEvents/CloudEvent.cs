@@ -23,11 +23,34 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="type">'type' of the CloudEvent</param>
         /// <param name="source">'source' of the CloudEvent</param>
+        /// <param name="extensions">Extensions to be added to this CloudEvents</param>
+        public CloudEvent(string type, Uri source, params ICloudEventExtension[] extensions) : this(
+            CloudEventsSpecVersion.Default, type, source, null, null, extensions)
+        {
+        }
+
+        /// <summary>
+        /// Create a new CloudEvent instance.
+        /// </summary>
+        /// <param name="type">'type' of the CloudEvent</param>
+        /// <param name="source">'source' of the CloudEvent</param>
         /// <param name="id">'id' of the CloudEvent</param>
         /// <param name="time">'time' of the CloudEvent</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
         public CloudEvent(string type, Uri source, string id = null, DateTime? time = null,
             params ICloudEventExtension[] extensions) : this(CloudEventsSpecVersion.Default, type, source, id, time, extensions)
+        {
+        }
+
+        /// <summary>
+        /// Create a new CloudEvent instance.
+        /// </summary>
+        /// <param name="specVersion">CloudEvents specification version</param>
+        /// <param name="type">'type' of the CloudEvent</param>
+        /// <param name="source">'source' of the CloudEvent</param>
+        /// <param name="extensions">Extensions to be added to this CloudEvents</param>
+        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source,
+            params ICloudEventExtension[] extensions) : this(specVersion, type, source, null, null, extensions)
         {
         }
 
@@ -47,6 +70,20 @@ namespace CloudNative.CloudEvents
             Source = source;
             Id = id ?? Guid.NewGuid().ToString();
             Time = time ?? DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Create a new CloudEvent instance.
+        /// </summary>
+        /// <param name="specVersion">CloudEvents specification version</param>
+        /// <param name="type">'type' of the CloudEvent</param>
+        /// <param name="source">'source' of the CloudEvent</param>
+        /// <param name="subject">'subject' of the CloudEvent</param>
+        /// <param name="extensions">Extensions to be added to this CloudEvents</param>
+        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source, string subject,
+            params ICloudEventExtension[] extensions) : this(specVersion, type, source, null, null, extensions)
+        {
+            Subject = subject;
         }
 
         /// <summary>
