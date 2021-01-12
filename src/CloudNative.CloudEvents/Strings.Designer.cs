@@ -79,6 +79,15 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;datacontenttype&apos; attribute value must be specified.
+        /// </summary>
+        internal static string ErrorContentTypeUnspecified {
+            get {
+                return ResourceManager.GetString("ErrorContentTypeUnspecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The &apos;datacontentencoding&apos; field is not a string.
         /// </summary>
         internal static string ErrorDataContentEncodingIsNotAString {

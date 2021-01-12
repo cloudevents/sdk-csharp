@@ -58,7 +58,10 @@ namespace CloudNative.CloudEvents
                     cloudEvent.Data, cloudEvent.Extensions.Values));
             }
 
-            Headers.ContentType = new MediaTypeHeaderValue(cloudEvent.DataContentType?.MediaType ?? "application/json");
+            var mediaType = cloudEvent.DataContentType?.MediaType
+                ?? throw new ArgumentException(Strings.ErrorContentTypeUnspecified, nameof(cloudEvent));
+
+            Headers.ContentType = new MediaTypeHeaderValue(mediaType);
             MapHeaders(cloudEvent, includeDataContentType: false);
         }
 

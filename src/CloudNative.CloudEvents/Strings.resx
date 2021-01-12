@@ -123,6 +123,9 @@
   <data name="ErrorContentTypeIsNotRFC2046" xml:space="preserve">
     <value>The 'contenttype' attribute value must be a content-type expression compliant with RFC2046</value>
   </data>
+  <data name="ErrorContentTypeUnspecified" xml:space="preserve">
+    <value>The 'datacontenttype' attribute value must be specified</value>
+  </data>
   <data name="ErrorDataContentEncodingIsNotAString" xml:space="preserve">
     <value>The 'datacontentencoding' field is not a string</value>
   </data>
