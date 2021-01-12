@@ -1,8 +1,17 @@
 <Project>
   <PropertyGroup>
+    <!-- Make the repository root available for other properties -->
+    <RepoRoot>$([System.IO.Path]::GetDirectoryName($([MSBuild]::GetPathOfFileAbove('.gitignore', '$(MSBuildThisFileDirectory)'))))</RepoRoot>
+
     <!-- Disable deterministic source paths for test projects -->
     <DeterministicSourcePaths>False</DeterministicSourcePaths>
 
+    <!-- Build properties -->
+    <AssemblyOriginatorKeyFile>$(RepoRoot)/CloudEventsSdk.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>True</SignAssembly>
+    <Deterministic>True</Deterministic>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    
     <!-- Never pack any test projects -->
     <IsPackable>False</IsPackable>
   </PropertyGroup>
