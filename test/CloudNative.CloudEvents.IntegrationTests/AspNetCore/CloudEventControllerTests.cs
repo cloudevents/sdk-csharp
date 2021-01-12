@@ -8,6 +8,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
     using Microsoft.AspNetCore.Mvc.Testing;
     using System;
     using System.Net;
+    using System.Net.Mime;
     using System.Threading.Tasks;
     using Xunit;
 
@@ -31,6 +32,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
             var cloudEvent = new CloudEvent("test-type-æøå", new Uri("urn:integration-tests"))
             {
                 Id = Guid.NewGuid().ToString(),
+                DataContentType = new ContentType("application/json")
             };
             var attrs = cloudEvent.GetAttributes();
             attrs[expectedExtensionKey] = expectedExtensionValue;
