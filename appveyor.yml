@@ -39,11 +39,3 @@ test_script:
   - cmd: dotnet test 
 on_finish :
   # any cleanup in here
-deploy:
-  provider: NuGet
-  api_key:
-    secure: twb6ozXbDJpPxiagxYozpVR7VX3CP33jjER4mX6J4CEFHpWmItO2Yi8nIn6TsUgI
-  skip_symbols: false
-  artifact: /.*\.nupkg/
-  on:
-      APPVEYOR_REPO_TAG: true
