@@ -70,7 +70,7 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;contenttype&apos; attribute value must be a content-type expression compliant with RFC2046.
+        ///   Looks up a localized string similar to The &apos;datacontenttype&apos; attribute value must be a content-type expression compliant with RFC2046.
         /// </summary>
         internal static string ErrorContentTypeIsNotRFC2046 {
             get {
