@@ -29,6 +29,14 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.StartsWith(Strings.ErrorContentTypeUnspecified, exception.Message);
         }
 
+        [Fact]
+        void Invalid_ContentType_Throws()
+        {
+            var cloudEvent = CreateEmptyCloudEvent();
+            var exception = Assert.Throws<InvalidOperationException>(() => cloudEvent.GetAttributes().Add("datacontenttype", "text/html; charset: windows-1255"));
+            Assert.StartsWith(Strings.ErrorContentTypeIsNotRFC2046, exception.Message);
+        }
+
         static CloudEvent CreateEmptyCloudEvent() =>
             new CloudEvent(CloudEventsSpecVersion.V1_0, "type",
                 new Uri("https://source"), "subject", "id", DateTime.UtcNow);
