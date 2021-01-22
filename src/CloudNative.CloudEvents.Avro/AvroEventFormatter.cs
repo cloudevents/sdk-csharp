@@ -89,14 +89,14 @@ namespace CloudNative.CloudEvents
                 {
                     continue;
                 }
-                if (keyValuePair.Key == CloudEventAttributes.SourceAttributeName() ||
-                    keyValuePair.Key == CloudEventAttributes.DataSchemaAttributeName())
+                if (keyValuePair.Key == CloudEventAttributes.SourceAttributeName(specVersion) ||
+                    keyValuePair.Key == CloudEventAttributes.DataSchemaAttributeName(specVersion))
                 {
                     attributes[keyValuePair.Key] = new Uri((string)keyValuePair.Value);
                 }
-                else if (keyValuePair.Key == CloudEventAttributes.TimeAttributeName())
+                else if (keyValuePair.Key == CloudEventAttributes.TimeAttributeName(specVersion))
                 {
-                    attributes[keyValuePair.Key] = DateTime.Parse((string)keyValuePair.Value);
+                    attributes[keyValuePair.Key] = Timestamps.Parse((string)keyValuePair.Value);
                 }
                 else
                 {
@@ -121,24 +121,24 @@ namespace CloudNative.CloudEvents
                     continue;
                 }
 
-                if (keyValuePair.Value is ContentType && !string.IsNullOrEmpty(((ContentType)keyValuePair.Value).MediaType))
+                if (keyValuePair.Value is ContentType valueContentType && !string.IsNullOrEmpty(valueContentType.MediaType))
                 {
-                    recordAttributes[keyValuePair.Key] = ((ContentType)keyValuePair.Value).ToString();
+                    recordAttributes[keyValuePair.Key] = valueContentType.ToString();
                 }
-                else if (keyValuePair.Value is Uri)
+                else if (keyValuePair.Value is Uri uri)
                 {
-                    recordAttributes[keyValuePair.Key] = ((Uri)keyValuePair.Value).ToString();
+                    recordAttributes[keyValuePair.Key] = uri .ToString();
                 }
-                else if (keyValuePair.Value is DateTime)
+                else if (keyValuePair.Value is DateTimeOffset timestamp)
                 {
-                    recordAttributes[keyValuePair.Key] = ((DateTime)keyValuePair.Value).ToString("o");
+                    recordAttributes[keyValuePair.Key] = Timestamps.Format(timestamp);
                 }
                 else if (cloudEvent.SpecVersion == CloudEventsSpecVersion.V1_0 &&
                          keyValuePair.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)))
                 {
-                    if (keyValuePair.Value is Stream)
+                    if (keyValuePair.Value is Stream stream)
                     {
-                        using (var sr = new BinaryReader((Stream)keyValuePair.Value))
+                        using (var sr = new BinaryReader(stream))
                         {
                             record.Add("data", sr.ReadBytes((int)sr.BaseStream.Length));
                         }

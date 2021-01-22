@@ -494,7 +494,7 @@ namespace CloudNative.CloudEvents
                 switch (attributeValue)
                 {
                     case string text: return text;
-                    case DateTime dateTime: return dateTime.ToString("u");
+                    case DateTimeOffset dateTimeOffset: return Timestamps.Format(dateTimeOffset);
                     case Uri uri: return uri.ToString();
                     case int integer: return integer.ToString(CultureInfo.InvariantCulture);
                     default:

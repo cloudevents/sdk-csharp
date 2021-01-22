@@ -26,7 +26,7 @@ namespace CloudNative.CloudEvents
         /// <param name="id">'id' of the CloudEvent</param>
         /// <param name="time">'time' of the CloudEvent</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
-        public CloudEvent(string type, Uri source, string id = null, DateTime? time = null,
+        public CloudEvent(string type, Uri source, string id = null, DateTimeOffset? time = null,
             params ICloudEventExtension[] extensions) : this(CloudEventsSpecVersion.Default, type, source, id, time, extensions)
         {
         }
@@ -40,13 +40,13 @@ namespace CloudNative.CloudEvents
         /// <param name="id">'id' of the CloudEvent</param>
         /// <param name="time">'time' of the CloudEvent</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
-        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source, string id = null, DateTime? time = null,
+        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source, string id = null, DateTimeOffset? time = null,
             params ICloudEventExtension[] extensions) : this(specVersion, extensions)
         {
             Type = type;
             Source = source;
             Id = id ?? Guid.NewGuid().ToString();
-            Time = time ?? DateTime.UtcNow;
+            Time = time ?? DateTimeOffset.UtcNow;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace CloudNative.CloudEvents
         /// <param name="id">'id' of the CloudEvent</param>
         /// <param name="time">'time' of the CloudEvent</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
-        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source, string subject, string id = null, DateTime? time = null,
+        public CloudEvent(CloudEventsSpecVersion specVersion, string type, Uri source, string subject, string id = null, DateTimeOffset? time = null,
             params ICloudEventExtension[] extensions) : this(specVersion, type, source, id, time, extensions)
         {
             Subject = subject;
@@ -179,9 +179,9 @@ namespace CloudNative.CloudEvents
         /// CloudEvents 'time' attribute. Timestamp of when the event happened.
         /// </summary>
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#time"/>
-        public DateTime? Time
+        public DateTimeOffset? Time
         {
-            get => (DateTime?)attributes[CloudEventAttributes.TimeAttributeName(attributes.SpecVersion)];
+            get => (DateTimeOffset?)attributes[CloudEventAttributes.TimeAttributeName(attributes.SpecVersion)];
             set => attributes[CloudEventAttributes.TimeAttributeName(attributes.SpecVersion)] = value;
         }
 

@@ -7,8 +7,6 @@ namespace CloudNative.CloudEvents
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Collections.Specialized;
-    using System.Globalization;
     using System.Net.Mime;
 
     /// <summary>
@@ -319,17 +317,16 @@ namespace CloudNative.CloudEvents
             }
             else if (key.Equals(TimeAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
-                if (value is DateTime)
+                if (value is DateTimeOffset)
                 {
                     return true;
                 }
 
                 if (value is string)
                 {
-                    if (DateTime.TryParse((string)value, CultureInfo.InvariantCulture,
-                        DateTimeStyles.AssumeUniversal, out var dateTimeVal))
+                    if (Timestamps.TryParse((string)value, out var result))
                     {
-                        value = dateTimeVal;
+                        value = result;
                         return true;
                     }
                 }

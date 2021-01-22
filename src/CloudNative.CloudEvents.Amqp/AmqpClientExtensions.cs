@@ -73,13 +73,14 @@ namespace CloudNative.CloudEvents.Amqp
                                 : CloudEventsSpecVersion.Default))
                             : CloudEventsSpecVersion.Default;
 
-                var cloudEvent = new CloudEvent(specVersion , extensions);
+                var cloudEvent = new CloudEvent(specVersion, extensions);
                 var attributes = cloudEvent.GetAttributes();
                 foreach (var prop in message.ApplicationProperties.Map)
                 {
-                    if (prop.Key is string &&
-                        ((string)prop.Key).StartsWith(AmqpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
+                    if (prop.Key is string key &&
+                        key.StartsWith(AmqpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase))
                     {
+                        string attrName = key.Substring(AmqpHeaderPrefix.Length).ToLowerInvariant();
                         if (cloudEvent.SpecVersion != CloudEventsSpecVersion.V1_0 && prop.Value is Map)
                         {
                             IDictionary<string, object> exp = new ExpandoObject();
@@ -88,13 +89,22 @@ namespace CloudNative.CloudEvents.Amqp
                                 exp[props.Key.ToString()] = props.Value;
                             }
 
-                            attributes[((string)prop.Key).Substring(AmqpHeaderPrefix.Length).ToLowerInvariant()] =
-                                exp;
+                            attributes[attrName] = exp;
+                        }
+                        else if (prop.Value is DateTime dt)
+                        {
+                            if (dt.Kind != DateTimeKind.Utc)
+                            {
+                                // This should only happen for MinValue and MaxValue...
+                                // just respecify as UTC. (We could add validation that it really
+                                // *is* MinValue or MaxValue if we wanted to.)
+                                dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                            }
+                            attributes[attrName] = (DateTimeOffset) dt;
                         }
                         else
                         {
-                            attributes[((string)prop.Key).Substring(AmqpHeaderPrefix.Length).ToLowerInvariant()] =
-                                prop.Value;
+                            attributes[attrName] = prop.Value;
                         }
                     }
                 }
