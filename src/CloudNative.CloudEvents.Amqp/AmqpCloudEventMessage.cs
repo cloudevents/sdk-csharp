@@ -59,13 +59,20 @@ namespace CloudNative.CloudEvents.Amqp
                 if (!attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) &&
                     !attribute.Key.Equals(CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion)))
                 {
+                    string key = "cloudEvents:" + attribute.Key;
                     if (attribute.Value is Uri)
                     {
-                        this.ApplicationProperties.Map.Add("cloudEvents:" + attribute.Key, attribute.Value.ToString());
+                        this.ApplicationProperties.Map.Add(key, attribute.Value.ToString());
                     }
-                    else if (attribute.Value is DateTime || attribute.Value is DateTime || attribute.Value is string)
+                    else if (attribute.Value is DateTimeOffset dto)
                     {
-                        this.ApplicationProperties.Map.Add("cloudEvents:" + attribute.Key, attribute.Value);
+                        // AMQPNetLite doesn't support DateTimeOffset values, so convert to UTC.
+                        // That means we can't roundtrip events with non-UTC timestamps, but that's not awful.
+                        this.ApplicationProperties.Map.Add(key, dto.UtcDateTime);
+                    }
+                    else if (attribute.Value is string)
+                    {
+                        this.ApplicationProperties.Map.Add(key, attribute.Value);
                     }
                     else
                     {

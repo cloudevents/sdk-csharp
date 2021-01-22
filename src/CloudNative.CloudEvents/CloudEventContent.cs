@@ -12,7 +12,6 @@ namespace CloudNative.CloudEvents
     using System.Net.Mime;
     using System.Text;
     using System.Threading.Tasks;
-    using System.Xml;
 
     /// <summary>
     /// This class is for use with `HttpClient` and constructs content and headers for
@@ -108,7 +107,7 @@ namespace CloudNative.CloudEvents
                     {
                         string text => WebUtility.UrlEncode(text),
                         ContentType contentType => contentType.ToString(),
-                        DateTime dt => XmlConvert.ToString(dt, XmlDateTimeSerializationMode.Utc),
+                        DateTimeOffset dto => Timestamps.Format(dto),
                         Uri uri => uri.ToString(),
                         int integer => integer.ToString(),
                         _ => WebUtility.UrlEncode(Encoding.UTF8.GetString(

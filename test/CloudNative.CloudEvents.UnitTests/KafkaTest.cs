@@ -15,6 +15,7 @@ namespace CloudNative.CloudEvents.UnitTests
     using System.Collections.Generic;
     using System.Text;
     using CloudNative.CloudEvents.Extensions;
+    using static TestHelpers;
 
     public class KafkaTest
     {
@@ -33,7 +34,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 subject: "123")
             {
                 Id = "A234-1234-1234",
-                Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
                 DataContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = "<much wow=\"xml\"/>"
             };
@@ -58,8 +59,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull"), receivedCloudEvent.Source);
             Assert.Equal("123", receivedCloudEvent.Subject);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                receivedCloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
@@ -80,7 +80,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 extensions: new PartitioningExtension())
             {
                 Id = "A234-1234-1234",
-                Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
                 DataContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = Encoding.UTF8.GetBytes("<much wow=\"xml\"/>")
             };
@@ -95,7 +95,11 @@ namespace CloudNative.CloudEvents.UnitTests
             // using serialization to create fully independent copy thus simulating message transport
             // real transport will work in a similar way
             var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
-            var messageCopy = JsonConvert.DeserializeObject<Message<string, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter());
+            var settings = new JsonSerializerSettings
+            {
+                Converters = { new HeadersConverter(), new HeaderConverter() }
+            };
+            var messageCopy = JsonConvert.DeserializeObject<Message<string, byte[]>>(serialized, settings);
 
             Assert.True(messageCopy.IsCloudEvent());
             var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, new PartitioningExtension());
@@ -104,8 +108,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                receivedCloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.DataContentType);
             Assert.Equal(Encoding.UTF8.GetBytes("<much wow=\"xml\"/>"), receivedCloudEvent.Data);
             Assert.Equal("hello much wow", receivedCloudEvent.Extension<PartitioningExtension>().PartitioningKeyValue);

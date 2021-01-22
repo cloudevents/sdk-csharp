@@ -39,6 +39,6 @@ namespace CloudNative.CloudEvents.UnitTests
 
         static CloudEvent CreateEmptyCloudEvent() =>
             new CloudEvent(CloudEventsSpecVersion.V1_0, "type",
-                new Uri("https://source"), "subject", "id", DateTime.UtcNow);
+                new Uri("https://source"), "subject", "id", DateTimeOffset.UtcNow);
     }
 }

@@ -14,7 +14,7 @@ namespace CloudNative.CloudEvents.UnitTests
         public void SetAttributePropertiesToNull()
         {
             var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V1_0, "type",
-                new Uri("https://source"), "subject", "id", DateTime.UtcNow)
+                new Uri("https://source"), "subject", "id", DateTimeOffset.UtcNow)
             {
                 Data = "some data",
                 DataContentType = new ContentType("text/plain"),

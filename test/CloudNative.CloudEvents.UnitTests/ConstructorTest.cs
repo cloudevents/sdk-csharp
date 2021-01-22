@@ -7,9 +7,12 @@ namespace CloudNative.CloudEvents.UnitTests
     using System;
     using System.Net.Mime;
     using Xunit;
+    using static TestHelpers;
 
     public class ConstructorTest
     {
+        private static readonly DateTimeOffset sampleTimestamp = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero);
+
         [Fact]
         public void CreateBaseEvent1()
         {
@@ -17,7 +20,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 new Uri("https://github.com/cloudevents/spec/pull/123"))
             {
                 Id = "A234-1234-1234",
-                Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                Time = sampleTimestamp,
                 DataContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = "<much wow=\"xml\"/>"
             };
@@ -30,8 +33,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
@@ -47,7 +49,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 "com.github.pull.create",
                 new Uri("https://github.com/cloudevents/spec/pull/123"),
                 "A234-1234-1234",
-                new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc))
+                sampleTimestamp)
             {
                 DataContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = "<much wow=\"xml\"/>"
@@ -61,8 +63,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
@@ -79,7 +80,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 new Uri("https://github.com/cloudevents/spec/pull/123"))
             {
                 Id = "A234-1234-1234",
-                Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                Time = sampleTimestamp,
                 DataContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = "<much wow=\"xml\"/>"
             };
@@ -92,8 +93,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
@@ -109,7 +109,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 new Uri("https://github.com/cloudevents/spec/pull/123"))
             {
                 Id = "A234-1234-1234",
-                Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                Time = sampleTimestamp,
                 DataContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = "<much wow=\"xml\"/>"
             };
@@ -124,8 +124,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
@@ -142,7 +141,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 new Uri("https://github.com/cloudevents/spec/pull/123"))
             {
                 Id = "A234-1234-1234",
-                Time = new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                Time = sampleTimestamp,
                 DataContentType = new ContentType(MediaTypeNames.Text.Xml),
                 Data = "<much wow=\"xml\"/>"
             };
@@ -156,8 +155,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
@@ -172,7 +170,7 @@ namespace CloudNative.CloudEvents.UnitTests
                 "com.github.pull.create",
                 new Uri("https://github.com/cloudevents/spec/pull/123"),
                 "A234-1234-1234",
-                new DateTime(2018, 4, 5, 17, 31, 0, DateTimeKind.Utc),
+                sampleTimestamp,
                 new ComExampleExtension1Extension()
                 {
                     ComExampleExtension1 = "value"
@@ -186,8 +184,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
             Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 

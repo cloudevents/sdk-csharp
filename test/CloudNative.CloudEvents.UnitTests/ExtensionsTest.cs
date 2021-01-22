@@ -9,6 +9,7 @@ namespace CloudNative.CloudEvents.UnitTests
     using System.Text;
     using CloudNative.CloudEvents.Extensions;
     using Xunit;
+    using static TestHelpers;
 
     public class ExtensionsTest
     {
@@ -72,9 +73,8 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
-            
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
+
             Assert.Equal("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01", cloudEvent.Extension<DistributedTracingExtension>().TraceParent);
             Assert.Equal("rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4=", cloudEvent.Extension<DistributedTracingExtension>().TraceState);
         }
@@ -91,8 +91,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
 
             Assert.Equal("00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01", cloudEvent.Extension<DistributedTracingExtension>().TraceParent);
             Assert.Equal("rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4=", cloudEvent.Extension<DistributedTracingExtension>().TraceState);
@@ -107,8 +106,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
 
             Assert.Equal("Integer", cloudEvent.Extension<SequenceExtension>().SequenceType);
             Assert.Equal("25", cloudEvent.Extension<SequenceExtension>().Sequence);
@@ -126,8 +124,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
 
             Assert.Equal("Integer", cloudEvent.Extension<SequenceExtension>().SequenceType);
             Assert.Equal("25", cloudEvent.Extension<SequenceExtension>().Sequence);
@@ -142,8 +139,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
 
             Assert.Equal(25, cloudEvent.Extension<IntegerSequenceExtension>().Sequence);
         }
@@ -160,8 +156,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
 
             Assert.Equal(25, cloudEvent.Extension<IntegerSequenceExtension>().Sequence);
         }
@@ -175,8 +170,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
 
             Assert.Equal(1, cloudEvent.Extension<SamplingExtension>().SampledRate.Value);
         }
@@ -193,8 +187,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            Assert.Equal(DateTime.Parse("2018-04-05T17:31:00Z").ToUniversalTime(),
-                cloudEvent.Time.Value.ToUniversalTime());
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
 
             Assert.Equal(1, cloudEvent.Extension<SamplingExtension>().SampledRate.Value);
         }
