@@ -150,8 +150,8 @@
   <data name="ErrorSourceValueIsNotAUri" xml:space="preserve">
     <value>The 'source' attribute value must be a valid absolute or relative URI</value>
   </data>
-  <data name="ErrorSpecVersionCannotBeCleared" xml:space="preserve">
-    <value>The 'specversion' attribute cannot be cleared</value>
+  <data name="ErrorSpecVersionCannotBeModified" xml:space="preserve">
+    <value>The 'specversion' attribute cannot be modified</value>
   </data>
   <data name="ErrorSpecVersionValueIsNotAString" xml:space="preserve">
     <value>The 'specversion' attribute value must be a string</value>

@@ -160,11 +160,11 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;specversion&apos; attribute cannot be cleared.
+        ///   Looks up a localized string similar to The &apos;specversion&apos; attribute cannot be modified.
         /// </summary>
-        internal static string ErrorSpecVersionCannotBeCleared {
+        internal static string ErrorSpecVersionCannotBeModified {
             get {
-                return ResourceManager.GetString("ErrorSpecVersionCannotBeCleared", resourceCulture);
+                return ResourceManager.GetString("ErrorSpecVersionCannotBeModified", resourceCulture);
             }
         }
         
