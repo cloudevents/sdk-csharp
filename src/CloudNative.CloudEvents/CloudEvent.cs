@@ -71,8 +71,13 @@ namespace CloudNative.CloudEvents
         /// <param name="specVersion">CloudEvents specification version</param>
         /// <param name="extensions">Extensions to be added to this CloudEvents</param>
         public CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<ICloudEventExtension> extensions)
+            : this(new CloudEventAttributes(specVersion, extensions), extensions)
         {
-            attributes = new CloudEventAttributes(specVersion, extensions);
+        }
+
+        private CloudEvent(CloudEventAttributes attributes, IEnumerable<ICloudEventExtension> extensions)
+        {
+            this.attributes = attributes;
             var extensionMap = new Dictionary<Type, ICloudEventExtension>();
             if (extensions != null)
             {
@@ -155,11 +160,11 @@ namespace CloudNative.CloudEvents
         /// specification which the event uses. This enables the interpretation of the context.
         /// </summary>
         /// <see cref="https://github.com/cloudevents/spec/blob/master/spec.md#specversion"/>
-        public CloudEventsSpecVersion SpecVersion
-        {
-            get => attributes.SpecVersion;
-            set => attributes.SpecVersion = value;
-        }
+        public CloudEventsSpecVersion SpecVersion => attributes.SpecVersion;
+
+        // TODO: Consider exposing publicly.
+        internal CloudEvent WithSpecVersion(CloudEventsSpecVersion newSpecVersion) =>
+            new CloudEvent(attributes.WithSpecVersion(newSpecVersion), Extensions.Values);
 
         /// <summary>
         /// CloudEvents 'subject' attribute. This describes the subject of the event in the context

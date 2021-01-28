@@ -78,7 +78,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv02));
-            cloudEvent.SpecVersion = CloudEventsSpecVersion.V0_1;
+            cloudEvent = cloudEvent.WithSpecVersion(CloudEventsSpecVersion.V0_1);
             var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent, out var contentType);
             var cloudEvent2 = jsonFormatter.DecodeStructuredEvent(jsonData);
 
@@ -96,7 +96,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var jsonFormatter = new JsonEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10));
-            cloudEvent.SpecVersion = CloudEventsSpecVersion.V0_2;
+            cloudEvent = cloudEvent.WithSpecVersion(CloudEventsSpecVersion.V0_2);
             var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent, out var contentType);
             var cloudEvent2 = jsonFormatter.DecodeStructuredEvent(jsonData);
 

@@ -118,7 +118,7 @@ namespace CloudNative.CloudEvents.UnitTests
             attrs["comexampleextension1"] = "value";
             attrs["comexampleextension2"] = new { othervalue = 5 };
 
-            cloudEvent.SpecVersion = CloudEventsSpecVersion.V0_2;
+            cloudEvent = cloudEvent.WithSpecVersion(CloudEventsSpecVersion.V0_2);
 
             Assert.Equal(CloudEventsSpecVersion.V0_2, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
@@ -149,7 +149,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var attrs = cloudEvent.GetAttributes();
             attrs["comexampleextension1"] = "value";
 
-            cloudEvent.SpecVersion = CloudEventsSpecVersion.V1_0;
+            cloudEvent = cloudEvent.WithSpecVersion(CloudEventsSpecVersion.V1_0);
 
             Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);

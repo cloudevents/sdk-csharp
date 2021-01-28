@@ -14,6 +14,19 @@ namespace CloudNative.CloudEvents
     /// </summary>
     public class CloudEventAttributes : IDictionary<string, object>
     {
+        private static readonly List<Func<CloudEventsSpecVersion, string>> attributeNameMethods = new List<Func<CloudEventsSpecVersion, string>>
+        {
+            DataAttributeName,
+            DataContentTypeAttributeName,
+            DataSchemaAttributeName,
+            IdAttributeName,
+            SourceAttributeName,
+            SpecVersionAttributeName,
+            SubjectAttributeName,
+            TimeAttributeName,
+            TypeAttributeName,
+        };
+
         readonly CloudEventsSpecVersion specVersion;
 
         IDictionary<string, object> dict = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
@@ -24,8 +37,7 @@ namespace CloudNative.CloudEvents
         {
             this.extensions = extensions;
             this.specVersion = specVersion;
-            dict[SpecVersionAttributeName(specVersion)] = (specVersion == CloudEventsSpecVersion.V0_1 ? "0.1" :
-                (specVersion == CloudEventsSpecVersion.V0_2 ? "0.2" : (specVersion == CloudEventsSpecVersion.V0_3 ? "0.3" : "1.0")));
+            dict[SpecVersionAttributeName(specVersion)] = SpecVersionString(specVersion);
         }
 
         int ICollection<KeyValuePair<string, object>>.Count => dict.Count;
@@ -36,100 +48,44 @@ namespace CloudNative.CloudEvents
 
         ICollection<object> IDictionary<string, object>.Values => dict.Values;
 
-        public CloudEventsSpecVersion SpecVersion
+        public CloudEventsSpecVersion SpecVersion => specVersion;
+
+        // TODO: Consider exposing publicly.
+        internal CloudEventAttributes WithSpecVersion(CloudEventsSpecVersion newVersion)
         {
-            get
+            var newAttributes = new CloudEventAttributes(newVersion, extensions);
+            foreach (var kv in dict)
             {
-                object val;
-                if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), out val) ||
-                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), out val) ||
-                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_3), out val) ||
-                    dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V1_0), out val))
+                // The constructor will have populated the spec version, so we can skip it.
+                if (!kv.Key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return (val as string) == "0.1" ? CloudEventsSpecVersion.V0_1 : 
-                           (val as string) == "0.2" ? CloudEventsSpecVersion.V0_2 :
-                           (val as string) == "0.3" ? CloudEventsSpecVersion.V0_3 : CloudEventsSpecVersion.V1_0;
-
-                }
-
-                return CloudEventsSpecVersion.Default;
-            }
-            set
-            {
-                // this setter sets the version and initiates a transform to the new target version if
-                // required. The transformation may fail under some circumstances where CloudEvents 
-                // versions are in mutual conflict
-
-                var currentSpecVersion = SpecVersion;
-                object val;
-                if (dict.TryGetValue(SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), out val))
-                {
-                    if (value == CloudEventsSpecVersion.V0_1 && (val as string) == "0.1")
-                    {
-                        return;
-                    }
-                }
-                else if ( dict.TryGetValue(SpecVersionAttributeName(), out val)) // 0.2, 0.3 and 1.0 are the same
-                {
-                    if ((value == CloudEventsSpecVersion.V0_2 && (val as string) == "0.2") ||
-                        (value == CloudEventsSpecVersion.V0_3 && (val as string) == "0.3") ||
-                        (value == CloudEventsSpecVersion.V1_0 && (val as string) == "1.0"))
-                    {
-                        return;
-                    }                                        
-                }                                                                      
-
-                // transform to new version
-                var copy = new Dictionary<string, object>(dict);
-                dict.Clear();
-                this[SpecVersionAttributeName(value)] = value == CloudEventsSpecVersion.V0_1 ? "0.1" : (value == CloudEventsSpecVersion.V0_2 ? "0.2" : (value == CloudEventsSpecVersion.V0_3 ? "0.3" : "1.0"));
-                foreach (var kv in copy)
-                {
-                    if (SpecVersionAttributeName(CloudEventsSpecVersion.V0_2).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
-                        SpecVersionAttributeName(CloudEventsSpecVersion.V0_3).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
-                        SpecVersionAttributeName(CloudEventsSpecVersion.V0_1).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase) ||
-                        SpecVersionAttributeName(CloudEventsSpecVersion.V1_0).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))  
-                    {
-                        continue;
-                    }
-                    if (DataContentTypeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[DataContentTypeAttributeName(value)] = kv.Value;
-                    }
-                    else if (DataAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[DataAttributeName(value)] = kv.Value;
-                    }
-                    else if (IdAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[IdAttributeName(value)] = kv.Value;
-                    }
-                    else if (DataSchemaAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[DataSchemaAttributeName(value)] = kv.Value;
-                    }
-                    else if (SourceAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[SourceAttributeName(value)] = kv.Value;
-                    }
-                    else if (SubjectAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[SubjectAttributeName(value)] = kv.Value;
-                    }
-                    else if (TimeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[TimeAttributeName(value)] = kv.Value;
-                    }
-                    else if (TypeAttributeName(currentSpecVersion).Equals(kv.Key, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        this[TypeAttributeName(value)] = kv.Value;
-                    }
-                    else
-                    {
-                        this[kv.Key] = kv.Value;
-                    }
+                    string newAttributeName = ConvertAttributeName(kv.Key, SpecVersion, newVersion);
+                    newAttributes[newAttributeName] = kv.Value;
                 }
             }
+            return newAttributes;
+        }
+
+        private static string SpecVersionString(CloudEventsSpecVersion version) =>
+            version switch
+            {
+                CloudEventsSpecVersion.V0_1 => "0.1",
+                CloudEventsSpecVersion.V0_2 => "0.2",
+                CloudEventsSpecVersion.V0_3 => "0.3",
+                CloudEventsSpecVersion.V1_0 => "1.0",
+                _ => throw new ArgumentOutOfRangeException($"Unknown spec version: {version}")
+            };
+
+        private static string ConvertAttributeName(string name, CloudEventsSpecVersion fromVersion, CloudEventsSpecVersion toVersion)
+        {
+            foreach (var method in attributeNameMethods)
+            {
+                if (name.Equals(method(fromVersion), StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return method(toVersion);
+                }
+            }
+            return name;
         }
 
         public object this[string key]
@@ -144,12 +100,14 @@ namespace CloudNative.CloudEvents
             } 
             set
             {
+                // Allow the "setting" of the spec version so long as it doesn't actually modify anything.
+                if (key.Equals(SpecVersionAttributeName(SpecVersion), StringComparison.InvariantCultureIgnoreCase) && !Equals(dict[key], value))
+                {
+                    throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeModified);
+                }
+
                 if (value is null)
                 {
-                    if (key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeCleared);
-                    }
                     dict.Remove(key);
                     return;
                 }
@@ -267,7 +225,7 @@ namespace CloudNative.CloudEvents
         {
             if (item.Key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeCleared);
+                throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeModified);
             }
             return dict.Remove(item);
         }
@@ -276,7 +234,7 @@ namespace CloudNative.CloudEvents
         {
             if (key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeCleared);
+                throw new InvalidOperationException(Strings.ErrorSpecVersionCannotBeModified);
             }
             return dict.Remove(key);
         }
@@ -296,15 +254,6 @@ namespace CloudNative.CloudEvents
                 }
 
                 throw new InvalidOperationException(Strings.ErrorTypeValueIsNotAString);
-            }
-            else if (key.Equals(SpecVersionAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
-            {
-                if (value is string)
-                {
-                    return true;
-                }
-
-                throw new InvalidOperationException(Strings.ErrorSpecVersionValueIsNotAString);
             }
             else if (key.Equals(IdAttributeName(this.SpecVersion), StringComparison.InvariantCultureIgnoreCase))
             {
