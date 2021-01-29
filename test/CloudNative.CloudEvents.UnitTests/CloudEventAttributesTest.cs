@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace CloudNative.CloudEvents.UnitTests
@@ -79,6 +80,39 @@ namespace CloudNative.CloudEvents.UnitTests
             // The value part is irrelevant; we throw on any attempt to remove a pair with a key that's the spec attribute version.
             var pair = KeyValuePair.Create(specVersionAttributeName, new object());
             Assert.Throws<InvalidOperationException>(() => attributes.Remove(pair));
+        }
+
+        [Theory]
+        [InlineData("somekey", true)]
+        [InlineData("some key", false)]
+        [InlineData("Somekey", false)]
+        [InlineData("somEkey", false)]
+        [InlineData("1somekey3324", true)]
+        public void Validates_LowerCase_Or_Digit(string key, bool isValid)
+        {
+            var attributes = new CloudEventAttributes(CloudEventsSpecVersion.Default, emptyExtensions);
+            string value = "value";
+            if (!isValid)
+            {
+                var exception = Assert.Throws<InvalidOperationException>(() => attributes[key] = value);
+                Assert.StartsWith(string.Format(Strings.ErrorAttributeKeyIsNotWellFormed, key), exception.Message);
+
+                exception = Assert.Throws<InvalidOperationException>(() => attributes.TryAdd(key, value));
+                Assert.StartsWith(string.Format(Strings.ErrorAttributeKeyIsNotWellFormed, key), exception.Message);
+
+                ICollection<KeyValuePair<string, object>> collection = attributes;
+                exception = Assert.Throws<InvalidOperationException>(() => collection.Add(new KeyValuePair<string, object>(key, value)));
+                Assert.StartsWith(string.Format(Strings.ErrorAttributeKeyIsNotWellFormed, key), exception.Message);
+            }
+            else
+            {
+                // should not throw
+                attributes[key] = value;
+                attributes.TryAdd(key, value);
+                ICollection<KeyValuePair<string, object>> collection = attributes;
+                collection.Clear();
+                collection.Add(new KeyValuePair<string, object>(key, value));
+            }
         }
     }
 }

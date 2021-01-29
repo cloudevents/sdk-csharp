@@ -7,6 +7,8 @@ namespace CloudNative.CloudEvents
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Globalization;
+    using System.Linq;
     using System.Net.Mime;
 
     /// <summary>
@@ -95,9 +97,9 @@ namespace CloudNative.CloudEvents
                 if (!dict.TryGetValue(key, out var result))
                 {
                     return null;
-                }             
+                }
                 return result;
-            } 
+            }
             set
             {
                 // Allow the "setting" of the spec version so long as it doesn't actually modify anything.
@@ -135,7 +137,7 @@ namespace CloudNative.CloudEvents
 
         public static string DataSchemaAttributeName(CloudEventsSpecVersion version = CloudEventsSpecVersion.Default)
         {
-            return version == CloudEventsSpecVersion.V0_1 ? "schemaUrl" : 
+            return version == CloudEventsSpecVersion.V0_1 ? "schemaUrl" :
                    (version == CloudEventsSpecVersion.V0_2 || version == CloudEventsSpecVersion.V0_3 ? "schemaurl" : "dataschema");
         }
 
@@ -191,7 +193,7 @@ namespace CloudNative.CloudEvents
             // Clearing the collection doesn't remove the spec version attribute.
             // Preserve it, clear the dictionary, then put it back.
             string specAttributeName = SpecVersionAttributeName(this.SpecVersion);
-            string specAttributeValue = (string) this[specAttributeName];
+            string specAttributeValue = (string)this[specAttributeName];
             dict.Clear();
             dict[specAttributeName] = specAttributeValue;
         }
@@ -355,6 +357,7 @@ namespace CloudNative.CloudEvents
             }
             else
             {
+                ValidateKey(key);
                 if (extensions != null)
                 {
                     foreach (var extension in extensions)
@@ -368,6 +371,15 @@ namespace CloudNative.CloudEvents
             }
 
             return false;
+        }
+
+        private void ValidateKey(string key)
+        {
+            if (key.All(c => char.IsDigit(c) || char.IsLower(c)))
+            {
+                return;
+            }
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Strings.ErrorAttributeKeyIsNotWellFormed, key));
         }
     }
 }

@@ -61,6 +61,15 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The attribute name, &apos;{0}&apos;, does not consist entirely of lower-case letters or digits..
+        /// </summary>
+        internal static string ErrorAttributeKeyIsNotWellFormed {
+            get {
+                return ResourceManager.GetString("ErrorAttributeKeyIsNotWellFormed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Null values cannot be added as attributes.
         /// </summary>
         internal static string ErrorCannotAddNullAttributeValue {
