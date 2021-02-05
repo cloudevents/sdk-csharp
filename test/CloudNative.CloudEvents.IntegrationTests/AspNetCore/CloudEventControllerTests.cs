@@ -1,17 +1,17 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.AspNetCoreSample;
+using CloudNative.CloudEvents.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
+using System;
+using System.Net;
+using System.Threading.Tasks;
+using Xunit;
+
 namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
 {
-    using CloudNative.CloudEvents.AspNetCoreSample;
-    using Microsoft.AspNetCore.Mvc.Testing;
-    using System;
-    using System.Net;
-    using System.Net.Mime;
-    using System.Threading.Tasks;
-    using Xunit;
-
     public class CloudEventControllerTests : IClassFixture<WebApplicationFactory<Startup>>
     {
         private readonly WebApplicationFactory<Startup> _factory;
@@ -24,29 +24,32 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
         [Theory]
         [InlineData(ContentMode.Structured)]
         [InlineData(ContentMode.Binary)]
-        public async Task Controller_WithValidCloudEvent_DeserializesUsingPipeline(ContentMode contentMode)
+        public async Task Controller_WithValidCloudEvent_NoContent_DeserializesUsingPipeline(ContentMode contentMode)
         {
             // Arrange
             var expectedExtensionKey = "comexampleextension1";
             var expectedExtensionValue = Guid.NewGuid().ToString();
-            var cloudEvent = new CloudEvent("test-type-æøå", new Uri("urn:integration-tests"))
+            var cloudEvent = new CloudEvent
             {
+                Type = "test-type-æøå",
+                Source = new Uri("urn:integration-tests"),
                 Id = Guid.NewGuid().ToString(),
-                DataContentType = new ContentType("application/json")
+                DataContentType = "application/json",
+                Data = new { key1 = "value1" },
+                [expectedExtensionKey] = expectedExtensionValue
             };
-            var attrs = cloudEvent.GetAttributes();
-            attrs[expectedExtensionKey] = expectedExtensionValue;
 
-            var content = new CloudEventContent(cloudEvent, contentMode, new JsonEventFormatter());
+            var httpContent = new CloudEventHttpContent(cloudEvent, contentMode, new JsonEventFormatter());
 
             // Act
-            var result = await _factory.CreateClient().PostAsync("/api/events/receive", content);
+            var result = await _factory.CreateClient().PostAsync("/api/events/receive", httpContent);
 
             // Assert
+            string resultContent = await result.Content.ReadAsStringAsync();
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-            Assert.Contains(cloudEvent.Id, await result.Content.ReadAsStringAsync());
-            Assert.Contains(cloudEvent.Type, await result.Content.ReadAsStringAsync());
-            Assert.Contains($"\"{expectedExtensionKey}\":\"{expectedExtensionValue}\"", await result.Content.ReadAsStringAsync());
+            Assert.Contains(cloudEvent.Id, resultContent);
+            Assert.Contains(cloudEvent.Type, resultContent);
+            Assert.Contains($"\"{expectedExtensionKey}\": \"{expectedExtensionValue}\"", resultContent);
         }
     }
 }

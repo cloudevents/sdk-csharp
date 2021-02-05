@@ -1,26 +1,23 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-namespace CloudNative.CloudEvents
-{
-    using System;
-    using System.IO;
-    using System.Net;
-    using System.Net.Http;
-    using System.Net.Http.Headers;
-    using System.Net.Mime;
-    using System.Text;
-    using System.Threading.Tasks;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using System.Threading.Tasks;
 
+namespace CloudNative.CloudEvents.Http
+{
     /// <summary>
     /// This class is for use with `HttpClient` and constructs content and headers for
     /// a HTTP request from a CloudEvent.
     /// </summary>
-    public class CloudEventContent : HttpContent
+    public class CloudEventHttpContent : HttpContent
     {
         IInnerContent inner;                      
-        static JsonEventFormatter jsonFormatter = new JsonEventFormatter();
 
         /// <summary>
         /// Constructor
@@ -28,7 +25,7 @@ namespace CloudNative.CloudEvents
         /// <param name="cloudEvent">CloudEvent</param>
         /// <param name="contentMode">Content mode. Structured or binary.</param>
         /// <param name="formatter">Event formatter</param>
-        public CloudEventContent(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
+        public CloudEventHttpContent(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
         {
             if (contentMode == ContentMode.Structured)
             {
@@ -39,6 +36,8 @@ namespace CloudNative.CloudEvents
                 return;
             }
 
+            // TODO: Shouldn't we use the formatter in all cases? If I have a JSON formatter and
+            // If we specify that the the data is a byte array, I'd expect to end up with a base64-encoded representation...
             if (cloudEvent.Data is byte[])
             {
                 inner = new InnerByteArrayContent((byte[])cloudEvent.Data);
@@ -53,18 +52,21 @@ namespace CloudNative.CloudEvents
             }
             else
             {
-                inner = new InnerByteArrayContent(formatter.EncodeAttribute(cloudEvent.SpecVersion, CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion),
-                    cloudEvent.Data, cloudEvent.Extensions.Values));
+                inner = new InnerByteArrayContent(formatter.EncodeData(cloudEvent.Data));
             }
 
-            var mediaType = cloudEvent.DataContentType?.MediaType
-                ?? throw new ArgumentException(Strings.ErrorContentTypeUnspecified, nameof(cloudEvent));
-
-            Headers.ContentType = new MediaTypeHeaderValue(mediaType);
+            // Note: we don't require a data content type, because there may not be any data.
+            // TODO: See if we can validate better. Perhaps use TryComputeLength?
+            var dataContentType = cloudEvent.DataContentType;
+            if (dataContentType is object)
+            {
+                var mediaType = new ContentType(dataContentType).MediaType;
+                Headers.ContentType = new MediaTypeHeaderValue(mediaType);
+            }
             MapHeaders(cloudEvent, includeDataContentType: false);
         }
 
-        interface IInnerContent
+        private interface IInnerContent
         {
             Task InnerSerializeToStreamAsync(Stream stream, TransportContext context);
             bool InnerTryComputeLength(out long length);
@@ -80,39 +82,24 @@ namespace CloudNative.CloudEvents
             return inner.InnerTryComputeLength(out length);
         }
 
-        void MapHeaders(CloudEvent cloudEvent, bool includeDataContentType)
+        private void MapHeaders(CloudEvent cloudEvent, bool includeDataContentType)
         {
-            string specVersionAttributeName = CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion);
-            string dataContentTypeAttributeName = CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion);
-
-            foreach (var attribute in cloudEvent.GetAttributes())
+            Headers.Add(HttpUtilities.HttpHeaderPrefix + CloudEventsSpecVersion.SpecVersionAttribute.Name,
+                HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
+            foreach (var attributeAndValue in cloudEvent.GetPopulatedAttributes())
             {
-                string key = attribute.Key;
-                string headerName = "ce-" + key;
-                object value = attribute.Value;
+                CloudEventAttribute attribute = attributeAndValue.Key;
+                string headerName = HttpUtilities.HttpHeaderPrefix + attribute.Name;
+                object value = attributeAndValue.Value;
 
-                // Never map the spec attribute to a header
-                if (key == specVersionAttributeName)
-                {
-                    continue;
-                }
                 // Only map the data content type attribute to a header if we've been asked to
-                else if (key == dataContentTypeAttributeName && !includeDataContentType)
+                if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute && !includeDataContentType)
                 {
                     continue;
                 }
                 else
                 {
-                    string headerValue = attribute.Value switch
-                    {
-                        string text => WebUtility.UrlEncode(text),
-                        ContentType contentType => contentType.ToString(),
-                        DateTimeOffset dto => Timestamps.Format(dto),
-                        Uri uri => uri.ToString(),
-                        int integer => integer.ToString(),
-                        _ => WebUtility.UrlEncode(Encoding.UTF8.GetString(
-                                jsonFormatter.EncodeAttribute(cloudEvent.SpecVersion, key, value, cloudEvent.Extensions.Values)))
-                    };
+                    string headerValue = HttpUtilities.EncodeHeaderValue(attribute.Format(value));
                     Headers.Add(headerName, headerValue);
                 }
             }

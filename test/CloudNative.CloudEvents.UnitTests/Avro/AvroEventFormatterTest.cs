@@ -1,28 +1,28 @@
-// Copyright (c) Cloud Native Foundation. 
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-namespace CloudNative.CloudEvents.UnitTests
-{
-    using System;
-    using System.Net.Mime;
-    using System.Text;
-    using Xunit;
-    using static TestHelpers;
+using System;
+using System.Net.Mime;
+using System.Text;
+using Xunit;
+using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
-    public class AvroTest
+namespace CloudNative.CloudEvents.Avro.UnitTests
+{
+    public class AvroEventFormatterTest
     {
-        const string jsonv10 =
-            "{\n" +
-            "    \"specversion\" : \"1.0\",\n" +
-            "    \"type\" : \"com.github.pull.create\",\n" +
-            "    \"source\" : \"https://github.com/cloudevents/spec/pull/123\",\n" +
-            "    \"id\" : \"A234-1234-1234\",\n" +
-            "    \"time\" : \"2018-04-05T17:31:00Z\",\n" +
-            "    \"comexampleextension1\" : \"value\",\n" +
-            "    \"datacontenttype\" : \"text/xml\",\n" +
-            "    \"data\" : \"<much wow=\\\"xml\\\"/>\"\n" +
-            "}";
+        private static readonly string jsonv10 = @"
+            {
+                'specversion' : '1.0',
+                'type' : 'com.github.pull.create',
+                'source' : 'https://github.com/cloudevents/spec/pull/123',
+                'id' : 'A234-1234-1234',
+                'time' : '2018-04-05T17:31:00Z',
+                'comexampleextension1' : 'value',
+                'datacontenttype' : 'text/xml',
+                'data' : '<much wow=\'xml\'/>'
+            }".Replace('\'', '"');
 
         [Fact]
         public void ReserializeTest()
@@ -42,9 +42,8 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(cloudEvent2.Data, cloudEvent.Data);
         }
 
-
         [Fact]
-        public void StructuredParseSuccess10()
+        public void StructuredParseSuccess()
         {
             var jsonFormatter = new JsonEventFormatter();
             var avroFormatter = new AvroEventFormatter();
@@ -57,32 +56,31 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
+            Assert.Equal(MediaTypeNames.Text.Xml, cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
-            var attr = cloudEvent.GetAttributes();
-            Assert.Equal("value", (string)attr["comexampleextension1"]);
+            Assert.Equal("value", (string)cloudEvent["comexampleextension1"]);
         }
-
         
         [Fact]
-        public void StructuredParseWithExtensionsSuccess10()
+        public void StructuredParseWithExtensionsSuccess()
         {
             var jsonFormatter = new JsonEventFormatter();
             var avroFormatter = new AvroEventFormatter();
-            var cloudEventJ = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10), new ComExampleExtension1Extension());
+            var extensionAttribute = CloudEventAttribute.CreateExtension("comexampleextension1", CloudEventAttributeType.String);
+            var cloudEventJ = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10), extensionAttribute);
             var avroData = avroFormatter.EncodeStructuredEvent(cloudEventJ, out var contentType);
-            var cloudEvent = avroFormatter.DecodeStructuredEvent(avroData, new ComExampleExtension1Extension());
+            var cloudEvent = avroFormatter.DecodeStructuredEvent(avroData, extensionAttribute);
 
             Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), cloudEvent.DataContentType);
+            Assert.Equal(MediaTypeNames.Text.Xml, cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
-            Assert.Equal("value", cloudEvent.Extension<ComExampleExtension1Extension>().ComExampleExtension1);
+            Assert.Equal("value", cloudEvent[extensionAttribute]);
         }
     }
 }
