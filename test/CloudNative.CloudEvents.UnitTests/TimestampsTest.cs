@@ -4,11 +4,10 @@
 
 using System;
 using Xunit;
+using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
 namespace CloudNative.CloudEvents.UnitTests
 {
-    using static TestHelpers;
-
     public class TimestampsTest
     {
         // TryParse and Parse are tested together, as they're effectively alternatives for the same thing.
@@ -21,7 +20,7 @@ namespace CloudNative.CloudEvents.UnitTests
         [InlineData("2021-01-18T14:52:01Z", 2021, 1, 18, 14, 52, 1, 0, 0)]
         [InlineData("2000-02-29T01:23:45.678+01:30", 2000, 2, 29, 1, 23, 45, 6_780_000, 90)]
         [InlineData("2000-02-29T01:23:45-01:30", 2000, 2, 29, 1, 23, 45, 0, -90)]
-        void Parse_Success_Simple(string text, int year, int month, int day, int hour, int minute, int second, int ticks, int offsetMinutes)
+        public void Parse_Success_Simple(string text, int year, int month, int day, int hour, int minute, int second, int ticks, int offsetMinutes)
         {
             var expected = new DateTimeOffset(year, month, day, hour, minute, second, 0, TimeSpan.FromMinutes(offsetMinutes))
                 .AddTicks(ticks);
@@ -44,7 +43,7 @@ namespace CloudNative.CloudEvents.UnitTests
         // (Realistically we're unlikely to get any values with greater precision than nanoseconds, but
         // we might as well test it.)
         [InlineData(".12345678912345", 1_234_567)]
-        void Parse_Success_VaryingFractionalSeconds(string fractionalPart, int expectedTicks)
+        public void Parse_Success_VaryingFractionalSeconds(string fractionalPart, int expectedTicks)
         {
             string text = $"2021-01-18T14:52:01{fractionalPart}+05:00";
             DateTimeOffset expected = new DateTimeOffset(2021, 1, 18, 14, 52, 1, 0, TimeSpan.FromHours(5))
@@ -67,7 +66,7 @@ namespace CloudNative.CloudEvents.UnitTests
         // Extreme values
         [InlineData("+14:00", 14 * 60)]
         [InlineData("-14:00", -14 * 60)]
-        void Parse_Success_VaryingUtcOffset(string offsetPart, int expectedOffsetMinutes)
+        public void Parse_Success_VaryingUtcOffset(string offsetPart, int expectedOffsetMinutes)
         {
             // No fractional seconds
             string text = $"2021-01-18T14:52:01{offsetPart}";
@@ -118,7 +117,7 @@ namespace CloudNative.CloudEvents.UnitTests
         [InlineData("2021-01-01T00:1:00Z")] // Non-padded minute
         [InlineData("2021-01-01T00:01:1Z")] // Non-padded second
         [InlineData("2021-01-01T00:01Z")] // No second part
-        void Parse_Failure(string text)
+        public void Parse_Failure(string text)
         {
             Assert.False(Timestamps.TryParse(text, out _));
             Assert.Throws<FormatException>(() => Timestamps.Parse(text));
@@ -144,7 +143,7 @@ namespace CloudNative.CloudEvents.UnitTests
         [InlineData("2021-01-18T14:52:01.123450Z")]
         [InlineData("2021-01-18T14:52:01.123456Z")]
         [InlineData("2021-01-18T14:52:01.1234567Z")]
-        void Format_Roundtrip(string input)
+        public void Format_Roundtrip(string input)
         {
             var parsed = Timestamps.Parse(input);
             var formatted = Timestamps.Format(parsed);
@@ -167,7 +166,7 @@ namespace CloudNative.CloudEvents.UnitTests
         [InlineData("2000-02-29T01:23:45.6781000000+01:30", "2000-02-29T01:23:45.678100+01:30")]
         // Tick precision
         [InlineData("2021-01-18T14:52:01.123456789Z", "2021-01-18T14:52:01.1234567Z")]
-        void Format_NonRoundtrip(string input, string expectedFormatted)
+        public void Format_NonRoundtrip(string input, string expectedFormatted)
         {
             var parsed = Timestamps.Parse(input);
             var formatted = Timestamps.Format(parsed);

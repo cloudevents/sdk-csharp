@@ -1,32 +1,33 @@
-// Copyright (c) Cloud Native Foundation. 
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using Avro;
+using Avro.Generic;
+using Avro.IO;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Mime;
+using System.Threading.Tasks;
+
 namespace CloudNative.CloudEvents
 {
-    using Avro;
-    using Avro.Generic;
-    using Avro.IO;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Net.Mime;
-    using System.Threading.Tasks;
-                                                               
     /// <summary>
-    /// Formatter that implements the JSON Event Format
+    /// Formatter that implements the Avro Event Format
     /// </summary>
     public class AvroEventFormatter : ICloudEventFormatter
     {
-        static readonly RecordSchema avroSchema;
-        static readonly DefaultReader avroReader;
-        static readonly DefaultWriter avroWriter;
+        private const string DataName = "data";
+        private static readonly RecordSchema avroSchema;
+        private static readonly DefaultReader avroReader;
+        private static readonly DefaultWriter avroWriter;
         
         static AvroEventFormatter()
         {
             // we're going to confidently assume that the embedded schema works. If not, type initialization
             // will fail and that's okay since the type is useless without the proper schema
-            using ( var sr = new StreamReader(typeof(AvroEventFormatter).Assembly.GetManifestResourceStream("CloudNative.CloudEvents.Avro.AvroSchema.json")))
+            using (var sr = new StreamReader(typeof(AvroEventFormatter).Assembly.GetManifestResourceStream("CloudNative.CloudEvents.Avro.AvroSchema.json")))
             {
                 avroSchema = (RecordSchema)RecordSchema.Parse(sr.ReadToEnd());
             }
@@ -35,72 +36,70 @@ namespace CloudNative.CloudEvents
         }
         public const string MediaTypeSuffix = "+avro";
 
-        public CloudEvent DecodeStructuredEvent(Stream data, params ICloudEventExtension[] extensions)
-        {
-            return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
-        }
+        public CloudEvent DecodeStructuredEvent(Stream data, params CloudEventAttribute[] extensionAttributes) =>
+            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>)extensionAttributes);
 
-        public Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<ICloudEventExtension> extensions)
-        {
-            return Task.FromResult(DecodeStructuredEvent(data, extensions));
-        }
+        // FIXME: We shouldn't use synchronous stream methods...
+        public Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            Task.FromResult(DecodeStructuredEvent(data, extensionAttributes));
 
-        public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions = null)
+        public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             var decoder = new Avro.IO.BinaryDecoder(data);
             var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
-            return DecodeGenericRecord(rawEvent, extensions);
+            return DecodeGenericRecord(rawEvent, extensionAttributes);
         }
 
-        public CloudEvent DecodeStructuredEvent(byte[] data, params ICloudEventExtension[] extensions)
-        {
-            return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
-        }
+        public CloudEvent DecodeStructuredEvent(byte[] data, params CloudEventAttribute[] extensionAttributes) =>
+            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
-        public CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<ICloudEventExtension> extensions = null)
-        {
-            return DecodeStructuredEvent(new MemoryStream(data), extensions);
-        }
+        public CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
 
-        public CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<ICloudEventExtension> extensions = null)
+        public CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             if (!record.TryGetValue("attribute", out var attrObj))
             {
                 return null;
             }
             IDictionary<string, object> recordAttributes = (IDictionary<string, object>)attrObj;
-            object data = null;
-            if (!record.TryGetValue("data", out data))
-            {
-                data = null;
-            }
 
             CloudEventsSpecVersion specVersion = CloudEventsSpecVersion.Default;
-            var cloudEvent = new CloudEvent(specVersion, extensions);
-            cloudEvent.Data = data;
+            if (recordAttributes.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var versionId) &&
+                versionId is string versionIdString)
+            {
+                specVersion = CloudEventsSpecVersion.FromVersionId(versionIdString);
+            }
+            var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
+            cloudEvent.Data = record.TryGetValue(DataName, out var data) ? data : null;
 
-            var attributes = cloudEvent.GetAttributes();
             foreach (var keyValuePair in recordAttributes)
             {
-                // skip the version since we set that above
-                if (keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), StringComparison.InvariantCultureIgnoreCase) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), StringComparison.InvariantCultureIgnoreCase) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V1_0), StringComparison.InvariantCultureIgnoreCase))
+                string key = keyValuePair.Key;
+                object value = keyValuePair.Value;
+                if (value is null)
                 {
                     continue;
                 }
-                if (keyValuePair.Key == CloudEventAttributes.SourceAttributeName(specVersion) ||
-                    keyValuePair.Key == CloudEventAttributes.DataSchemaAttributeName(specVersion))
+
+                if (key == CloudEventsSpecVersion.SpecVersionAttribute.Name || key == DataName)
                 {
-                    attributes[keyValuePair.Key] = new Uri((string)keyValuePair.Value);
+                    continue;
                 }
-                else if (keyValuePair.Key == CloudEventAttributes.TimeAttributeName(specVersion))
+
+                // The Avro schema allows the value to be a Boolean, integer, string or bytes.
+                // Timestamps and URIs are represented as strings, so we just use SetAttributeFromString to handle those.
+                if (value is bool || value is int || value is byte[])
                 {
-                    attributes[keyValuePair.Key] = Timestamps.Parse((string)keyValuePair.Value);
+                    cloudEvent[key] = value;
+                }
+                else if (value is string)
+                {
+                    cloudEvent.SetAttributeFromString(key, (string)value);
                 }
                 else
                 {
-                    attributes[keyValuePair.Key] = keyValuePair.Value;
+                    throw new ArgumentException($"Invalid value type from Avro record: {value.GetType()}");
                 }
             }
 
@@ -112,46 +111,19 @@ namespace CloudNative.CloudEvents
             contentType = new ContentType(CloudEvent.MediaType+AvroEventFormatter.MediaTypeSuffix);
 
             GenericRecord record = new GenericRecord(avroSchema);
+            record.Add(DataName, SerializeData(cloudEvent.Data));
             var recordAttributes = new Dictionary<string, object>();
-            var attributes = cloudEvent.GetAttributes();
-            foreach (var keyValuePair in attributes)
-            {
-                if (keyValuePair.Value == null)
-                {
-                    continue;
-                }
+            recordAttributes[CloudEventsSpecVersion.SpecVersionAttribute.Name] = cloudEvent.SpecVersion.VersionId;
 
-                if (keyValuePair.Value is ContentType valueContentType && !string.IsNullOrEmpty(valueContentType.MediaType))
-                {
-                    recordAttributes[keyValuePair.Key] = valueContentType.ToString();
-                }
-                else if (keyValuePair.Value is Uri uri)
-                {
-                    recordAttributes[keyValuePair.Key] = uri .ToString();
-                }
-                else if (keyValuePair.Value is DateTimeOffset timestamp)
-                {
-                    recordAttributes[keyValuePair.Key] = Timestamps.Format(timestamp);
-                }
-                else if (cloudEvent.SpecVersion == CloudEventsSpecVersion.V1_0 &&
-                         keyValuePair.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)))
-                {
-                    if (keyValuePair.Value is Stream stream)
-                    {
-                        using (var sr = new BinaryReader(stream))
-                        {
-                            record.Add("data", sr.ReadBytes((int)sr.BaseStream.Length));
-                        }
-                    }
-                    else
-                    {
-                        record.Add("data", keyValuePair.Value);
-                    }
-                }
-                else
-                {
-                    recordAttributes[keyValuePair.Key] = keyValuePair.Value;
-                }
+            foreach (var keyValuePair in cloudEvent.GetPopulatedAttributes())
+            {
+                var attribute = keyValuePair.Key;
+                var value = keyValuePair.Value;
+                // TODO: Create a mapping method in each direction, to have this logic more clearly separated.
+                var avroValue = value is bool || value is int || value is byte[] || value is string
+                    ? value
+                    : attribute.Format(value);
+                recordAttributes[attribute.Name] = avroValue;
             }
             record.Add("attribute", recordAttributes);
             MemoryStream memStream = new MemoryStream();
@@ -160,14 +132,26 @@ namespace CloudNative.CloudEvents
             return new Span<byte>(memStream.GetBuffer(), 0, (int)memStream.Length).ToArray();
         }
 
-        public object DecodeAttribute(CloudEventsSpecVersion specVersion, string name, byte[] data, IEnumerable<ICloudEventExtension> extensions = null)
+        /// <summary>
+        /// Convert data into a suitable format for inclusion in an Avro record.
+        /// TODO: Asynchronous version of this...
+        /// </summary>
+        private static object SerializeData(object data)
         {
-            throw new NotSupportedException("Encoding invidual attributes is not supported for Apache Avro");
+            if (data is Stream stream)
+            {
+                var ms = new MemoryStream();
+                stream.CopyTo(ms);
+                return ms.ToArray();
+            }
+            return data;
         }
 
-        public byte[] EncodeAttribute(CloudEventsSpecVersion specVersion, string name, object value, IEnumerable<ICloudEventExtension> extensions = null)
-        {
-            throw new NotSupportedException("Encoding invidual attributes is not supported for Apache Avro");
-        }
+        // TODO: Validate that this is correct...
+        public byte[] EncodeData(object value) =>
+            throw new NotSupportedException("The Avro event formatter does not support binary content mode");
+
+        public object DecodeData(byte[] value, string contentType) =>
+            throw new NotSupportedException("The Avro event formatter does not support binary content mode");
     }
 }

@@ -1,90 +1,96 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using Amqp;
+using Amqp.Framing;
+using Amqp.Types;
+using System;
+using System.IO;
+
+// TODO: Avoid the use of inheritance here? We're not really adding anything.
 namespace CloudNative.CloudEvents.Amqp
 {
-    using System;
-    using System.ComponentModel;
-    using System.IO;
-    using global::Amqp;
-    using global::Amqp.Framing;
-    using global::Amqp.Types;
-
     public class AmqpCloudEventMessage : Message
     {
         public AmqpCloudEventMessage(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
         {
+            ApplicationProperties = new ApplicationProperties();
+            MapHeaders(cloudEvent);
+
             if (contentMode == ContentMode.Structured)
             {
-                this.BodySection = new Data
-                    { Binary = formatter.EncodeStructuredEvent(cloudEvent, out var contentType) };
-                this.Properties = new Properties() { ContentType = contentType.MediaType };
-                this.ApplicationProperties = new ApplicationProperties();
+                BodySection = new Data
+                {
+                    Binary = formatter.EncodeStructuredEvent(cloudEvent, out var contentType)
+                };
+                Properties = new Properties { ContentType = contentType.MediaType };
+                ApplicationProperties = new ApplicationProperties();
                 MapHeaders(cloudEvent);
                 return;
             }
-
-            if (cloudEvent.Data is byte[])
+            else
             {
-                this.BodySection = new Data { Binary = (byte[])cloudEvent.Data };
+                BodySection = SerializeData(cloudEvent.Data);
+                Properties = new Properties { ContentType = cloudEvent.DataContentType };
             }
-            else if (cloudEvent.Data is Stream)
-            {
-                if (cloudEvent.Data is MemoryStream)
-                {
-                    this.BodySection = new Data { Binary = ((MemoryStream)cloudEvent.Data).ToArray() };
-                }
-                else
-                {
-                    var buffer = new MemoryStream();
-                    ((Stream)cloudEvent.Data).CopyTo(buffer);
-                    this.BodySection = new Data { Binary = buffer.ToArray() };
-                }
-            }
-            else if (cloudEvent.Data is string)
-            {
-                this.BodySection = new AmqpValue() { Value = cloudEvent.Data };
-            }
-
-            this.Properties = new Properties() { ContentType = cloudEvent.DataContentType?.MediaType };
-            this.ApplicationProperties = new ApplicationProperties();
-            MapHeaders(cloudEvent);
         }
 
-        void MapHeaders(CloudEvent cloudEvent)
+        private void MapHeaders(CloudEvent cloudEvent)
         {
-            foreach (var attribute in cloudEvent.GetAttributes())
+            var properties = ApplicationProperties.Map;
+            properties.Add(AmqpClientExtensions.SpecVersionAmqpHeader, cloudEvent.SpecVersion.VersionId);
+            
+            foreach (var pair in cloudEvent.GetPopulatedAttributes())
             {
-                if (!attribute.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)) &&
-                    !attribute.Key.Equals(CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion)))
-                {
-                    string key = "cloudEvents:" + attribute.Key;
-                    if (attribute.Value is Uri)
-                    {
-                        this.ApplicationProperties.Map.Add(key, attribute.Value.ToString());
-                    }
-                    else if (attribute.Value is DateTimeOffset dto)
-                    {
-                        // AMQPNetLite doesn't support DateTimeOffset values, so convert to UTC.
-                        // That means we can't roundtrip events with non-UTC timestamps, but that's not awful.
-                        this.ApplicationProperties.Map.Add(key, dto.UtcDateTime);
-                    }
-                    else if (attribute.Value is string)
-                    {
-                        this.ApplicationProperties.Map.Add(key, attribute.Value);
-                    }
-                    else
-                    {
-                        Map dict = new Map();
-                        foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(attribute.Value))
-                        {
-                            dict.Add(descriptor.Name, descriptor.GetValue(attribute.Value));
-                        }
+                var attribute = pair.Key;
 
-                        this.ApplicationProperties.Map.Add("cloudEvents:" + attribute.Key, dict);
-                    }
+                // The content type is specified elsewhere.
+                if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute)
+                {
+                    continue;
                 }
+
+                string propKey = AmqpClientExtensions.AmqpHeaderPrefix + attribute.Name;
+
+                // TODO: Check that AMQP can handle byte[], bool and int values
+                object propValue = pair.Value switch
+                {
+                    Uri uri => uri.ToString(),
+                    // AMQPNetLite doesn't support DateTimeOffset values, so convert to UTC.
+                    // That means we can't roundtrip events with non-UTC timestamps, but that's not awful.
+                    DateTimeOffset dto => dto.UtcDateTime,
+                    _ => pair.Value
+                };
+                properties.Add(propKey, propValue);
+            }
+        }
+
+        /// <summary>
+        /// Convert data into a suitable format for inclusion in an Avro record.
+        /// TODO: Asynchronous version?
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private static RestrictedDescribed SerializeData(object data)
+        {
+            switch (data)
+            {
+                case null:
+                    return null;
+                case byte[] bytes:
+                    return new Data { Binary = bytes };
+                case MemoryStream memoryStream:
+                    // Note: this will return the whole stream, regardless of position...
+                    return new Data { Binary = memoryStream.ToArray() };
+                case Stream stream:
+                    var buffer = new MemoryStream();
+                    stream.CopyTo(buffer);
+                    return new Data { Binary = buffer.ToArray() };
+                case string text:
+                    return new AmqpValue { Value = text };
+                default:
+                    throw new ArgumentException($"Unsupported type for AMQP data: {data.GetType()}");
             }
         }
     }

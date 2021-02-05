@@ -1,123 +1,117 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Mime;
+using System.Text;
+using System.Threading.Tasks;
+
 namespace CloudNative.CloudEvents
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Net.Mime;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
-
     /// <summary>
     /// Formatter that implements the JSON Event Format
     /// </summary>
     public class JsonEventFormatter : ICloudEventFormatter
     {
+        private const string DataBase64 = "data_base64";
+        private const string Data = "data";
         public const string MediaTypeSuffix = "+json";
 
-        public CloudEvent DecodeStructuredEvent(Stream data, params ICloudEventExtension[] extensions)
-        {
-            return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
-        }
+        public CloudEvent DecodeStructuredEvent(Stream data, params CloudEventAttribute[] extensionAttributes) =>
+            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
-        public async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<ICloudEventExtension> extensions)
+        public async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
             {
                 DateParseHandling = DateParseHandling.DateTimeOffset
             };
-            var jObject = await JObject.LoadAsync(jsonReader);
-            return DecodeJObject(jObject, extensions);
+            var jObject = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+            return DecodeJObject(jObject, extensionAttributes);
         }
 
-        public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<ICloudEventExtension> extensions = null)
+        public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes = null)
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
             {
                 DateParseHandling = DateParseHandling.DateTimeOffset
             };
             var jObject = JObject.Load(jsonReader);
-            return DecodeJObject(jObject, extensions);
+            return DecodeJObject(jObject, extensionAttributes);
         }
 
-        public CloudEvent DecodeStructuredEvent(byte[] data, params ICloudEventExtension[] extensions)
-        {
-            return DecodeStructuredEvent(data, (IEnumerable<ICloudEventExtension>)extensions);
-        }
+        public CloudEvent DecodeStructuredEvent(byte[] data, params CloudEventAttribute[] extensionAttributes) =>
+            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>)extensionAttributes);
 
-        public CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<ICloudEventExtension> extensions = null) =>
-            DecodeStructuredEvent(new MemoryStream(data), extensions);
+        public CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes = null) =>
+            DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
 
-        public CloudEvent DecodeJObject(JObject jObject, IEnumerable<ICloudEventExtension> extensions = null)
+        // TODO: If we make this private, we'll have significantly more control over what token types we see.
+        // For example, we could turn off date parsing entirely, and we may never get "Uri" tokens either.
+        public CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute> extensionAttributes = null)
         {
             CloudEventsSpecVersion specVersion = CloudEventsSpecVersion.Default;
-            if (jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1)) ||
-                jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1).ToLowerInvariant()))
+            if (jObject.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionToken))
             {
-                specVersion = CloudEventsSpecVersion.V0_1;
-            }
-            if (jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)) ||
-                jObject.ContainsKey(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2).ToLowerInvariant()))
-            {
-                specVersion =
-                    ((string)jObject[CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2)] ==
-                     "0.2")
-                        ? CloudEventsSpecVersion.V0_2 :
-                        ((string)jObject[CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_3)] ==
-                         "0.3")
-                            ? CloudEventsSpecVersion.V0_3 : CloudEventsSpecVersion.Default;
+                string versionId = (string)specVersionToken;
+                specVersion = CloudEventsSpecVersion.FromVersionId(versionId);
+                // TODO: Throw if specVersion is null?
             }
 
-            var cloudEvent = new CloudEvent(specVersion, extensions);
-            var attributes = cloudEvent.GetAttributes();
+            var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
             foreach (var keyValuePair in jObject)
             {
-                // skip the version since we set that above
-                if (keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_1), StringComparison.InvariantCultureIgnoreCase) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V0_2), StringComparison.InvariantCultureIgnoreCase) ||
-                    keyValuePair.Key.Equals(CloudEventAttributes.SpecVersionAttributeName(CloudEventsSpecVersion.V1_0), StringComparison.InvariantCultureIgnoreCase))
+                var key = keyValuePair.Key;
+                var value = keyValuePair.Value;
+
+                // Skip the spec version attribute, which we've already taken account of.
+                if (key == CloudEventsSpecVersion.SpecVersionAttribute.Name)
                 {
                     continue;
                 }
 
-                if (specVersion == CloudEventsSpecVersion.V1_0)
+                // TODO: Is the data_base64 name version-specific?
+                if (specVersion == CloudEventsSpecVersion.V1_0 && key == DataBase64)
                 {
-                    // handle base64 encoded binaries
-                    if (keyValuePair.Key.Equals("data_base64"))
-                    {
-                        attributes["data"] = Convert.FromBase64String(keyValuePair.Value.ToString());
-                        continue;
-                    }
+                    // Handle base64 encoded binaries
+                    cloudEvent.Data = Convert.FromBase64String((string)value);
+                    continue;
+                }
+                if (key == Data)
+                {
+                    // FIXME: Deserialize where appropriate.
+                    // Consider whether there are any options here to consider beyond "string" and "object".
+                    // (e.g. arrays, numbers etc).
+                    // Note: the cast to "object" is important here, otherwise the string branch is implicitly
+                    // converted back to JToken...
+                    cloudEvent.Data = value.Type == JTokenType.String ? (string) value : (object) value;
+                    continue;
                 }
 
-                switch (keyValuePair.Value.Type)
+                var attribute = cloudEvent.GetAttribute(key);
+
+                // Set the attribute in the event, taking account of mismatches between the type in the JObject
+                // and the attribute type as best we can.
+
+                // TODO: This currently performs more conversions than it really should, in the cause of simplicity.
+                // We basically need a matrix of "attribute type vs token type" but that's rather complicated.
+
+                string attributeValue = value.Type switch
                 {
-                    case JTokenType.String:
-                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<string>();
-                        break;
-                    case JTokenType.Date:
-                        // TODO: Check this is appropriate. (Should we use Timestamps instead?)
-                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<DateTimeOffset>();
-                        break;
-                    case JTokenType.Uri:
-                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<Uri>();
-                        break;
-                    case JTokenType.Null:
-                        attributes[keyValuePair.Key] = null;
-                        break;
-                    case JTokenType.Integer:
-                        attributes[keyValuePair.Key] = keyValuePair.Value.ToObject<int>();
-                        break;
-                    default:
-                        attributes[keyValuePair.Key] = (dynamic)keyValuePair.Value;
-                        break;
-                }
+                    JTokenType.String => (string)value,
+                    JTokenType.Date => CloudEventAttributeType.Timestamp.Format((DateTimeOffset)value),
+                    JTokenType.Uri => CloudEventAttributeType.UriReference.Format((Uri)value),
+                    JTokenType.Null => null, // TODO: Check we want to do this. It's a bit weird.
+                    JTokenType.Integer => CloudEventAttributeType.Integer.Format((int)value),
+                    _ => throw new ArgumentException($"Invalid token type '{value.Type}' for CloudEvent attribute")
+                };
+
+                cloudEvent.SetAttributeFromString(key, attributeValue);
             }
 
             return cloudEvent;
@@ -131,121 +125,71 @@ namespace CloudNative.CloudEvents
             };
 
             JObject jObject = new JObject();
-            var attributes = cloudEvent.GetAttributes();
+            var attributes = cloudEvent.GetPopulatedAttributes();
             foreach (var keyValuePair in attributes)
             {
-                if (keyValuePair.Value == null)
-                {
-                    continue;
-                }
+                jObject[keyValuePair.Key.Name] = JToken.FromObject(keyValuePair.Value);
+            }
 
-                if (keyValuePair.Value is ContentType contentTypeValue && !string.IsNullOrEmpty(contentTypeValue.MediaType))
+            // FIXME: This is all a bit arbitrary.
+            if (cloudEvent.Data is object)
+            {
+                // FIXME: This assumes there's nothing beyond the media type...
+                if (cloudEvent.DataContentType == "application/json")
                 {
-                    jObject[keyValuePair.Key] = JToken.FromObject(contentTypeValue.ToString());
+                    jObject[Data] = JToken.FromObject(cloudEvent.Data);
                 }
-                else if (cloudEvent.SpecVersion == CloudEventsSpecVersion.V1_0 &&
-                         keyValuePair.Key.Equals(CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion)))
+                else if (cloudEvent.Data is string text && cloudEvent.DataContentType?.StartsWith("text/") == true)
                 {
-                    if (keyValuePair.Value is Stream stream)
-                    {
-                        using (var sr = new BinaryReader(stream))
-                        {
-                            jObject["data_base64"] = Convert.ToBase64String(sr.ReadBytes((int)sr.BaseStream.Length));
-                        }
-                    }
-                    else if (keyValuePair.Value is IEnumerable<byte> bytes)
-                    {
-                        // TODO: Avoid creating a copy if it's already a byte array.
-                        jObject["data_base64"] = Convert.ToBase64String(bytes.ToArray());
-                    }
-                    else
-                    {
-                        jObject["data"] = JToken.FromObject(keyValuePair.Value);
-                    }   
+                    jObject[Data] = text;
+                }
+                else if (cloudEvent.Data is byte[] binary)
+                {
+                    jObject[DataBase64] = Convert.ToBase64String(binary);
                 }
                 else
                 {
-                    jObject[keyValuePair.Key] = JToken.FromObject(keyValuePair.Value);
+                    throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type {cloudEvent.DataContentType}");
                 }
             }
+
             return Encoding.UTF8.GetBytes(jObject.ToString());
         }
 
-        public object DecodeAttribute(CloudEventsSpecVersion specVersion, string name, byte[] data, IEnumerable<ICloudEventExtension> extensions = null)
+        // TODO: How should the caller know whether the result is "raw" or should be stored in data_base64?
+        public byte[] EncodeData(object value)
         {
-            if (name.Equals(CloudEventAttributes.IdAttributeName(specVersion)) ||
-                name.Equals(CloudEventAttributes.TypeAttributeName(specVersion)) ||
-                name.Equals(CloudEventAttributes.SubjectAttributeName(specVersion)))
+            // TODO: Check this is what we want.
+            // In particular, if this is just other text or binary data, rather than JSON, what does it
+            // mean to have a JSON event format?
+            string json = value switch
             {
-                return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string));
-            }
-
-            if (name.Equals(CloudEventAttributes.TimeAttributeName(specVersion)))
-            {
-                return Timestamps.Parse(Encoding.UTF8.GetString(data));
-            }
-
-            if (name.Equals(CloudEventAttributes.SourceAttributeName(specVersion)) ||
-                name.Equals(CloudEventAttributes.DataSchemaAttributeName(specVersion)))
-            {
-                var uri = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string)) as string;
-                return new Uri(uri);
-            }
-
-            if (name.Equals(CloudEventAttributes.DataContentTypeAttributeName(specVersion)))
-            {
-                var s = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), typeof(string)) as string;
-                return new ContentType(s);
-            }
-
-            if (extensions != null)
-            {
-                foreach (var extension in extensions)
-                {
-                    // TODO: Use appropriate parsing, e.g. for timestamps
-                    Type type = extension.GetAttributeType(name);
-                    if (type != null)
-                    {
-                        return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), type);
-                    }
-                }
-            }
-            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data));
+                JToken token => token.ToString(), // Formatting?
+                string text => text,
+                byte[] data => Convert.ToBase64String(data),
+                null => null,
+                _ => JsonConvert.SerializeObject(value)
+            };
+            return json is null ? new byte[0] : Encoding.UTF8.GetBytes(json);
         }
 
-        public byte[] EncodeAttribute(CloudEventsSpecVersion specVersion, string name, object value, IEnumerable<ICloudEventExtension> extensions = null)
+        public object DecodeData(byte[] value, string contentType)
         {
-            if (name.Equals(CloudEventAttributes.DataAttributeName(specVersion)))
+            if (contentType == "application/json")
             {
-                if (value is Stream)
+                var jsonReader = new JsonTextReader(new StreamReader(new MemoryStream(value), Encoding.UTF8, true, 8192, true))
                 {
-                    using (var buffer = new MemoryStream())
-                    {
-                        ((Stream)value).CopyTo(buffer);
-                        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(buffer.ToArray()));
-                    }
-                }
+                    DateParseHandling = DateParseHandling.DateTimeOffset
+                };
+                return JToken.Load(jsonReader);
             }
-
-            if (extensions != null)
+            else if (contentType?.StartsWith("text/") == true)
             {
-                foreach (var extension in extensions)
-                {
-                    Type type = extension.GetAttributeType(name);
-                    if (type != null)
-                    {
-                        // TODO: Use appropriate formatting, e.g. for timestamps
-                        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(Convert.ChangeType(value, type)));
-                    }
-                }
+                // FIXME: Even if we want to do this, we really need to know if there's a content encoding.
+                return Encoding.UTF8.GetString(value);
             }
-
-            if (value is DateTimeOffset dto)
-            {
-                return Encoding.UTF8.GetBytes(Timestamps.Format(dto));
-            }
-
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value));
+            // TODO: Clone?
+            return value;
         }
     }
 }

@@ -1,31 +1,36 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Extensions;
+using Confluent.Kafka;
+using System;
+using System.IO;
+using System.Text;
+
 namespace CloudNative.CloudEvents.Kafka
 {
-    using CloudNative.CloudEvents.Extensions;
-    using Confluent.Kafka;
-    using System;
-    using System.IO;
-    using System.Text;
-
+    // TODO: avoid the inheritance here? Constructors are somewhat constricting...
     public class KafkaCloudEventMessage : Message<string, byte[]>
     {
-        public const string KafkaHeaderPerfix = "ce_";
+        internal const string KafkaHeaderPrefix = "ce_";
 
-        public const string KafkaContentTypeAttributeName = "content-type";
+        internal const string KafkaContentTypeAttributeName = "content-type";
+        internal const string SpecVersionKafkaHeader = KafkaHeaderPrefix + "specversion";
 
         public KafkaCloudEventMessage(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
         {
+            // TODO: Is this appropriate? Why can't we transport a CloudEvent without data in Kafka?
             if (cloudEvent.Data == null)
             {
                 throw new ArgumentNullException(nameof(cloudEvent.Data));
             }
 
-            Headers = new Headers();
-
-            Key = ExtractPartitionKey(cloudEvent);            
+            Headers = new Headers
+            {
+                {  SpecVersionKafkaHeader, Encoding.UTF8.GetBytes(cloudEvent.SpecVersion.VersionId) }
+            };
+            Key = (string) cloudEvent[Partitioning.PartitionKeyAttribute];
 
             if (contentMode == ContentMode.Structured)
             {
@@ -40,6 +45,7 @@ namespace CloudNative.CloudEvents.Kafka
                 }
                 else if (cloudEvent.Data is Stream dataStream)
                 {
+                    // TODO: Extract this common code somewhere
                     if (dataStream is MemoryStream dataMemoryStream)
                     {
                         Value = dataMemoryStream.ToArray();
@@ -55,8 +61,10 @@ namespace CloudNative.CloudEvents.Kafka
                 {
                     throw new InvalidOperationException($"{cloudEvent.Data.GetType()} type is not supported for Cloud Event's Value.");
                 }
-
-                Headers.Add(KafkaContentTypeAttributeName, Encoding.UTF8.GetBytes(cloudEvent.DataContentType?.MediaType));                
+                if (cloudEvent.DataContentType is string dataContentType)
+                {
+                    Headers.Add(KafkaContentTypeAttributeName, Encoding.UTF8.GetBytes(dataContentType));
+                }
             }
 
             MapHeaders(cloudEvent, formatter);
@@ -64,25 +72,19 @@ namespace CloudNative.CloudEvents.Kafka
 
         private void MapHeaders(CloudEvent cloudEvent, ICloudEventFormatter formatter)
         {
-            foreach (var attr in cloudEvent.GetAttributes())
+
+            foreach (var pair in cloudEvent.GetPopulatedAttributes())
             {
-                if (string.Equals(attr.Key, CloudEventAttributes.DataAttributeName(cloudEvent.SpecVersion))                    
-                    || string.Equals(attr.Key, CloudEventAttributes.DataContentTypeAttributeName(cloudEvent.SpecVersion))
-                    || string.Equals(attr.Key, PartitioningExtension.PartitioningKeyAttributeName))
+                var attribute = pair.Key;
+                if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute ||
+                    attribute.Name == Partitioning.PartitionKeyAttribute.Name)
                 {
                     continue;
                 }
-
-                Headers.Add(KafkaHeaderPerfix + attr.Key, 
-                    formatter.EncodeAttribute(cloudEvent.SpecVersion, attr.Key, attr.Value, cloudEvent.Extensions.Values));
+                var value = attribute.Format(pair.Value);
+                Headers.Add(KafkaHeaderPrefix + attribute.Name, Encoding.UTF8.GetBytes(value));
             }
         }
 
-        protected string ExtractPartitionKey(CloudEvent cloudEvent)
-        {
-            var extension = cloudEvent.Extension<PartitioningExtension>();
-
-            return extension?.PartitioningKeyValue;
-        }
     }
 }  

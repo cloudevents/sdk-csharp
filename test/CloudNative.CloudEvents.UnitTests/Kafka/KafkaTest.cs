@@ -1,22 +1,19 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-namespace CloudNative.CloudEvents.UnitTests
-{
-    using System;
-    using System.Net.Mime;
-    using CloudNative.CloudEvents.Amqp;
-    using CloudNative.CloudEvents.Kafka;
-    using Newtonsoft.Json;
-    using Xunit;
-    using Confluent.Kafka;
-    using Newtonsoft.Json.Linq;
-    using System.Collections.Generic;
-    using System.Text;
-    using CloudNative.CloudEvents.Extensions;
-    using static TestHelpers;
+using CloudNative.CloudEvents.Extensions;
+using Confluent.Kafka;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Net.Mime;
+using System.Text;
+using Xunit;
+using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
+namespace CloudNative.CloudEvents.Kafka.UnitTests
+{
     public class KafkaTest
     {
         [Fact]
@@ -28,19 +25,17 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var jsonEventFormatter = new JsonEventFormatter();
 
-            var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V1_0,
-                "com.github.pull.create",
-                source: new Uri("https://github.com/cloudevents/spec/pull"),
-                subject: "123")
+            var cloudEvent = new CloudEvent
             {
+                Type = "com.github.pull.create",
+                Source = new Uri("https://github.com/cloudevents/spec/pull"),
+                Subject = "123",
                 Id = "A234-1234-1234",
                 Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = new ContentType(MediaTypeNames.Text.Xml),
-                Data = "<much wow=\"xml\"/>"
+                DataContentType = MediaTypeNames.Text.Xml,
+                Data = "<much wow=\"xml\"/>",
+                ["comexampleextension1"] = "value"
             };
-
-            var attrs = cloudEvent.GetAttributes();
-            attrs["comexampleextension1"] = "value";
        
             var message = new KafkaCloudEventMessage(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
 
@@ -60,11 +55,10 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("123", receivedCloudEvent.Subject);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.DataContentType);
+            Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            var attr = receivedCloudEvent.GetAttributes();
-            Assert.Equal("value", (string)attr["comexampleextension1"]);
+            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -75,19 +69,17 @@ namespace CloudNative.CloudEvents.UnitTests
             // the `Message<T, K>`
 
             var jsonEventFormatter = new JsonEventFormatter();
-            var cloudEvent = new CloudEvent("com.github.pull.create",
-                new Uri("https://github.com/cloudevents/spec/pull/123"),
-                extensions: new PartitioningExtension())
+            var cloudEvent = new CloudEvent(Partitioning.AllAttributes)
             {
+                Type = "com.github.pull.create",
+                Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
                 Id = "A234-1234-1234",
                 Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = new ContentType(MediaTypeNames.Text.Xml),
-                Data = Encoding.UTF8.GetBytes("<much wow=\"xml\"/>")
+                DataContentType = MediaTypeNames.Text.Xml,
+                Data = Encoding.UTF8.GetBytes("<much wow=\"xml\"/>"),
+                ["comexampleextension1"] = "value",
+                [Partitioning.PartitionKeyAttribute] = "hello much wow"
             };
-
-            var attrs = cloudEvent.GetAttributes();
-            attrs["comexampleextension1"] = "value";
-            cloudEvent.Extension<PartitioningExtension>().PartitioningKeyValue = "hello much wow";
 
             var message = new KafkaCloudEventMessage(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
@@ -102,19 +94,18 @@ namespace CloudNative.CloudEvents.UnitTests
             var messageCopy = JsonConvert.DeserializeObject<Message<string, byte[]>>(serialized, settings);
 
             Assert.True(messageCopy.IsCloudEvent());
-            var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, new PartitioningExtension());
+            var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, Partitioning.AllAttributes);
 
             Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.DataContentType);
+            Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal(Encoding.UTF8.GetBytes("<much wow=\"xml\"/>"), receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", receivedCloudEvent.Extension<PartitioningExtension>().PartitioningKeyValue);
+            Assert.Equal("hello much wow", (string) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
-            var attr = receivedCloudEvent.GetAttributes();
-            Assert.Equal("value", (string)attr["comexampleextension1"]);
+            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
         }
 
         private class HeadersConverter : JsonConverter

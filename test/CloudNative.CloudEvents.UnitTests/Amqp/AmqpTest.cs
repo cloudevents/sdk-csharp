@@ -1,16 +1,15 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-namespace CloudNative.CloudEvents.UnitTests
-{
-    using System;
-    using System.Net.Mime;
-    using CloudNative.CloudEvents.Amqp;
-    using global::Amqp;
-    using Xunit;
-    using static TestHelpers;
+using System;
+using System.Net.Mime;
+using Amqp;
+using Xunit;
+using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
+namespace CloudNative.CloudEvents.Amqp.UnitTests
+{
     public class AmqpTest
     {
         [Fact]
@@ -18,22 +17,17 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             // the AMQPNetLite library is factored such
             // that we don't need to do a wire test here
-
-
-            var jsonEventFormatter = new JsonEventFormatter();
-            var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V1_0,
-                "com.github.pull.create",
-                source: new Uri("https://github.com/cloudevents/spec/pull"),
-                subject: "123")
+            var cloudEvent = new CloudEvent
             {
+                Type = "com.github.pull.create",
+                Source = new Uri("https://github.com/cloudevents/spec/pull"),
+                Subject = "123",
                 Id = "A234-1234-1234",
                 Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = new ContentType(MediaTypeNames.Text.Xml),
-                Data = "<much wow=\"xml\"/>"
+                DataContentType = MediaTypeNames.Text.Xml,
+                Data = "<much wow=\"xml\"/>",
+                ["comexampleextension1"] = "value"
             };
-
-            var attrs = cloudEvent.GetAttributes();
-            attrs["comexampleextension1"] = "value";
             
             var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
@@ -41,7 +35,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var message1 = Message.Decode(encodedAmqpMessage);
             Assert.True(message1.IsCloudEvent());
-            var receivedCloudEvent = message1.ToCloudEvent();
+            var receivedCloudEvent = message1.ToCloudEvent(new JsonEventFormatter());
 
             Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
@@ -49,11 +43,10 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("123", receivedCloudEvent.Subject);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.DataContentType);
+            Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            var attr = receivedCloudEvent.GetAttributes();
-            Assert.Equal("value", (string)attr["comexampleextension1"]);
+            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -62,58 +55,58 @@ namespace CloudNative.CloudEvents.UnitTests
             // the AMQPNetLite library is factored such
             // that we don't need to do a wire test here
 
-
-            var jsonEventFormatter = new JsonEventFormatter();
-            var cloudEvent = new CloudEvent("com.github.pull.create",
-                new Uri("https://github.com/cloudevents/spec/pull/123"))
+            var cloudEvent = new CloudEvent
             {
+                Type = "com.github.pull.create",
+                Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
+                Subject = "123",
                 Id = "A234-1234-1234",
                 Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = new ContentType(MediaTypeNames.Text.Xml),
-                Data = "<much wow=\"xml\"/>"
+                DataContentType = MediaTypeNames.Text.Xml,
+                Data = "<much wow=\"xml\"/>",
+                ["comexampleextension1"] = "value"
             };
 
-            var attrs = cloudEvent.GetAttributes();
-            attrs["comexampleextension1"] = "value";
-            
-            var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            // No formatter is needed for binary mode.
+            var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, null);
             Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
 
             var message1 = Message.Decode(encodedAmqpMessage);
             Assert.True(message1.IsCloudEvent());
-            var receivedCloudEvent = message1.ToCloudEvent();
+            // No formatter is needed for binary mode.
+            var receivedCloudEvent = message1.ToCloudEvent(null);
 
             Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
-            Assert.Equal(new ContentType(MediaTypeNames.Text.Xml), receivedCloudEvent.DataContentType);
+            Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            var attr = receivedCloudEvent.GetAttributes();
-            Assert.Equal("value", (string)attr["comexampleextension1"]);            
+            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
         public void AmqpNormalizesTimestampsToUtc()
         {
-            var cloudEvent = new CloudEvent("com.github.pull.create",
-                new Uri("https://github.com/cloudevents/spec/pull/123"))
+            var cloudEvent = new CloudEvent
             {
+                Type = "com.github.pull.create",
+                Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
                 Id = "A234-1234-1234",
                 // 2018-04-05T18:31:00+01:00 => 2018-04-05T17:31:00Z
                 Time = new DateTimeOffset(2018, 4, 5, 18, 31, 0, TimeSpan.FromHours(1)),
-                DataContentType = new ContentType(MediaTypeNames.Text.Xml),
+                DataContentType = MediaTypeNames.Text.Xml,
                 Data = "<much wow=\"xml\"/>"
             };
 
-            var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, null);
             var encodedAmqpMessage = message.Encode();
 
             var message1 = Message.Decode(encodedAmqpMessage);
-            var receivedCloudEvent = message1.ToCloudEvent();
+            var receivedCloudEvent = message1.ToCloudEvent(null);
 
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
         }

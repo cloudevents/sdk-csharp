@@ -1,19 +1,24 @@
-﻿// Copyright (c) Cloud Native Foundation. 
+﻿// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using System;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Net.Http.Headers;
+
 namespace CloudNative.CloudEvents
 {
-    using System;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Mvc.Formatters;
-    using Microsoft.Net.Http.Headers;
+    // FIXME: This doesn't get called for binary CloudEvents without content, or with a different data content type.
 
     public class CloudEventJsonInputFormatter : TextInputFormatter
     {
+        private readonly ICloudEventFormatter _formatter;
+
         public CloudEventJsonInputFormatter()
         {
+            _formatter = new JsonEventFormatter();
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/cloudevents+json"));
 
@@ -37,7 +42,7 @@ namespace CloudNative.CloudEvents
 
             try
             {
-                var cloudEvent = await request.ReadCloudEventAsync();
+                var cloudEvent = await request.ReadCloudEventAsync(_formatter);
                 return await InputFormatterResult.SuccessAsync(cloudEvent);
             }
             catch (Exception)
