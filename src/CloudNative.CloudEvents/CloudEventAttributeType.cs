@@ -37,12 +37,12 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// An absolute uniform resource identifier.
         /// </summary>
-        public static CloudEventAttributeType Uri { get; } = new UriType("URI", allowRelative: false);
+        public static CloudEventAttributeType Uri { get; } = new UriType();
 
         /// <summary>
         /// A uniform resource identifier reference.
         /// </summary>
-        public static CloudEventAttributeType UriReference { get; } = new UriType("URI-Reference", allowRelative: true);
+        public static CloudEventAttributeType UriReference { get; } = new UriReferenceType();
 
         /// <summary>
         /// A date and time expression using the Gregorian calendar.
@@ -167,26 +167,46 @@ namespace CloudNative.CloudEvents
         // it very hard to really validate.
         // Note that it doesn't look like IsWellFormedOriginalString actually checks whether things 
         // need escaping anyway :(
+        // While URI and URI-Reference could be implemented in the same class, there were sufficient
+        // differences to make it not worthwhile.
         private class UriType : GenericCloudEventsAttributeType<Uri>
         {
-            private readonly UriKind uriKind;
-
-            public UriType(string name, bool allowRelative) : base(name)
+            public UriType() : base("URI")
             {
-                uriKind = allowRelative ? UriKind.RelativeOrAbsolute : UriKind.Absolute;
             }
 
             protected override string FormatImpl(Uri value) => value.OriginalString;
 
-            protected override Uri ParseImpl(string value) => new Uri(value, uriKind);
+            protected override Uri ParseImpl(string value)
+            {
+                Uri uri = new Uri(value, UriKind.Absolute);
+                // On Linux, URIs starting with '/' are implicitly absolute with a scheme of "file".
+                // We don't want that...
+                if (value.StartsWith("/"))
+                {
+                    throw new UriFormatException("Invalid URI: expected an absolute URI");
+                }
+                return uri;
+            }
 
             protected override void ValidateImpl(Uri value)
             {
-                if (uriKind == UriKind.Absolute && !value.IsAbsoluteUri)
+                if (!value.IsAbsoluteUri)
                 {
                     throw new ArgumentException("URI must be absolute.");
-                }                
+                }
             }
+        }
+
+        private class UriReferenceType : GenericCloudEventsAttributeType<Uri>
+        {
+            public UriReferenceType() : base("URI-Reference")
+            {
+            }
+
+            protected override string FormatImpl(Uri value) => value.OriginalString;
+
+            protected override Uri ParseImpl(string value) => new Uri(value, UriKind.RelativeOrAbsolute);
         }
 
         private class BinaryType : GenericCloudEventsAttributeType<byte[]>

@@ -236,6 +236,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             [Theory]
             [InlineData("//cloudevents.io?query=value")]
+            [InlineData("/path-absolute")]
             [InlineData("")]
             public void Parse_Invalid(string text)
             {
