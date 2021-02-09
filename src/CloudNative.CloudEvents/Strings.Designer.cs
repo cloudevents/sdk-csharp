@@ -61,11 +61,11 @@ namespace CloudNative.CloudEvents {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Null values cannot be added as attributes.
+        ///   Looks up a localized string similar to The &apos;specversion&apos; attribute cannot be used as an indexer key for CloudEvent.
         /// </summary>
-        internal static string ErrorCannotAddNullAttributeValue {
+        internal static string ErrorCannotIndexBySpecVersionAttribute {
             get {
-                return ResourceManager.GetString("ErrorCannotAddNullAttributeValue", resourceCulture);
+                return ResourceManager.GetString("ErrorCannotIndexBySpecVersionAttribute", resourceCulture);
             }
         }
         
@@ -84,141 +84,6 @@ namespace CloudNative.CloudEvents {
         internal static string ErrorContentTypeUnspecified {
             get {
                 return ResourceManager.GetString("ErrorContentTypeUnspecified", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;datacontentencoding&apos; field is not a string.
-        /// </summary>
-        internal static string ErrorDataContentEncodingIsNotAString {
-            get {
-                return ResourceManager.GetString("ErrorDataContentEncodingIsNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;id&apos; attribute value must be a string.
-        /// </summary>
-        internal static string ErrorIdValueIsNotAString {
-            get {
-                return ResourceManager.GetString("ErrorIdValueIsNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;key&apos; attribute value must be a string.
-        /// </summary>
-        internal static string ErrorPartitioningKeyValueIsaNotAString {
-            get {
-                return ResourceManager.GetString("ErrorPartitioningKeyValueIsaNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;sampledrate&apos; attribute value must be an integer.
-        /// </summary>
-        internal static string ErrorSampledRateValueIsaNotAnInteger {
-            get {
-                return ResourceManager.GetString("ErrorSampledRateValueIsaNotAnInteger", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;schemaurl&apos; attribute value must be a valid absolute or relative URI.
-        /// </summary>
-        internal static string ErrorSchemaUrlIsNotAUri {
-            get {
-                return ResourceManager.GetString("ErrorSchemaUrlIsNotAUri", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;sequencetype&apos; attribute value must be an integer.
-        /// </summary>
-        internal static string ErrorSequenceTypeValueIsaNotAString {
-            get {
-                return ResourceManager.GetString("ErrorSequenceTypeValueIsaNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;sequence&apos; attribute value must be an integer.
-        /// </summary>
-        internal static string ErrorSequenceValueIsaNotAString {
-            get {
-                return ResourceManager.GetString("ErrorSequenceValueIsaNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;source&apos; attribute value must be a valid absolute or relative URI.
-        /// </summary>
-        internal static string ErrorSourceValueIsNotAUri {
-            get {
-                return ResourceManager.GetString("ErrorSourceValueIsNotAUri", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;specversion&apos; attribute cannot be modified.
-        /// </summary>
-        internal static string ErrorSpecVersionCannotBeModified {
-            get {
-                return ResourceManager.GetString("ErrorSpecVersionCannotBeModified", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;specversion&apos; attribute value must be a string.
-        /// </summary>
-        internal static string ErrorSpecVersionValueIsNotAString {
-            get {
-                return ResourceManager.GetString("ErrorSpecVersionValueIsNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;subject&apos; attribute value must be a string.
-        /// </summary>
-        internal static string ErrorSubjectValueIsNotAString {
-            get {
-                return ResourceManager.GetString("ErrorSubjectValueIsNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;time&apos; attribute value must be a valid ISO8601 timestamp expression.
-        /// </summary>
-        internal static string ErrorTimeValueIsNotATimestamp {
-            get {
-                return ResourceManager.GetString("ErrorTimeValueIsNotATimestamp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;traceparent&apos; attribute value is required with the distributed tracing extension and must be a string.
-        /// </summary>
-        internal static string ErrorTraceParentValueIsaNotAString {
-            get {
-                return ResourceManager.GetString("ErrorTraceParentValueIsaNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;tracestate&apos; attribute value must be a string.
-        /// </summary>
-        internal static string ErrorTraceStateValueIsaNotAString {
-            get {
-                return ResourceManager.GetString("ErrorTraceStateValueIsaNotAString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;type&apos; attribute value must be a string.
-        /// </summary>
-        internal static string ErrorTypeValueIsNotAString {
-            get {
-                return ResourceManager.GetString("ErrorTypeValueIsNotAString", resourceCulture);
             }
         }
     }

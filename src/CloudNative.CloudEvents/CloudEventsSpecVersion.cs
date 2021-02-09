@@ -18,10 +18,12 @@ namespace CloudNative.CloudEvents
     /// </summary>
     public sealed class CloudEventsSpecVersion
     {
+        internal const string SpecVersionAttributeName = "specversion";
+
         /// <summary>
         /// The attribute used to indicate the version of the CloudEvents specification being used.
         /// </summary>
-        public static CloudEventAttribute SpecVersionAttribute { get; } = CreateRequired("specversion", CloudEventAttributeType.String, NonEmptyString);
+        public static CloudEventAttribute SpecVersionAttribute { get; } = CreateRequired(SpecVersionAttributeName, CloudEventAttributeType.String, NonEmptyString);
 
         // Populated by the constructor.
         private static readonly List<CloudEventsSpecVersion> allVersions = new List<CloudEventsSpecVersion>();

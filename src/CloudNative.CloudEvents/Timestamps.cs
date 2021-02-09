@@ -12,7 +12,7 @@ namespace CloudNative.CloudEvents
     /// as <see cref="DateTimeOffset"/> values within the SDK, and use RFC-3339
     /// for string representations (e.g. in headers).
     /// </summary>
-    public static class Timestamps
+    internal static class Timestamps
     {
         private const long TicksPerMicrosecond = TimeSpan.TicksPerMillisecond / 1000;
 

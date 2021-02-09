@@ -69,10 +69,28 @@ namespace CloudNative.CloudEvents
             {
                 foreach (var extension in extensionAttributes)
                 {
-                    if (SpecVersion.GetAttributeByName(extension.Name) is object)
-                    {
-                        throw new ArgumentException($"'{extension.Name}' cannot be specified as the name of an extension attribute; it is already a context attribute");
-                    }
+                    Preconditions.CheckArgument(
+                        extension is object,
+                        nameof(extensionAttributes),
+                        "Extension attribute collection cannot contain null elements");
+                    Preconditions.CheckArgument(
+                        extension.Name != CloudEventsSpecVersion.SpecVersionAttributeName,
+                        nameof(extensionAttributes),
+                        "The 'specversion' attribute cannot be specified as an extension attribute");
+                    Preconditions.CheckArgument(
+                        SpecVersion.GetAttributeByName(extension.Name) is null,
+                        nameof(extensionAttributes),
+                        "'{0}' cannot be specified as the name of an extension attribute; it is already a context attribute",
+                        extension.Name);
+                    Preconditions.CheckArgument(
+                        extension.IsExtension,
+                        nameof(extensionAttributes),
+                        "'{0}' is not an extension attribute",
+                        extension.Name);
+                    Preconditions.CheckArgument(
+                        !this.extensionAttributes.ContainsKey(extension.Name),
+                        nameof(extensionAttributes),
+                        "'{0}' cannot be specified more than once as an extension attribute");
                     this.extensionAttributes.Add(extension.Name, extension);
                 }
             }
@@ -82,8 +100,6 @@ namespace CloudNative.CloudEvents
         /// The CloudEvents specification version for this event.
         /// </summary>
         public CloudEventsSpecVersion SpecVersion { get; }
-
-        // FIXME: Reject any attempt to set or fetch the spec version via the indexer.
 
         /// <summary>
         /// Sets or fetches the value associated with the given attribute.
@@ -104,24 +120,38 @@ namespace CloudNative.CloudEvents
         /// <returns>The fetched attribute value, or null if the attribute has no value in this event.</returns>
         public object this[CloudEventAttribute attribute]
         {
-            // TODO: Should we validate that the known attribute is compatible with the requested one?
-            // For example, if we know about a CloudEventAttribute with a type of "string", and instead
-            // one is requested with the same name but a type of "timestamp", the value returned may be
-            // unhelpful...
-            get => attributeValues.GetValueOrDefault(Preconditions.CheckNotNull(attribute, nameof(attribute)).Name);
+            get
+            {
+                Preconditions.CheckNotNull(attribute, nameof(attribute));
+                Preconditions.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
+
+                // TODO: Is this validation definitely useful? It does mean we never return something
+                // that's invalid for the attribute, which is potentially good...
+                var value = attributeValues.GetValueOrDefault(attribute.Name);
+                if (value is object)
+                {
+                    attribute.Validate(value);
+                }
+                return value;
+            }
             set
             {
                 Preconditions.CheckNotNull(attribute, nameof(attribute));
+                Preconditions.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
+
                 string name = attribute.Name;
-                var knownAttribute = GetAttribute(name); 
+                var knownAttribute = GetAttribute(name);
 
                 // TODO: Are we happy to add the extension in even if the value is null?
-                if (knownAttribute is null)
+                Preconditions.CheckArgument(knownAttribute is object || attribute.IsExtension,
+                    nameof(attribute),
+                    "Cannot add an unknown non-extension attribute to an event.");
+
+                // If the attribute is new, or we previously had an extension attribute, replace it with our new information.
+                // TODO: Alternatively, we could validate that it's got the same type... but what if it has
+                // different validation criteria?
+                if (knownAttribute is null || (knownAttribute.IsExtension && knownAttribute != attribute))
                 {
-                    if (!attribute.IsExtension)
-                    {
-                        throw new ArgumentException("Cannot add an unknown non-extension attribute to an event.");
-                    }
                     extensionAttributes[name] = attribute;
                 }
 
@@ -131,6 +161,7 @@ namespace CloudNative.CloudEvents
                     return;
                 }
                 // TODO: We could convert the attribute value here instead? Or is that a bit too much "magic"?
+                // TODO: Should we validate the value against the 
                 attributeValues[name] = attribute.Validate(value);
             }
         }
@@ -144,22 +175,27 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public object this[string attributeName]
         {
-            // TODO: Validate the attribute name? Check it's not spec version?
-            get => attributeValues.GetValueOrDefault(Preconditions.CheckNotNull(attributeName, nameof(attributeName)));
+            get
+            {
+                // TODO: Validate the attribute name is valid (e.g. not upper case)? Seems overkill.
+                Preconditions.CheckNotNull(attributeName, nameof(attributeName));
+                Preconditions.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                return attributeValues.GetValueOrDefault(Preconditions.CheckNotNull(attributeName, nameof(attributeName)));
+            }            
             set
             {
                 Preconditions.CheckNotNull(attributeName, nameof(attributeName));
+                Preconditions.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
+
                 var knownAttribute = GetAttribute(attributeName);
 
-                // TODO: Decide on spec version behavior
-
                 // TODO: Are we happy to add the extension in even if the value is null?
+                // (It's a simple way of populating extensions after the fact...)
                 if (knownAttribute is null)
                 {
-                    if (value is object && !(value is string))
-                    {
-                        throw new ArgumentException($"Cannot assign value of type {value.GetType()} to unknown attribute '{attributeName}'");
-                    }
+                    Preconditions.CheckArgument(value is null || value is string,
+                        nameof(value), "Cannot assign value of type {0} to unknown attribute '{1}'",
+                        value.GetType(), attributeName);
                     knownAttribute = CloudEventAttribute.CreateExtension(attributeName, CloudEventAttributeType.String);
                     extensionAttributes[attributeName] = knownAttribute;
                 }

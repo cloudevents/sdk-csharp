@@ -78,6 +78,12 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public abstract object Parse(string text);
 
+        /// <summary>
+        /// Validates that the given value is valid for this type.
+        /// </summary>
+        /// <param name="value">The value to validate. Must be non-null, and suitable for this attribute type.</param>
+        public abstract void Validate(object value);
+
         private CloudEventAttributeType(string name, Type clrType)
         {
             Name = name;
@@ -86,17 +92,36 @@ namespace CloudNative.CloudEvents
 
         private abstract class GenericCloudEventsAttributeType<T> : CloudEventAttributeType
         {
-            public override sealed object Parse(string value) => ParseImpl(value);
-
-            public override sealed string Format(object value) => FormatImpl((T) value);
-
             protected GenericCloudEventsAttributeType(string name) : base(name, typeof(T))
             {
+            }
+
+            public override sealed object Parse(string value) => ParseImpl(Preconditions.CheckNotNull(value, nameof(value)));
+
+            public override sealed string Format(object value)
+            {
+                Validate(value);
+                // TODO: Avoid the double cast.
+                return FormatImpl((T) value);
+            }
+
+            public override sealed void Validate(object value)
+            {
+                Preconditions.CheckNotNull(value, nameof(value));
+                if (!ClrType.IsInstanceOfType(value))
+                {
+                    throw new ArgumentException($"Value of type {value.GetType()} is incompatible with expected type {ClrType}", nameof(value));
+                }
+
+                ValidateImpl((T)Preconditions.CheckNotNull(value, nameof(value)));
             }
 
             protected abstract T ParseImpl(string value);
 
             protected abstract string FormatImpl(T value);
+
+            // Default is for all values to be valid.
+            protected virtual void ValidateImpl(T value) { }
         }
 
         private class BooleanType : GenericCloudEventsAttributeType<bool>
@@ -133,18 +158,35 @@ namespace CloudNative.CloudEvents
             protected override DateTimeOffset ParseImpl(string value) => Timestamps.Parse(value);
         }
 
+        // FIXME: Decide on escaping policies here. Uri will automatically perform escaping for us,
+        // but it's not clear what the behavior should be. Should we assert that when parsing, the
+        // string is already well-formed, and then use the original string when formatting?
+        // That makes sense when we parse a CloudEvent and then reformat it, but if users provide
+        // a Uri object to us, they may well want it to be escaped for them.
+        // Side-note: Uri.IsWellFormedOriginalString() rejects "#fragment" for some reason, which makes
+        // it very hard to really validate.
+        // Note that it doesn't look like IsWellFormedOriginalString actually checks whether things 
+        // need escaping anyway :(
         private class UriType : GenericCloudEventsAttributeType<Uri>
         {
             private readonly UriKind uriKind;
 
             public UriType(string name, bool allowRelative) : base(name)
             {
-                uriKind = allowRelative ? UriKind.RelativeOrAbsolute : UriKind.Absolute; ;
+                uriKind = allowRelative ? UriKind.RelativeOrAbsolute : UriKind.Absolute;
             }
 
-            protected override string FormatImpl(Uri value) => value.ToString(); // TODO: Check this!
+            protected override string FormatImpl(Uri value) => value.OriginalString;
 
             protected override Uri ParseImpl(string value) => new Uri(value, uriKind);
+
+            protected override void ValidateImpl(Uri value)
+            {
+                if (uriKind == UriKind.Absolute && !value.IsAbsoluteUri)
+                {
+                    throw new ArgumentException("URI must be absolute.");
+                }                
+            }
         }
 
         private class BinaryType : GenericCloudEventsAttributeType<byte[]>
@@ -164,7 +206,14 @@ namespace CloudNative.CloudEvents
             }
 
             protected override string FormatImpl(int value) => value.ToString(CultureInfo.InvariantCulture);
-            protected override int ParseImpl(string value) => int.Parse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
+            protected override int ParseImpl(string value)
+            {
+                if (value.Length > 0 && value[0] == '+')
+                {
+                    throw new FormatException("Leading + sign is not permitted");
+                }
+                return int.Parse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
+            }
         }
     }
 }
