@@ -49,6 +49,12 @@ namespace CloudNative.CloudEvents.Amqp
                         continue;
                     }
                     string attributeName = key.Substring(AmqpHeaderPrefix.Length).ToLowerInvariant();
+                    
+                    // We've already dealt with the spec version.
+                    if (attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
+                    {
+                        continue;
+                    }
 
                     // Timestamps are serialized via DateTime instead of DateTimeOffset.
                     if (property.Value is DateTime dt)

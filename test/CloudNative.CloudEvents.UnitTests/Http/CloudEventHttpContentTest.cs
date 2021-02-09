@@ -23,10 +23,19 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         // We need to work out whether we want a modified version of this test.
         // It should be okay to not set a DataContentType if there's no data...
         // but what if there's a data value which is an empty string, empty byte array or empty stream?
-        [Fact(Skip = "Currently don't throw")]
-        public void ContentType_MissingFromCloudEvent_BinaryMode()
+        [Fact]
+        public void NoContentType_NoContent()
         {
             var cloudEvent = CreateEmptyCloudEvent();
+            var content = new CloudEventHttpContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            Assert.Null(content.Headers.ContentType);
+        }
+
+        [Fact]
+        public void NoContentType_WithContent()
+        {
+            var cloudEvent = CreateEmptyCloudEvent();
+            cloudEvent.Data = "Some text";
             var exception = Assert.Throws<ArgumentException>(() => new CloudEventHttpContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter()));
             Assert.StartsWith(Strings.ErrorContentTypeUnspecified, exception.Message);
         }

@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -55,13 +56,18 @@ namespace CloudNative.CloudEvents.Http
                 inner = new InnerByteArrayContent(formatter.EncodeData(cloudEvent.Data));
             }
 
-            // Note: we don't require a data content type, because there may not be any data.
-            // TODO: See if we can validate better. Perhaps use TryComputeLength?
+            // We don't require a data content type if there isn't any data.
+            // We may not be able to tell whether the data is empty or not, but we're lenient
+            // in that case.
             var dataContentType = cloudEvent.DataContentType;
             if (dataContentType is object)
             {
                 var mediaType = new ContentType(dataContentType).MediaType;
                 Headers.ContentType = new MediaTypeHeaderValue(mediaType);
+            }
+            else if (TryComputeLength(out var length) && length != 0L)
+            {
+                throw new ArgumentException(Strings.ErrorContentTypeUnspecified, nameof(cloudEvent));
             }
             MapHeaders(cloudEvent, includeDataContentType: false);
         }

@@ -117,58 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ErrorCannotAddNullAttributeValue" xml:space="preserve">
-    <value>Null values cannot be added as attributes</value>
+  <data name="ErrorCannotIndexBySpecVersionAttribute" xml:space="preserve">
+    <value>The 'specversion' attribute cannot be used as an indexer key for CloudEvent</value>
   </data>
   <data name="ErrorContentTypeIsNotRFC2046" xml:space="preserve">
     <value>The 'datacontenttype' attribute value must be a content-type expression compliant with RFC2046</value>
   </data>
   <data name="ErrorContentTypeUnspecified" xml:space="preserve">
     <value>The 'datacontenttype' attribute value must be specified</value>
-  </data>
-  <data name="ErrorDataContentEncodingIsNotAString" xml:space="preserve">
-    <value>The 'datacontentencoding' field is not a string</value>
-  </data>
-  <data name="ErrorIdValueIsNotAString" xml:space="preserve">
-    <value>The 'id' attribute value must be a string</value>
-  </data>
-  <data name="ErrorPartitioningKeyValueIsaNotAString" xml:space="preserve">
-    <value>The 'key' attribute value must be a string</value>
-  </data>
-  <data name="ErrorSampledRateValueIsaNotAnInteger" xml:space="preserve">
-    <value>The 'sampledrate' attribute value must be an integer</value>
-  </data>
-  <data name="ErrorSchemaUrlIsNotAUri" xml:space="preserve">
-    <value>The 'schemaurl' attribute value must be a valid absolute or relative URI</value>
-  </data>
-  <data name="ErrorSequenceTypeValueIsaNotAString" xml:space="preserve">
-    <value>The 'sequencetype' attribute value must be an integer</value>
-  </data>
-  <data name="ErrorSequenceValueIsaNotAString" xml:space="preserve">
-    <value>The 'sequence' attribute value must be an integer</value>
-  </data>
-  <data name="ErrorSourceValueIsNotAUri" xml:space="preserve">
-    <value>The 'source' attribute value must be a valid absolute or relative URI</value>
-  </data>
-  <data name="ErrorSpecVersionCannotBeModified" xml:space="preserve">
-    <value>The 'specversion' attribute cannot be modified</value>
-  </data>
-  <data name="ErrorSpecVersionValueIsNotAString" xml:space="preserve">
-    <value>The 'specversion' attribute value must be a string</value>
-  </data>
-  <data name="ErrorSubjectValueIsNotAString" xml:space="preserve">
-    <value>The 'subject' attribute value must be a string</value>
-  </data>
-  <data name="ErrorTimeValueIsNotATimestamp" xml:space="preserve">
-    <value>The 'time' attribute value must be a valid ISO8601 timestamp expression</value>
-  </data>
-  <data name="ErrorTraceParentValueIsaNotAString" xml:space="preserve">
-    <value>The 'traceparent' attribute value is required with the distributed tracing extension and must be a string</value>
-  </data>
-  <data name="ErrorTraceStateValueIsaNotAString" xml:space="preserve">
-    <value>The 'tracestate' attribute value must be a string</value>
-  </data>
-  <data name="ErrorTypeValueIsNotAString" xml:space="preserve">
-    <value>The 'type' attribute value must be a string</value>
   </data>
 </root>

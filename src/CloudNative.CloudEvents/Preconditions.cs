@@ -13,5 +13,31 @@ namespace CloudNative.CloudEvents
     {
         internal static T CheckNotNull<T>(T value, string paramName) where T : class =>
             value ?? throw new ArgumentNullException(paramName);
+
+        internal static void CheckArgument(bool condition, string paramName, string message)
+        {
+            if (!condition)
+            {
+                throw new ArgumentException(message, paramName);
+            }
+        }
+
+        internal static void CheckArgument(bool condition, string paramName, string messageFormat,
+            object arg1)
+        {
+            if (!condition)
+            {
+                throw new ArgumentException(string.Format(messageFormat, arg1), paramName);
+            }
+        }
+
+        internal static void CheckArgument(bool condition, string paramName, string messageFormat,
+            object arg1, object arg2)
+        {
+            if (!condition)
+            {
+                throw new ArgumentException(string.Format(messageFormat, arg1, arg2), paramName);
+            }
+        }
     }
 }

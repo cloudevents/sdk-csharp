@@ -44,7 +44,7 @@ namespace CloudNative.CloudEvents
         // TODO: Have a "mode" of Required/Optional/Extension?
 
         private CloudEventAttribute(string name, CloudEventAttributeType type, bool required, bool extension, Action<object> validator) =>
-            (Name, Type, IsRequired, IsExtension, this.validator) = (ValidateName(name), type, required, extension, validator);
+            (Name, Type, IsRequired, IsExtension, this.validator) = (ValidateName(name), Preconditions.CheckNotNull(type, nameof(type)), required, extension, validator);
 
         internal static CloudEventAttribute CreateRequired(string name, CloudEventAttributeType type, Action<object> validator) =>
             new CloudEventAttribute(name, type, required: true, extension: false, validator: validator);
@@ -52,8 +52,14 @@ namespace CloudNative.CloudEvents
         internal static CloudEventAttribute CreateOptional(string name, CloudEventAttributeType type, Action<object> validator) =>
             new CloudEventAttribute(name, type, required: false, extension: false, validator: validator);
 
-        public static CloudEventAttribute CreateExtension(string name, CloudEventAttributeType type) =>
-            new CloudEventAttribute(name, type, required: false, extension: true, validator: null);
+        public static CloudEventAttribute CreateExtension(string name, CloudEventAttributeType type)
+        {
+            if (name == CloudEventsSpecVersion.SpecVersionAttributeName)
+            {
+                throw new ArgumentException($"The attribute name '{name}' is reserved and cannot be used for an extension attribute.");
+            }
+            return new CloudEventAttribute(name, type, required: false, extension: true, validator: null);
+        }
 
         /// <summary>
         /// Creates an extension attribute with a custom validator.
@@ -98,7 +104,22 @@ namespace CloudNative.CloudEvents
             return name;
         }
 
-        public object Parse(string text) => Validate(Type.Parse(text));
+        public object Parse(string text)
+        {
+            Preconditions.CheckNotNull(text, nameof(text));
+            object value;
+            // By wrapping every exception here, we always get an
+            // ArgumentException (other than the ArgumentNullException above) and have the name in the message.
+            try
+            {
+                value = Type.Parse(text);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException($"Text for attribute '{Name}' is invalid: {e.Message}", nameof(value), e);
+            }
+            return Validate(Type.Parse(text));
+        }
 
         public string Format(object value) => Type.Format(Validate(value));
 
@@ -112,20 +133,19 @@ namespace CloudNative.CloudEvents
         public object Validate(object value)
         {
             Preconditions.CheckNotNull(value, nameof(value));
-            if (!Type.ClrType.IsInstanceOfType(value))
+            // By wrapping every exception, whether from the type or the custom validator, we always get an
+            // ArgumentException (other than the ArgumentNullException above) and have the name in the message.
+            try
             {
-                throw new ArgumentException($"Value of type {value.GetType()} for attribute '{Name}' is incompatible with expected type {Type.ClrType}", nameof(value));
-            }
-            if (validator is object)
-            {
-                try
+                Type.Validate(value);
+                if (validator is object)
                 {
                     validator(value);
                 }
-                catch (Exception e)
-                {
-                    throw new ArgumentException($"Value for attribute '{Name}' is invalid: {e.Message}", nameof(value), e);
-                }
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException($"Value for attribute '{Name}' is invalid: {e.Message}", nameof(value), e);
             }
             return value;
         }
