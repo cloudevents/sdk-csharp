@@ -41,7 +41,8 @@ namespace CloudNative.CloudEvents
             CreateOptional("time", CloudEventAttributeType.Timestamp, null));
 
         /// <summary>
-        /// The ID of the spec version, in its canonical serialized form.
+        /// The ID of the spec version, in its canonical serialized form,
+        /// such as "1.0".
         /// </summary>
         public string VersionId { get; }
 

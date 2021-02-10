@@ -18,7 +18,7 @@ namespace CloudNative.CloudEvents
         /// overriding the formatter.
         /// </summary>
         /// <param name="httpRequest">HTTP request</param>
-        /// <param name="formatter"></param>
+        /// <param name="formatter">The event formatter to use to process the request body.</param>
         /// <param name="extensions">List of extension instances</param>
         /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
         public static async ValueTask<CloudEvent> ReadCloudEventAsync(this HttpRequest httpRequest,
