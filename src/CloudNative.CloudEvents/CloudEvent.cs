@@ -9,6 +9,7 @@ using System.Linq;
 namespace CloudNative.CloudEvents
 {
     // TODO: Document really clearly that the SpecVersion attribute isn't included anywhere here...
+    // TODO: Consider implementing IDictionary<,>
 
     /// <summary>
     /// Represents a CloudEvent.
@@ -161,7 +162,6 @@ namespace CloudNative.CloudEvents
                     return;
                 }
                 // TODO: We could convert the attribute value here instead? Or is that a bit too much "magic"?
-                // TODO: Should we validate the value against the 
                 attributeValues[name] = attribute.Validate(value);
             }
         }
