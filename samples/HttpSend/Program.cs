@@ -2,15 +2,16 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents;
+using CloudNative.CloudEvents.Http;
+using CloudNative.CloudEvents.NewtonsoftJson;
+using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Threading.Tasks;
-using CloudNative.CloudEvents;
-using CloudNative.CloudEvents.Http;
-using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
 
 namespace HttpSend
 {

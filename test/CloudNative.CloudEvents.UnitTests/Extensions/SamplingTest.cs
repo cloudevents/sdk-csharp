@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.Text;
 using Xunit;

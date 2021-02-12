@@ -3,6 +3,7 @@
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.Extensions;
+using CloudNative.CloudEvents.NewtonsoftJson;
 using Confluent.Kafka;
 using Newtonsoft.Json;
 using System;

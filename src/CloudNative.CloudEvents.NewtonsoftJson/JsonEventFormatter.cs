@@ -11,7 +11,7 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CloudNative.CloudEvents
+namespace CloudNative.CloudEvents.NewtonsoftJson
 {
     /// <summary>
     /// Formatter that implements the JSON Event Format
