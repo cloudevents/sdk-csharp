@@ -8,7 +8,7 @@ using System.Text;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
-namespace CloudNative.CloudEvents.UnitTests
+namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
 {
     public class JsonEventFormatterTest
     {

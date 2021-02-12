@@ -6,6 +6,7 @@ using System;
 using System.Net.Mime;
 using Amqp;
 using Xunit;
+using CloudNative.CloudEvents.NewtonsoftJson;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
 namespace CloudNative.CloudEvents.Amqp.UnitTests
