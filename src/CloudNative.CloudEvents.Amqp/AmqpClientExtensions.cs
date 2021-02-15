@@ -20,7 +20,7 @@ namespace CloudNative.CloudEvents.Amqp
             message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader);        
 
         public static CloudEvent ToCloudEvent(this Message message,
-            ICloudEventFormatter formatter,
+            CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes)
         {
             if (HasCloudEventsContentType(message))

@@ -26,7 +26,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="cloudEvent">CloudEvent</param>
         /// <param name="contentMode">Content mode. Structured or binary.</param>
         /// <param name="formatter">Event formatter</param>
-        public CloudEventHttpContent(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
+        public CloudEventHttpContent(CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
             if (contentMode == ContentMode.Structured)
             {

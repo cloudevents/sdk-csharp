@@ -9,7 +9,7 @@ namespace CloudNative.CloudEvents.Mqtt
     // TODO: Update to a newer version of MQTTNet and support both binary and structured mode?
     public class MqttCloudEventMessage : MqttApplicationMessage
     {
-        public MqttCloudEventMessage(CloudEvent cloudEvent, ICloudEventFormatter formatter)
+        public MqttCloudEventMessage(CloudEvent cloudEvent, CloudEventFormatter formatter)
         {
             this.Payload = formatter.EncodeStructuredEvent(cloudEvent, out var contentType);
         }

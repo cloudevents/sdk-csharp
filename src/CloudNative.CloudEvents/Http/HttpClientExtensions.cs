@@ -80,7 +80,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent.</param>
         /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
         public static Task<CloudEvent> ToCloudEventAsync(this HttpResponseMessage httpResponseMessage,
-            ICloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
+            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
             ToCloudEventInternalAsync(httpResponseMessage.Headers, httpResponseMessage.Content, formatter, extensionAttributes);
 
         /// <summary>
@@ -91,12 +91,12 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="extensionAttributes">List of extension instances</param>
         /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
         public static Task<CloudEvent> ToCloudEventAsync(this HttpRequestMessage httpRequestMessage,
-            ICloudEventFormatter formatter,
+            CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes) =>
             ToCloudEventInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes);
 
         private static async Task<CloudEvent> ToCloudEventInternalAsync(HttpHeaders headers, HttpContent content,
-            ICloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             if (HasCloudEventsContentType(content))
             {

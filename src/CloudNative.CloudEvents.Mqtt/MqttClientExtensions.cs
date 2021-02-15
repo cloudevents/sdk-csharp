@@ -9,7 +9,7 @@ namespace CloudNative.CloudEvents.Mqtt
     public static class MqttClientExtensions
     {
         public static CloudEvent ToCloudEvent(this MqttApplicationMessage message,
-            ICloudEventFormatter eventFormatter, params CloudEventAttribute[] extensionAttributes)
+            CloudEventFormatter eventFormatter, params CloudEventAttribute[] extensionAttributes)
         {
             return eventFormatter.DecodeStructuredEvent(message.Payload, extensionAttributes);
         }

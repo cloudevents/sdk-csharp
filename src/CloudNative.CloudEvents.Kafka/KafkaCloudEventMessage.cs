@@ -18,7 +18,7 @@ namespace CloudNative.CloudEvents.Kafka
         internal const string KafkaContentTypeAttributeName = "content-type";
         internal const string SpecVersionKafkaHeader = KafkaHeaderPrefix + "specversion";
 
-        public KafkaCloudEventMessage(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
+        public KafkaCloudEventMessage(CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
             // TODO: Is this appropriate? Why can't we transport a CloudEvent without data in Kafka?
             if (cloudEvent.Data == null)
@@ -70,7 +70,7 @@ namespace CloudNative.CloudEvents.Kafka
             MapHeaders(cloudEvent, formatter);
         }
 
-        private void MapHeaders(CloudEvent cloudEvent, ICloudEventFormatter formatter)
+        private void MapHeaders(CloudEvent cloudEvent, CloudEventFormatter formatter)
         {
 
             foreach (var pair in cloudEvent.GetPopulatedAttributes())
