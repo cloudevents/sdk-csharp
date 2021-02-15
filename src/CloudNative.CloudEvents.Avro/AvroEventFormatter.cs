@@ -40,10 +40,10 @@ namespace CloudNative.CloudEvents
             DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>)extensionAttributes);
 
         // FIXME: We shouldn't use synchronous stream methods...
-        public Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+        public override Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             Task.FromResult(DecodeStructuredEvent(data, extensionAttributes));
 
-        public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             var decoder = new Avro.IO.BinaryDecoder(data);
             var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
@@ -53,7 +53,7 @@ namespace CloudNative.CloudEvents
         public CloudEvent DecodeStructuredEvent(byte[] data, params CloudEventAttribute[] extensionAttributes) =>
             DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
-        public CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+        public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
 
         public CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
@@ -106,7 +106,7 @@ namespace CloudNative.CloudEvents
             return cloudEvent;
         }
 
-        public byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
+        public override byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
         {
             contentType = new ContentType(CloudEvent.MediaType+AvroEventFormatter.MediaTypeSuffix);
 
@@ -148,10 +148,10 @@ namespace CloudNative.CloudEvents
         }
 
         // TODO: Validate that this is correct...
-        public byte[] EncodeData(object value) =>
+        public override byte[] EncodeData(object value) =>
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
 
-        public object DecodeData(byte[] value, string contentType) =>
+        public override object DecodeData(byte[] value, string contentType) =>
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
     }
 }
