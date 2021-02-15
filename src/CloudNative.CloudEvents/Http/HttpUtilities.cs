@@ -21,7 +21,7 @@ namespace CloudNative.CloudEvents.Http
 
         public const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";
 
-        internal static Stream MapDataAttributeToStream(CloudEvent cloudEvent, ICloudEventFormatter formatter) =>
+        internal static Stream MapDataAttributeToStream(CloudEvent cloudEvent, CloudEventFormatter formatter) =>
             cloudEvent.Data switch
             {
                 byte[] bytes => new MemoryStream(bytes),

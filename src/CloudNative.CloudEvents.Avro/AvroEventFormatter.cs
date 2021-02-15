@@ -16,7 +16,7 @@ namespace CloudNative.CloudEvents
     /// <summary>
     /// Formatter that implements the Avro Event Format
     /// </summary>
-    public class AvroEventFormatter : ICloudEventFormatter
+    public class AvroEventFormatter : CloudEventFormatter
     {
         private const string DataName = "data";
         private static readonly RecordSchema avroSchema;

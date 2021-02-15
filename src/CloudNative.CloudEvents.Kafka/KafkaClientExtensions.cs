@@ -20,11 +20,11 @@ namespace CloudNative.CloudEvents.Kafka
             (ExtractContentType(message)?.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) == true);
 
         public static CloudEvent ToCloudEvent(this Message<string, byte[]> message,
-            ICloudEventFormatter eventFormatter, params CloudEventAttribute[] extensionAttributes) =>
+            CloudEventFormatter eventFormatter, params CloudEventAttribute[] extensionAttributes) =>
             ToCloudEvent(message, eventFormatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
         public static CloudEvent ToCloudEvent(this Message<string, byte[]> message,
-            ICloudEventFormatter eventFormatter, IEnumerable<CloudEventAttribute> extensionAttributes)
+            CloudEventFormatter eventFormatter, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             if (!IsCloudEvent(message))
             {

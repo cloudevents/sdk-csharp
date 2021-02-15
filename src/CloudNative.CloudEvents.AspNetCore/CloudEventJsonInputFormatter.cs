@@ -16,9 +16,9 @@ namespace CloudNative.CloudEvents
 
     public class CloudEventJsonInputFormatter : TextInputFormatter
     {
-        private readonly ICloudEventFormatter _formatter;
+        private readonly CloudEventFormatter _formatter;
 
-        public CloudEventJsonInputFormatter(ICloudEventFormatter formatter)
+        public CloudEventJsonInputFormatter(CloudEventFormatter formatter)
         {
             _formatter = formatter;
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));

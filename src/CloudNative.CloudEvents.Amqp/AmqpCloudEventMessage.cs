@@ -13,7 +13,7 @@ namespace CloudNative.CloudEvents.Amqp
 {
     public class AmqpCloudEventMessage : Message
     {
-        public AmqpCloudEventMessage(CloudEvent cloudEvent, ContentMode contentMode, ICloudEventFormatter formatter)
+        public AmqpCloudEventMessage(CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
             ApplicationProperties = new ApplicationProperties();
             MapHeaders(cloudEvent);

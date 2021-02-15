@@ -26,7 +26,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="formatter">Formatter</param>
         /// <returns>Task</returns>
         public static Task CopyFromAsync(this HttpListenerResponse httpListenerResponse, CloudEvent cloudEvent,
-            ContentMode contentMode, ICloudEventFormatter formatter)
+            ContentMode contentMode, CloudEventFormatter formatter)
         {
             if (contentMode == ContentMode.Structured)
             {
@@ -99,7 +99,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="extensions">List of extension instances</param>
         /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
-            ICloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes)
+            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes)
         {
             if (HasCloudEventsContentType(httpListenerRequest))
             {

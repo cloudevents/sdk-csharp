@@ -25,7 +25,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="formatter">Formatter</param>
         /// <returns>Task</returns>
         public static async Task CopyFromAsync(this HttpWebRequest httpWebRequest, CloudEvent cloudEvent,
-            ContentMode contentMode, ICloudEventFormatter formatter)
+            ContentMode contentMode, CloudEventFormatter formatter)
         {
             if (contentMode == ContentMode.Structured)
             {

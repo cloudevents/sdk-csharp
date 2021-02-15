@@ -22,7 +22,7 @@ namespace CloudNative.CloudEvents
         /// <param name="extensions">List of extension instances</param>
         /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
         public static async ValueTask<CloudEvent> ReadCloudEventAsync(this HttpRequest httpRequest,
-            ICloudEventFormatter formatter,
+            CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes)
         {
             if (HasCloudEventsContentType(httpRequest))

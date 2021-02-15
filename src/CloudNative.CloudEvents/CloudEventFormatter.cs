@@ -13,7 +13,7 @@ namespace CloudNative.CloudEvents
     /// <summary>
     /// Implemented by formatters
     /// </summary>
-    public abstract class ICloudEventFormatter
+    public abstract class CloudEventFormatter
     {
         /// <summary>
         /// Decode a structured event from a stream

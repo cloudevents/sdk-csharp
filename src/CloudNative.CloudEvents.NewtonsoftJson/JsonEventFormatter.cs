@@ -16,7 +16,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
     /// <summary>
     /// Formatter that implements the JSON Event Format
     /// </summary>
-    public class JsonEventFormatter : ICloudEventFormatter
+    public class JsonEventFormatter : CloudEventFormatter
     {
         private const string DataBase64 = "data_base64";
         private const string Data = "data";
