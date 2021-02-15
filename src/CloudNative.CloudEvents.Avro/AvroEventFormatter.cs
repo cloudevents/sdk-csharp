@@ -36,9 +36,6 @@ namespace CloudNative.CloudEvents
         }
         public const string MediaTypeSuffix = "+avro";
 
-        public CloudEvent DecodeStructuredEvent(Stream data, params CloudEventAttribute[] extensionAttributes) =>
-            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>)extensionAttributes);
-
         // FIXME: We shouldn't use synchronous stream methods...
         public override Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             Task.FromResult(DecodeStructuredEvent(data, extensionAttributes));
@@ -49,9 +46,6 @@ namespace CloudNative.CloudEvents
             var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
             return DecodeGenericRecord(rawEvent, extensionAttributes);
         }
-
-        public CloudEvent DecodeStructuredEvent(byte[] data, params CloudEventAttribute[] extensionAttributes) =>
-            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
         public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);

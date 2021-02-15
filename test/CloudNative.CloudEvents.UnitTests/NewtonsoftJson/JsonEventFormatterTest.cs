@@ -68,7 +68,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var extension = CloudEventAttribute.CreateExtension("comexampleextension2", CloudEventAttributeType.Integer);
 
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10), extension);
+            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10), new[] { extension });
             // Instead of getting it as a string (as before), we now have it as an integer.
             Assert.Equal(10, cloudEvent["comexampleextension2"]);
         }
