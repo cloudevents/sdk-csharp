@@ -25,7 +25,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         public CloudEvent DecodeStructuredEvent(Stream data, params CloudEventAttribute[] extensionAttributes) =>
             DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
-        public async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
             {
@@ -35,7 +35,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             return DecodeJObject(jObject, extensionAttributes);
         }
 
-        public CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes = null)
+        public override CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes = null)
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
             {
@@ -48,7 +48,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         public CloudEvent DecodeStructuredEvent(byte[] data, params CloudEventAttribute[] extensionAttributes) =>
             DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>)extensionAttributes);
 
-        public CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes = null) =>
+        public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes = null) =>
             DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
 
         // TODO: If we make this private, we'll have significantly more control over what token types we see.
@@ -117,7 +117,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             return cloudEvent;
         }
 
-        public byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
+        public override byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
         {
             contentType = new ContentType("application/cloudevents+json")
             {
@@ -157,7 +157,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         // TODO: How should the caller know whether the result is "raw" or should be stored in data_base64?
-        public byte[] EncodeData(object value)
+        public override byte[] EncodeData(object value)
         {
             // TODO: Check this is what we want.
             // In particular, if this is just other text or binary data, rather than JSON, what does it
@@ -173,7 +173,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             return json is null ? new byte[0] : Encoding.UTF8.GetBytes(json);
         }
 
-        public object DecodeData(byte[] value, string contentType)
+        public override object DecodeData(byte[] value, string contentType)
         {
             if (contentType == "application/json")
             {
