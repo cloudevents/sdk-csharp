@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Mime;
-using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents
 {
@@ -36,13 +35,9 @@ namespace CloudNative.CloudEvents
         }
         public const string MediaTypeSuffix = "+avro";
 
-        // FIXME: We shouldn't use synchronous stream methods...
-        public override Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            Task.FromResult(DecodeStructuredEvent(data, extensionAttributes));
-
         public override CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            var decoder = new Avro.IO.BinaryDecoder(data);
+            var decoder = new BinaryDecoder(data);
             var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
             return DecodeGenericRecord(rawEvent, extensionAttributes);
         }

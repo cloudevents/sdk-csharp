@@ -16,22 +16,32 @@ namespace CloudNative.CloudEvents
     public abstract class CloudEventFormatter
     {
         /// <summary>
-        /// Decode a structured event from a stream
+        /// Decode a structured event from a stream. The default implementation copies the
+        /// content of the stream into a byte array before passing it to <see cref="DecodeStructuredEvent(byte[], IEnumerable{CloudEventAttribute})"/>,
+        /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
         /// <param name="data"></param>
         /// <param name="extensions"></param>
         /// <returns></returns>
-        public virtual CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            throw new NotImplementedException();
+        public virtual CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            var bytes = BinaryDataUtilities.ToByteArray(data);
+            return DecodeStructuredEvent(bytes, extensionAttributes);
+        }
 
         /// <summary>
-        /// Decode a structured event from a stream asynchonously
+        /// Decode a structured event from a stream. The default implementation asynchronously copies the
+        /// content of the stream into a byte array before passing it to <see cref="DecodeStructuredEvent(byte[], IEnumerable{CloudEventAttribute})"/>,
+        /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
         /// <param name="data"></param>
         /// <param name="extensions"></param>
         /// <returns></returns>
-        public virtual Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            throw new NotImplementedException();
+        public virtual async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            var bytes = await BinaryDataUtilities.ToByteArrayAsync(data).ConfigureAwait(false);
+            return DecodeStructuredEvent(bytes, extensionAttributes);
+        }
 
         // TODO: Remove either this one or the stream one? It seems unnecessary to have both.
 
