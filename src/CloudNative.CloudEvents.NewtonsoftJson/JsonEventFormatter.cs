@@ -26,7 +26,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
             {
-                DateParseHandling = DateParseHandling.DateTimeOffset
+                DateParseHandling = DateParseHandling.None
             };
             var jObject = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
             return DecodeJObject(jObject, extensionAttributes);
@@ -36,7 +36,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
             {
-                DateParseHandling = DateParseHandling.DateTimeOffset
+                DateParseHandling = DateParseHandling.None
             };
             var jObject = JObject.Load(jsonReader);
             return DecodeJObject(jObject, extensionAttributes);
@@ -45,9 +45,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes = null) =>
             DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
 
-        // TODO: If we make this private, we'll have significantly more control over what token types we see.
-        // For example, we could turn off date parsing entirely, and we may never get "Uri" tokens either.
-        public CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute> extensionAttributes = null)
+        private CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute> extensionAttributes = null)
         {
             CloudEventsSpecVersion specVersion = CloudEventsSpecVersion.Default;
             if (jObject.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionToken))
@@ -98,8 +96,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 string attributeValue = value.Type switch
                 {
                     JTokenType.String => (string)value,
-                    JTokenType.Date => CloudEventAttributeType.Timestamp.Format((DateTimeOffset)value),
-                    JTokenType.Uri => CloudEventAttributeType.UriReference.Format((Uri)value),
                     JTokenType.Null => null, // TODO: Check we want to do this. It's a bit weird.
                     JTokenType.Integer => CloudEventAttributeType.Integer.Format((int)value),
                     _ => throw new ArgumentException($"Invalid token type '{value.Type}' for CloudEvent attribute")

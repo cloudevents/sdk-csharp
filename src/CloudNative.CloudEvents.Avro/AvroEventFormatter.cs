@@ -45,7 +45,7 @@ namespace CloudNative.CloudEvents
         public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
 
-        public CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
+        private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             if (!record.TryGetValue("attribute", out var attrObj))
             {
