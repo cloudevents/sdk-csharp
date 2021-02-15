@@ -32,7 +32,7 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             var avroFormatter = new AvroEventFormatter();
             var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10));
             var avroData = avroFormatter.EncodeStructuredEvent(cloudEvent, out var contentType);
-            var cloudEvent2 = avroFormatter.DecodeStructuredEvent(avroData);
+            var cloudEvent2 = avroFormatter.DecodeStructuredEvent(avroData, new CloudEventAttribute[0]);
 
             Assert.Equal(cloudEvent2.SpecVersion, cloudEvent.SpecVersion);
             Assert.Equal(cloudEvent2.Type, cloudEvent.Type);
@@ -50,7 +50,7 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             var avroFormatter = new AvroEventFormatter();
             var cloudEventJ = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10));
             var avroData = avroFormatter.EncodeStructuredEvent(cloudEventJ, out var contentType);
-            var cloudEvent = avroFormatter.DecodeStructuredEvent(avroData);
+            var cloudEvent = avroFormatter.DecodeStructuredEvent(avroData, new CloudEventAttribute[0]);
 
             Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
@@ -69,9 +69,9 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             var jsonFormatter = new JsonEventFormatter();
             var avroFormatter = new AvroEventFormatter();
             var extensionAttribute = CloudEventAttribute.CreateExtension("comexampleextension1", CloudEventAttributeType.String);
-            var cloudEventJ = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10), extensionAttribute);
+            var cloudEventJ = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10), new[] { extensionAttribute });
             var avroData = avroFormatter.EncodeStructuredEvent(cloudEventJ, out var contentType);
-            var cloudEvent = avroFormatter.DecodeStructuredEvent(avroData, extensionAttribute);
+            var cloudEvent = avroFormatter.DecodeStructuredEvent(avroData, new[] { extensionAttribute });
 
             Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);

@@ -22,9 +22,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         private const string Data = "data";
         public const string MediaTypeSuffix = "+json";
 
-        public CloudEvent DecodeStructuredEvent(Stream data, params CloudEventAttribute[] extensionAttributes) =>
-            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>) extensionAttributes);
-
         public override async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
@@ -44,9 +41,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             var jObject = JObject.Load(jsonReader);
             return DecodeJObject(jObject, extensionAttributes);
         }
-
-        public CloudEvent DecodeStructuredEvent(byte[] data, params CloudEventAttribute[] extensionAttributes) =>
-            DecodeStructuredEvent(data, (IEnumerable<CloudEventAttribute>)extensionAttributes);
 
         public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes = null) =>
             DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
