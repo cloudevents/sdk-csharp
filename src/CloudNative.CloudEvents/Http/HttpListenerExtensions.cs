@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents.Http
@@ -30,17 +31,17 @@ namespace CloudNative.CloudEvents.Http
         {
             if (contentMode == ContentMode.Structured)
             {
-                var buffer = formatter.EncodeStructuredEvent(cloudEvent, out var contentType);
+                var buffer = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
                 httpListenerResponse.ContentType = contentType.ToString();
                 MapAttributesToListenerResponse(cloudEvent, httpListenerResponse);
                 return httpListenerResponse.OutputStream.WriteAsync(buffer, 0, buffer.Length);
             }
-
-            Stream stream = HttpUtilities.MapDataAttributeToStream(cloudEvent, formatter);
+            
             // TODO: Check the defaulting to JSON here...
             httpListenerResponse.ContentType = cloudEvent.DataContentType?.ToString() ?? "application/json";
             MapAttributesToListenerResponse(cloudEvent, httpListenerResponse);
-            return stream.CopyToAsync(httpListenerResponse.OutputStream);
+            byte[] content = formatter.EncodeBinaryModeEventData(cloudEvent);
+            return httpListenerResponse.OutputStream.WriteAsync(content, 0, content.Length);
         }
 
         // TODO: Do we want this? It's not about CloudEvents...
@@ -97,14 +98,16 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="httpListenerRequest">Listener request</param>
         /// <param name="formatter"></param>
         /// <param name="extensions">List of extension instances</param>
-        /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
+        /// <returns>The CloudEvent corresponding to the given request.</returns>
+        /// <exception cref="ArgumentException">The request does not represent a CloudEvent,
+        /// or the event's specification version is not supported,
+        /// or the event formatter cannot interpret it.</exception>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes)
         {
             if (HasCloudEventsContentType(httpListenerRequest))
             {
-                // FIXME: Handle no formatter being specified.
-                return formatter.DecodeStructuredEvent(httpListenerRequest.InputStream, extensionAttributes);
+                return formatter.DecodeStructuredModeMessage(httpListenerRequest.InputStream, MimeUtilities.CreateContentTypeOrNull(httpListenerRequest.ContentType), extensionAttributes);
             }
             else
             {
@@ -132,16 +135,11 @@ namespace CloudNative.CloudEvents.Http
                     cloudEvent.SetAttributeFromString(attributeName, attributeValue);
                 }
 
-                // TODO: Check that this doesn't come through as a header already
+                // The data content type should not have been set via a "ce-" header; instead,
+                // it's in the regular content type.
                 cloudEvent.DataContentType = httpListenerRequest.ContentType;
 
-                // TODO: This is a bit ugly.
-                var memoryStream = new MemoryStream();
-                httpListenerRequest.InputStream.CopyTo(memoryStream);
-                if (memoryStream.Length != 0)
-                {
-                    cloudEvent.Data = formatter.DecodeData(memoryStream.ToArray(), cloudEvent.DataContentType);
-                }
+                formatter.DecodeBinaryModeEventData(BinaryDataUtilities.ToByteArray(httpListenerRequest.InputStream), cloudEvent);
                 return cloudEvent;
             }
         }

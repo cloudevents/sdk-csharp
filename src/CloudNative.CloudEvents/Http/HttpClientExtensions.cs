@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents.Http
@@ -102,7 +103,7 @@ namespace CloudNative.CloudEvents.Http
             {
                 // FIXME: Handle no formatter being specified.
                 var stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
-                return await formatter.DecodeStructuredEventAsync(stream, extensionAttributes).ConfigureAwait(false);
+                return await formatter.DecodeStructuredModeMessageAsync(stream, content.Headers.ContentType.ToContentType(), extensionAttributes).ConfigureAwait(false);
             }
             else
             {
@@ -136,7 +137,7 @@ namespace CloudNative.CloudEvents.Http
                     // TODO: Should this just be the media type? We probably need to take a full audit of this...
                     cloudEvent.DataContentType = content.Headers?.ContentType?.ToString();
                     var data = await content.ReadAsByteArrayAsync().ConfigureAwait(false);
-                    cloudEvent.Data = formatter.DecodeData(data, cloudEvent.DataContentType);
+                    formatter.DecodeBinaryModeEventData(data, cloudEvent);
                 }
                 return cloudEvent;
             }

@@ -11,7 +11,8 @@ namespace CloudNative.CloudEvents.Mqtt
         public static CloudEvent ToCloudEvent(this MqttApplicationMessage message,
             CloudEventFormatter eventFormatter, params CloudEventAttribute[] extensionAttributes)
         {
-            return eventFormatter.DecodeStructuredEvent(message.Payload, extensionAttributes);
+            // TODO: Determine if there's a sensible content type we should apply.
+            return eventFormatter.DecodeStructuredModeMessage(message.Payload, contentType: null, extensionAttributes);
         }
     }
 }

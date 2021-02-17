@@ -34,7 +34,7 @@ namespace CloudNative.CloudEvents.Kafka
 
             if (contentMode == ContentMode.Structured)
             {
-                Value = formatter.EncodeStructuredEvent(cloudEvent, out var contentType);
+                Value = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
                 Headers.Add(KafkaContentTypeAttributeName, Encoding.UTF8.GetBytes(contentType.MediaType));
             }
             else

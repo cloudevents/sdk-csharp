@@ -145,7 +145,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         }
 
         [Fact]
-        async Task HttpStructuredClientReceiveTest()
+        public async Task HttpStructuredClientReceiveTest()
         {
             string ctx = Guid.NewGuid().ToString();
             PendingRequests.TryAdd(ctx, async context =>
@@ -200,7 +200,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         }
 
         [Fact]
-        async Task HttpStructuredClientSendTest()
+        public async Task HttpStructuredClientSendTest()
         {
             var cloudEvent = new CloudEvent
             {                
@@ -231,7 +231,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                     Assert.Equal("2018-04-05T17:31:00Z", headers["ce-time"]);
                     // Note that datacontenttype is mapped in this case, but would not be included in binary mode.
                     Assert.Equal("text/xml", headers["ce-datacontenttype"]);
-                    Assert.Equal("application/cloudevents+json", context.Request.ContentType);
+                    Assert.Equal("application/cloudevents+json; charset=utf-8", context.Request.ContentType);
                     Assert.Equal("value", headers["ce-comexampleextension1"]);
                     // The non-ASCII attribute value should have been URL-encoded using UTF-8 for the header.
                     Assert.Equal("%C3%A6%C3%B8%C3%A5", headers["ce-utf8examplevalue"]);
