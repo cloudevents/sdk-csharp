@@ -6,6 +6,7 @@ using System;
 using System.Net.Mime;
 using System.Text;
 using Xunit;
+using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
 namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
@@ -30,11 +31,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         public void ReserializeTest10()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10));
-            var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent, out var contentType);
+            var cloudEvent = jsonFormatter.DecodeStructuredModeText(jsonv10);
+            var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
             Assert.Equal("application/cloudevents+json", contentType.MediaType);
 
-            var cloudEvent2 = jsonFormatter.DecodeStructuredEvent(jsonData);
+            var cloudEvent2 = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType: null, Array.Empty<CloudEventAttribute>());
 
             Assert.Equal(cloudEvent2.SpecVersion, cloudEvent.SpecVersion);
             Assert.Equal(cloudEvent2.Type, cloudEvent.Type);
@@ -49,7 +50,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         public void StructuredParseSuccess10()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10));
+            var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(Encoding.UTF8.GetBytes(jsonv10), contentType: null, extensionAttributes: null);
             Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
@@ -68,7 +69,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var extension = CloudEventAttribute.CreateExtension("comexampleextension2", CloudEventAttributeType.Integer);
 
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(jsonv10), new[] { extension });
+            var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(Encoding.UTF8.GetBytes(jsonv10), contentType: null, new[] { extension });
             // Instead of getting it as a string (as before), we now have it as an integer.
             Assert.Equal(10, cloudEvent["comexampleextension2"]);
         }

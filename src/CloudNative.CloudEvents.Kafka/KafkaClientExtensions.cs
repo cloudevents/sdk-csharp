@@ -7,6 +7,7 @@ using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 
 namespace CloudNative.CloudEvents.Kafka
@@ -38,7 +39,7 @@ namespace CloudNative.CloudEvents.Kafka
             // Structured mode
             if (contentType?.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) == true)
             {
-                cloudEvent = eventFormatter.DecodeStructuredEvent(message.Value, extensionAttributes);
+                cloudEvent = eventFormatter.DecodeStructuredModeMessage(message.Value, new ContentType(contentType), extensionAttributes);
             }
             else
             {

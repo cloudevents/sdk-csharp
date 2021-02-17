@@ -6,6 +6,7 @@ using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.Text;
 using Xunit;
+using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 
 namespace CloudNative.CloudEvents.Extensions.UnitTests
 {
@@ -25,7 +26,7 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
         public void Parse()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(sampleJson), Sequence.AllAttributes);
+            var cloudEvent = jsonFormatter.DecodeStructuredModeText(sampleJson, Sequence.AllAttributes);
 
             Assert.Equal("Integer", cloudEvent[Sequence.SequenceTypeAttribute]);
             Assert.Equal("25", cloudEvent[Sequence.SequenceAttribute]);
@@ -35,9 +36,9 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
         public void Transcode()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent1 = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(sampleJson));
-            var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out var contentType);
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, Sequence.AllAttributes);
+            var cloudEvent1 = jsonFormatter.DecodeStructuredModeText(sampleJson);
+            var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent1, out var contentType);
+            var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType, Sequence.AllAttributes);
 
             Assert.Equal("Integer", cloudEvent[Sequence.SequenceTypeAttribute]);
             Assert.Equal("25", cloudEvent[Sequence.SequenceAttribute]);

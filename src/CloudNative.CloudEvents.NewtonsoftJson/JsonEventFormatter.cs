@@ -14,74 +14,130 @@ using System.Threading.Tasks;
 namespace CloudNative.CloudEvents.NewtonsoftJson
 {
     /// <summary>
-    /// Formatter that implements the JSON Event Format
+    /// Formatter that implements the JSON Event Format.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When encoding CloudEvent data, the behavior depends on the data content type of the CloudEvent
+    /// and the type of the <see cref="CloudEvent.Data"/> property value, following the rules below.
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>
+    /// If the data value is null, the content is empty for a binary mode message, and neither the "data"
+    /// nor "data_base64" property is populated in a structured mode message.
+    /// </description></item>
+    /// <item><description>
+    /// If the data content type is absent or has a media type of "application/json", the data is encoded as JSON.
+    /// If the data is already a <see cref="JToken"/>, that is serialized directly as JSON. Otherwise, the data
+    /// is converted using the <see cref="JsonSerializer"/> passed into the constructor, or a
+    /// default serializer.
+    /// </description></item>
+    /// <item><description>
+    /// Otherwise, if the data content type has a media type beginning with "text/" and the data value is a string,
+    /// the data is serialized as a string.
+    /// </description></item>
+    /// <item><description>
+    /// Otherwise, if the data value is a byte array, it is serialized either directly as binary data
+    /// (for binary mode messages) or as base64 data (for structured mode messages).
+    /// </description></item>
+    /// <item><description>
+    /// Otherwise, the encoding operation fails.
+    /// </description></item>
+    /// </list>
+    /// <para>
+    /// When decoding CloudEvent data, the following rules are used:
+    /// </para>
+    /// <para>
+    /// In a structured mode message, any data is either binary data within the "data_base64" property value,
+    /// or is a JSON token as the "data" property value. Binary data is represented as a byte array.
+    /// A JSON token is decoded as a string if is just a string value and the data content type is specified
+    /// and has a media type beginning with "text/". A JSON token representing the null value always
+    /// leads to a null data result. In any other situation, the JSON token is preserved as a <see cref="JToken"/>
+    /// that can be used for further deserialization (e.g. to a specific CLR type).
+    /// </para>
+    /// <para>
+    /// In a binary mode message, the data is parsed based on the content type of the message. When the content
+    /// type is absent or has a media type of "application/json", the data is parsed as JSON, with the result as
+    /// a <see cref="JToken"/>. When the content type has a media type beginning with "text/", the data is parsed
+    /// as a string. In all other cases, the data is left as a byte array.
+    /// </para>
+    /// </remarks>
     public class JsonEventFormatter : CloudEventFormatter
     {
+        private const string JsonMediaType = "application/json";
         private const string DataBase64 = "data_base64";
         private const string Data = "data";
-        public const string MediaTypeSuffix = "+json";
+        private const string MediaTypeSuffix = "+json";
 
-        public override async Task<CloudEvent> DecodeStructuredEventAsync(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
+        private readonly JsonSerializer serializer;
+
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses a default <see cref="JsonSerializer"/>.
+        /// </summary>
+        public JsonEventFormatter() : this(JsonSerializer.CreateDefault())
         {
-            var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
-            {
-                DateParseHandling = DateParseHandling.None
-            };
+        }
+
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializer"/>
+        /// to serialize objects as JSON.
+        /// </summary>
+        public JsonEventFormatter(JsonSerializer serializer)
+        {
+            this.serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+        }
+
+        public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            var jsonReader = CreateJsonReader(data, contentType.GetEncoding());
             var jObject = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
             return DecodeJObject(jObject, extensionAttributes);
         }
 
-        public override CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes = null)
+        public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            var jsonReader = new JsonTextReader(new StreamReader(data, Encoding.UTF8, true, 8192, true))
-            {
-                DateParseHandling = DateParseHandling.None
-            };
+            var jsonReader = CreateJsonReader(data, contentType.GetEncoding());
             var jObject = JObject.Load(jsonReader);
             return DecodeJObject(jObject, extensionAttributes);
         }
 
-        public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes = null) =>
-            DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
+        public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
 
         private CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute> extensionAttributes = null)
         {
-            CloudEventsSpecVersion specVersion = CloudEventsSpecVersion.Default;
-            if (jObject.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionToken))
+            if (!jObject.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionToken)
+                || specVersionToken.Type != JTokenType.String)
             {
-                string versionId = (string)specVersionToken;
-                specVersion = CloudEventsSpecVersion.FromVersionId(versionId);
-                // TODO: Throw if specVersion is null?
+                throw new ArgumentException($"Structured mode content does not represent a CloudEvent");
+            }
+            var specVersion = CloudEventsSpecVersion.FromVersionId((string) specVersionToken);
+            if (specVersion is null)
+            {
+                throw new ArgumentException($"Unsupported CloudEvents spec version '{(string)specVersionToken}'");
             }
 
             var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
+            PopulateAttributesFromStructuredEvent(cloudEvent, jObject);
+            PopulateDataFromStructuredEvent(cloudEvent, jObject);
+
+            return cloudEvent;
+        }
+
+        private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
+        {
             foreach (var keyValuePair in jObject)
             {
                 var key = keyValuePair.Key;
                 var value = keyValuePair.Value;
 
                 // Skip the spec version attribute, which we've already taken account of.
-                if (key == CloudEventsSpecVersion.SpecVersionAttribute.Name)
+                // Data is handled later, when everything else (importantly, the data content type)
+                // has been populated.
+                if (key == CloudEventsSpecVersion.SpecVersionAttribute.Name ||
+                    key == DataBase64 ||
+                    key == Data)
                 {
-                    continue;
-                }
-
-                // TODO: Is the data_base64 name version-specific?
-                if (specVersion == CloudEventsSpecVersion.V1_0 && key == DataBase64)
-                {
-                    // Handle base64 encoded binaries
-                    cloudEvent.Data = Convert.FromBase64String((string)value);
-                    continue;
-                }
-                if (key == Data)
-                {
-                    // FIXME: Deserialize where appropriate.
-                    // Consider whether there are any options here to consider beyond "string" and "object".
-                    // (e.g. arrays, numbers etc).
-                    // Note: the cast to "object" is important here, otherwise the string branch is implicitly
-                    // converted back to JToken...
-                    cloudEvent.Data = value.Type == JTokenType.String ? (string) value : (object) value;
                     continue;
                 }
 
@@ -96,18 +152,53 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 string attributeValue = value.Type switch
                 {
                     JTokenType.String => (string)value,
+                    JTokenType.Boolean => CloudEventAttributeType.Boolean.Format((bool)value),
                     JTokenType.Null => null, // TODO: Check we want to do this. It's a bit weird.
                     JTokenType.Integer => CloudEventAttributeType.Integer.Format((int)value),
                     _ => throw new ArgumentException($"Invalid token type '{value.Type}' for CloudEvent attribute")
                 };
-
+                // Note: we *could* infer an extension type of integer and Boolean, but not other extension types.
+                // (We don't want to assume that everything that looks like a timestamp is a timestamp, etc.)
+                // Stick to strings for consistency.
                 cloudEvent.SetAttributeFromString(key, attributeValue);
             }
-
-            return cloudEvent;
         }
 
-        public override byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
+        private void PopulateDataFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
+        {
+            jObject.TryGetValue(Data, out var dataToken);
+            jObject.TryGetValue(DataBase64, out var dataBase64Token);
+            if (dataToken is null && dataBase64Token is null)
+            {
+                return;
+            }
+            if (dataToken is object && dataBase64Token is object)
+            {
+                throw new ArgumentException($"Structured mode content cannot contain both '{Data}' and '{DataBase64}' properties.");
+            }
+            if (dataBase64Token is object)
+            {
+                if (dataBase64Token.Type != JTokenType.String)
+                {
+                    throw new ArgumentException($"Structured mode property '{DataBase64}' must be a string, when present.");
+                }
+                cloudEvent.Data = Convert.FromBase64String((string) dataBase64Token);
+            }
+            else
+            {
+                if (dataToken.Type == JTokenType.Null)
+                {
+                    return;
+                }
+                // Convert JSON string tokens to string values when the content type suggests that's appropriate,
+                // otherwise leave the token as it is.
+                cloudEvent.Data = dataToken.Type == JTokenType.String && cloudEvent.DataContentType?.StartsWith("text/") == true
+                    ? (string) dataToken
+                    : (object) dataToken; // Deliberately cast to object to avoid any implicit conversions
+            }
+        }
+
+        public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
             contentType = new ContentType("application/cloudevents+json")
             {
@@ -115,21 +206,23 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             };
 
             JObject jObject = new JObject();
+            jObject[CloudEventsSpecVersion.SpecVersionAttribute.Name] = cloudEvent.SpecVersion.VersionId;
             var attributes = cloudEvent.GetPopulatedAttributes();
             foreach (var keyValuePair in attributes)
             {
                 jObject[keyValuePair.Key.Name] = JToken.FromObject(keyValuePair.Value);
             }
 
-            // FIXME: This is all a bit arbitrary.
             if (cloudEvent.Data is object)
             {
-                // FIXME: This assumes there's nothing beyond the media type...
-                if (cloudEvent.DataContentType == "application/json")
+                ContentType dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+                if (dataContentType.MediaType == JsonMediaType)
                 {
-                    jObject[Data] = JToken.FromObject(cloudEvent.Data);
+                    jObject[Data] = cloudEvent.Data is JToken token
+                        ? token
+                        : JToken.FromObject(cloudEvent.Data);
                 }
-                else if (cloudEvent.Data is string text && cloudEvent.DataContentType?.StartsWith("text/") == true)
+                else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
                 {
                     jObject[Data] = text;
                 }
@@ -139,7 +232,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 }
                 else
                 {
-                    throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type {cloudEvent.DataContentType}");
+                    throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type '{cloudEvent.DataContentType}'");
                 }
             }
 
@@ -147,39 +240,54 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         // TODO: How should the caller know whether the result is "raw" or should be stored in data_base64?
-        public override byte[] EncodeData(object value)
+        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
-            // TODO: Check this is what we want.
-            // In particular, if this is just other text or binary data, rather than JSON, what does it
-            // mean to have a JSON event format?
-            string json = value switch
+            if (cloudEvent.Data is null)
             {
-                JToken token => token.ToString(), // Formatting?
-                string text => text,
-                byte[] data => Convert.ToBase64String(data),
-                null => null,
-                _ => JsonConvert.SerializeObject(value)
-            };
-            return json is null ? new byte[0] : Encoding.UTF8.GetBytes(json);
+                return Array.Empty<byte>();
+            }
+            ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+            if (contentType.MediaType == JsonMediaType)
+            {
+                string json = JsonConvert.SerializeObject(cloudEvent.Data);
+                return contentType.GetEncoding().GetBytes(json);
+            }
+            if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
+            {
+                return contentType.GetEncoding().GetBytes(text);
+            }
+            if (cloudEvent.Data is byte[] bytes)
+            {
+                return bytes;
+            }
+            throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type '{cloudEvent.DataContentType}'");
         }
 
-        public override object DecodeData(byte[] value, string contentType)
+        public override void DecodeBinaryModeEventData(byte[] value, CloudEvent cloudEvent)
         {
-            if (contentType == "application/json")
+            ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+
+            Encoding encoding = contentType.GetEncoding();
+
+            if (contentType.MediaType == JsonMediaType)
             {
-                var jsonReader = new JsonTextReader(new StreamReader(new MemoryStream(value), Encoding.UTF8, true, 8192, true))
-                {
-                    DateParseHandling = DateParseHandling.DateTimeOffset
-                };
-                return JToken.Load(jsonReader);
+                var jsonReader = CreateJsonReader(new MemoryStream(value), encoding);
+                cloudEvent.Data = JToken.Load(jsonReader);
             }
-            else if (contentType?.StartsWith("text/") == true)
+            else if (contentType.MediaType.StartsWith("text/") == true)
             {
-                // FIXME: Even if we want to do this, we really need to know if there's a content encoding.
-                return Encoding.UTF8.GetString(value);
+                cloudEvent.Data = encoding.GetString(value);
             }
-            // TODO: Clone?
-            return value;
+            else
+            {
+                cloudEvent.Data = value;
+            }
         }
+
+        private static JsonReader CreateJsonReader(Stream stream, Encoding encoding) =>
+            new JsonTextReader(new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8192, leaveOpen: true))
+            {
+                DateParseHandling = DateParseHandling.None
+            };
     }
 }

@@ -29,16 +29,16 @@ namespace CloudNative.CloudEvents.Http
         {
             if (contentMode == ContentMode.Structured)
             {
-                var buffer = formatter.EncodeStructuredEvent(cloudEvent, out var contentType);
+                var buffer = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
                 httpWebRequest.ContentType = contentType.ToString();
                 await httpWebRequest.GetRequestStream().WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                 return;
             }
 
-            Stream stream = HttpUtilities.MapDataAttributeToStream(cloudEvent, formatter);
             httpWebRequest.ContentType = cloudEvent.DataContentType?.ToString() ?? "application/json";
             MapAttributesToWebRequest(cloudEvent, httpWebRequest);
-            await stream.CopyToAsync(httpWebRequest.GetRequestStream());
+            byte[] content = formatter.EncodeBinaryModeEventData(cloudEvent);
+            await httpWebRequest.GetRequestStream().WriteAsync(content, 0, content.Length).ConfigureAwait(false);
         }
 
         static void MapAttributesToWebRequest(CloudEvent cloudEvent, HttpWebRequest httpWebRequest)

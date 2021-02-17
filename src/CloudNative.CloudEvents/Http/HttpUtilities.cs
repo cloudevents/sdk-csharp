@@ -6,6 +6,8 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,15 +22,6 @@ namespace CloudNative.CloudEvents.Http
         public const string HttpHeaderPrefix = "ce-";
 
         public const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";
-
-        internal static Stream MapDataAttributeToStream(CloudEvent cloudEvent, CloudEventFormatter formatter) =>
-            cloudEvent.Data switch
-            {
-                byte[] bytes => new MemoryStream(bytes),
-                string text => new MemoryStream(Encoding.UTF8.GetBytes(text)),
-                Stream stream => stream,
-                object other => new MemoryStream(formatter.EncodeData(other))
-            };
 
         /// <summary>
         /// Checks whether the given HTTP header name starts with "ce-", and if so, converts it into

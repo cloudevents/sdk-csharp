@@ -6,6 +6,7 @@ using Amqp;
 using Amqp.Types;
 using System;
 using System.IO;
+using System.Net.Mime;
 
 namespace CloudNative.CloudEvents.Amqp
 {
@@ -16,16 +17,16 @@ namespace CloudNative.CloudEvents.Amqp
         internal const string SpecVersionAmqpHeader = AmqpHeaderPrefix + "specversion";
 
         public static bool IsCloudEvent(this Message message) =>
-            (message.Properties.ContentType is Symbol contentType && contentType.ToString().StartsWith(CloudEvent.MediaType)) ||
+            HasCloudEventsContentType(message, out _) ||
             message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader);        
 
         public static CloudEvent ToCloudEvent(this Message message,
             CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes)
         {
-            if (HasCloudEventsContentType(message))
+            if (HasCloudEventsContentType(message, out var contentType))
             {
-                return formatter.DecodeStructuredEvent(new MemoryStream((byte[])message.Body), extensionAttributes);
+                return formatter.DecodeStructuredModeMessage(new MemoryStream((byte[])message.Body), new ContentType(contentType), extensionAttributes);
             }
             else
             {
@@ -88,7 +89,10 @@ namespace CloudNative.CloudEvents.Amqp
         }
 
         // TODO: Check that it really is meant to be case-sensitive. (Original code was inconsistent.)
-        private static bool HasCloudEventsContentType(Message message) =>
-            message.Properties.ContentType is Symbol contentType && contentType.ToString().StartsWith(CloudEvent.MediaType);
+        private static bool HasCloudEventsContentType(Message message, out string contentType)
+        {
+            contentType = (message.Properties.ContentType as Symbol)?.ToString();
+            return contentType?.StartsWith(CloudEvent.MediaType) == true;
+        }
     }
 }

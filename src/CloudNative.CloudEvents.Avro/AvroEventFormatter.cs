@@ -13,10 +13,27 @@ using System.Net.Mime;
 namespace CloudNative.CloudEvents
 {
     /// <summary>
-    /// Formatter that implements the Avro Event Format
+    /// Formatter that implements the Avro Event Format.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This event formatter currently only supports structured-mode messages.
+    /// </para>
+    /// <para>
+    /// When encoding a CloudEvent, the data must be serializable as described in the
+    /// <a href="https://github.com/cloudevents/spec/blob/v1.0.1/avro-format.md#3-data">CloudEvents Avro Event
+    /// Format specification</a>.
+    /// </para>
+    /// <para>
+    /// When decoding a CloudEvent, the <see cref="CloudEvent.Data"/> property is populated directly from the
+    /// Avro record, so the value will have the natural Avro deserialization type for that data (which may
+    /// not be exactly the same as the type that was serialized).
+    /// </para>
+    /// </remarks>
     public class AvroEventFormatter : CloudEventFormatter
     {
+        private const string MediaTypeSuffix = "+avro";
+        private const string AttributeName = "attribute";
         private const string DataName = "data";
         private static readonly RecordSchema avroSchema;
         private static readonly DefaultReader avroReader;
@@ -24,42 +41,46 @@ namespace CloudNative.CloudEvents
         
         static AvroEventFormatter()
         {
-            // we're going to confidently assume that the embedded schema works. If not, type initialization
-            // will fail and that's okay since the type is useless without the proper schema
+            // We're going to confidently assume that the embedded schema works. If not, type initialization
+            // will fail and that's okay since the type is useless without the proper schema.
             using (var sr = new StreamReader(typeof(AvroEventFormatter).Assembly.GetManifestResourceStream("CloudNative.CloudEvents.Avro.AvroSchema.json")))
             {
-                avroSchema = (RecordSchema)RecordSchema.Parse(sr.ReadToEnd());
+                avroSchema = (RecordSchema) Schema.Parse(sr.ReadToEnd());
             }
             avroReader = new DefaultReader(avroSchema, avroSchema);
             avroWriter = new DefaultWriter(avroSchema);
         }
-        public const string MediaTypeSuffix = "+avro";
 
-        public override CloudEvent DecodeStructuredEvent(Stream data, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             var decoder = new BinaryDecoder(data);
             var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
             return DecodeGenericRecord(rawEvent, extensionAttributes);
         }
 
-        public override CloudEvent DecodeStructuredEvent(byte[] data, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredEvent(new MemoryStream(data), extensionAttributes);
+        public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
 
         private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            if (!record.TryGetValue("attribute", out var attrObj))
+            if (!record.TryGetValue(AttributeName, out var attrObj))
             {
-                return null;
+                throw new ArgumentException($"Record has no '{AttributeName}' field");
             }
             IDictionary<string, object> recordAttributes = (IDictionary<string, object>)attrObj;
 
-            CloudEventsSpecVersion specVersion = CloudEventsSpecVersion.Default;
-            if (recordAttributes.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var versionId) &&
-                versionId is string versionIdString)
+            if (!recordAttributes.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var versionId) ||
+                !(versionId is string versionIdString))
             {
-                specVersion = CloudEventsSpecVersion.FromVersionId(versionIdString);
+                throw new ArgumentException("Specification version attribute is missing");
             }
-            var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
+            CloudEventsSpecVersion version = CloudEventsSpecVersion.FromVersionId(versionIdString);
+            if (version is null)
+            {
+                throw new ArgumentException($"Unsupported CloudEvents spec version '{versionIdString}'");
+            }
+
+            var cloudEvent = new CloudEvent(version, extensionAttributes);
             cloudEvent.Data = record.TryGetValue(DataName, out var data) ? data : null;
 
             foreach (var keyValuePair in recordAttributes)
@@ -78,6 +99,7 @@ namespace CloudNative.CloudEvents
 
                 // The Avro schema allows the value to be a Boolean, integer, string or bytes.
                 // Timestamps and URIs are represented as strings, so we just use SetAttributeFromString to handle those.
+                // TODO: This does mean that any extensions of these types must have been registered beforehand.
                 if (value is bool || value is int || value is byte[])
                 {
                     cloudEvent[key] = value;
@@ -95,12 +117,13 @@ namespace CloudNative.CloudEvents
             return cloudEvent;
         }
 
-        public override byte[] EncodeStructuredEvent(CloudEvent cloudEvent, out ContentType contentType)
+        public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
-            contentType = new ContentType(CloudEvent.MediaType+AvroEventFormatter.MediaTypeSuffix);
+            contentType = new ContentType(CloudEvent.MediaType + MediaTypeSuffix);
 
+            // We expect the Avro encoded to detect data types that can't be represented in the schema.
             GenericRecord record = new GenericRecord(avroSchema);
-            record.Add(DataName, SerializeData(cloudEvent.Data));
+            record.Add(DataName, cloudEvent.Data);
             var recordAttributes = new Dictionary<string, object>();
             recordAttributes[CloudEventsSpecVersion.SpecVersionAttribute.Name] = cloudEvent.SpecVersion.VersionId;
 
@@ -114,33 +137,18 @@ namespace CloudNative.CloudEvents
                     : attribute.Format(value);
                 recordAttributes[attribute.Name] = avroValue;
             }
-            record.Add("attribute", recordAttributes);
+            record.Add(AttributeName, recordAttributes);
             MemoryStream memStream = new MemoryStream();
             BinaryEncoder encoder = new BinaryEncoder(memStream);
             avroWriter.Write(record, encoder);
-            return new Span<byte>(memStream.GetBuffer(), 0, (int)memStream.Length).ToArray();
-        }
-
-        /// <summary>
-        /// Convert data into a suitable format for inclusion in an Avro record.
-        /// TODO: Asynchronous version of this...
-        /// </summary>
-        private static object SerializeData(object data)
-        {
-            if (data is Stream stream)
-            {
-                var ms = new MemoryStream();
-                stream.CopyTo(ms);
-                return ms.ToArray();
-            }
-            return data;
+            return memStream.ToArray();
         }
 
         // TODO: Validate that this is correct...
-        public override byte[] EncodeData(object value) =>
+        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
 
-        public override object DecodeData(byte[] value, string contentType) =>
+        public override void DecodeBinaryModeEventData(byte[] value, CloudEvent cloudEvent) =>
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
     }
 }

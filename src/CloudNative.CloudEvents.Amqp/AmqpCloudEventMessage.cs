@@ -22,7 +22,7 @@ namespace CloudNative.CloudEvents.Amqp
             {
                 BodySection = new Data
                 {
-                    Binary = formatter.EncodeStructuredEvent(cloudEvent, out var contentType)
+                    Binary = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType)
                 };
                 Properties = new Properties { ContentType = contentType.MediaType };
                 ApplicationProperties = new ApplicationProperties();

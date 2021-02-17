@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents
@@ -14,13 +15,13 @@ namespace CloudNative.CloudEvents
     public static class HttpRequestExtension
     {
         /// <summary>
-        /// Converts this HTTP request into a CloudEvent object, with the given extensions,
-        /// overriding the formatter.
+        /// Converts this HTTP request into a CloudEvent object.
         /// </summary>
-        /// <param name="httpRequest">HTTP request</param>
-        /// <param name="formatter">The event formatter to use to process the request body.</param>
-        /// <param name="extensions">List of extension instances</param>
-        /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
+        /// <param name="httpRequest">The HTTP request to decode. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to process the request body. Must not be null.</param>
+        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The decoded CloudEvent.</returns>
+        /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
         public static async ValueTask<CloudEvent> ReadCloudEventAsync(this HttpRequest httpRequest,
             CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes)
@@ -28,7 +29,7 @@ namespace CloudNative.CloudEvents
             if (HasCloudEventsContentType(httpRequest))
             {
                 // TODO: Handle formatter being null
-                return await formatter.DecodeStructuredEventAsync(httpRequest.Body, extensionAttributes).ConfigureAwait(false);
+                return await formatter.DecodeStructuredModeMessageAsync(httpRequest.Body, MimeUtilities.CreateContentTypeOrNull(httpRequest.ContentType), extensionAttributes).ConfigureAwait(false);
             }
             else
             {
@@ -59,13 +60,11 @@ namespace CloudNative.CloudEvents
                 cloudEvent.DataContentType = httpRequest.ContentType;
                 if (httpRequest.Body is Stream body)
                 {
-                    // TODO: This is a bit ugly.
+                    // TODO: This is a bit ugly. We have code in BinaryDataUtilities to handle this, but
+                    // we'd rather not expose it...
                     var memoryStream = new MemoryStream();
                     await body.CopyToAsync(memoryStream).ConfigureAwait(false);
-                    if (memoryStream.Length != 0)
-                    {
-                        cloudEvent.Data = formatter.DecodeData(memoryStream.ToArray(), cloudEvent.DataContentType);
-                    }
+                    formatter.DecodeBinaryModeEventData(memoryStream.ToArray(), cloudEvent);
                 }
                 return cloudEvent;
             }

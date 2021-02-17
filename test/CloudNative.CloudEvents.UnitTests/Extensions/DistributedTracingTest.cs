@@ -5,6 +5,7 @@
 using CloudNative.CloudEvents.NewtonsoftJson;
 using System.Text;
 using Xunit;
+using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 
 namespace CloudNative.CloudEvents.Extensions.UnitTests
 {
@@ -27,7 +28,7 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
         public void ParseJson()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(sampleJson), DistributedTracing.AllAttributes);
+            var cloudEvent = jsonFormatter.DecodeStructuredModeText(sampleJson, DistributedTracing.AllAttributes);
 
             Assert.Equal(SampleParent, cloudEvent[DistributedTracing.TraceParentAttribute]);
             Assert.Equal(SampleParent, cloudEvent.GetTraceParent());
@@ -39,9 +40,9 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
         public void Transcode()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent1 = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(sampleJson));
-            var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out _);
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, DistributedTracing.AllAttributes);
+            var cloudEvent1 = jsonFormatter.DecodeStructuredModeText(sampleJson);
+            var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent1, out var contentType);
+            var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType, DistributedTracing.AllAttributes);
 
             Assert.Equal(SampleParent, cloudEvent[DistributedTracing.TraceParentAttribute]);
             Assert.Equal(SampleParent, cloudEvent.GetTraceParent());

@@ -6,6 +6,7 @@ using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.Text;
 using Xunit;
+using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 
 namespace CloudNative.CloudEvents.Extensions.UnitTests
 {
@@ -24,7 +25,7 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
         public void SamplingParse()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(sampleJson), Sampling.AllAttributes);
+            var cloudEvent = jsonFormatter.DecodeStructuredModeText(sampleJson, Sampling.AllAttributes);
 
             Assert.Equal(1, cloudEvent["sampledrate"]);
             Assert.Equal(1, cloudEvent.GetSampledRate());
@@ -34,12 +35,12 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
         public void SamplingJsonTranscode()
         {
             var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent1 = jsonFormatter.DecodeStructuredEvent(Encoding.UTF8.GetBytes(sampleJson));
+            var cloudEvent1 = jsonFormatter.DecodeStructuredModeText(sampleJson);
             // Note that the value is just a string here, as we don't know the attribute type.
             Assert.Equal("1", cloudEvent1["sampledrate"]);
 
-            var jsonData = jsonFormatter.EncodeStructuredEvent(cloudEvent1, out _);
-            var cloudEvent = jsonFormatter.DecodeStructuredEvent(jsonData, Sampling.AllAttributes);
+            var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent1, out var contentType);
+            var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType, Sampling.AllAttributes);
 
             // When parsing with the attributes in place, the value is propagated as an integer.
             Assert.Equal(1, cloudEvent["sampledrate"]);
