@@ -43,11 +43,15 @@ namespace CloudNative.CloudEvents.Kafka
             else
             {
                 // Binary mode
-                CloudEventsSpecVersion version = CloudEventsSpecVersion.Default;
-                if (GetHeaderValue(message, KafkaCloudEventMessage.SpecVersionKafkaHeader) is byte[] versionIdBytes)
+                if (!(GetHeaderValue(message, KafkaCloudEventMessage.SpecVersionKafkaHeader) is byte[] versionIdBytes))
                 {
-                    string versionId = Encoding.UTF8.GetString(versionIdBytes);
-                    version = CloudEventsSpecVersion.FromVersionId(versionId);
+                    throw new ArgumentException("Request is not a CloudEvent");
+                }
+                string versionId = Encoding.UTF8.GetString(versionIdBytes);
+                CloudEventsSpecVersion version = CloudEventsSpecVersion.FromVersionId(versionId);
+                if (version is null)
+                {
+                    throw new ArgumentException($"Unsupported CloudEvents spec version '{versionId}'");
                 }
 
                 cloudEvent = new CloudEvent(version, extensionAttributes)

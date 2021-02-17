@@ -108,10 +108,15 @@ namespace CloudNative.CloudEvents.Http
             }
             else
             {
-                CloudEventsSpecVersion version = CloudEventsSpecVersion.Default;
-                if (httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader] is string versionId)
+                string versionId = httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader];
+                if (versionId is null)
                 {
-                    version = CloudEventsSpecVersion.FromVersionId(versionId);
+                    throw new ArgumentException("Request is not a CloudEvent");
+                }
+                var version = CloudEventsSpecVersion.FromVersionId(versionId);
+                if (version is null)
+                {
+                    throw new ArgumentException($"Unsupported CloudEvents spec version '{versionId}'");
                 }
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
@@ -143,6 +148,7 @@ namespace CloudNative.CloudEvents.Http
 
         private static void MapAttributesToListenerResponse(CloudEvent cloudEvent, HttpListenerResponse httpListenerResponse)
         {
+            httpListenerResponse.Headers.Add(HttpUtilities.SpecVersionHttpHeader, HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
             foreach (var attributeAndValue in cloudEvent.GetPopulatedAttributes())
             {
                 var attribute = attributeAndValue.Key;

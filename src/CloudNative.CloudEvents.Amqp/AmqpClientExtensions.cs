@@ -30,10 +30,14 @@ namespace CloudNative.CloudEvents.Amqp
             else
             {
                 var propertyMap = message.ApplicationProperties.Map;
-                CloudEventsSpecVersion version = CloudEventsSpecVersion.Default;
-                if (propertyMap.TryGetValue(SpecVersionAmqpHeader, out var versionId) && versionId is string versionIdText)
+                if (!propertyMap.TryGetValue(SpecVersionAmqpHeader, out var versionId) || !(versionId is string versionIdText))
                 {
-                    version = CloudEventsSpecVersion.FromVersionId(versionIdText);
+                    throw new ArgumentException("Request is not a CloudEvent");
+                }
+                var version = CloudEventsSpecVersion.FromVersionId(versionIdText);
+                if (version is null)
+                {
+                    throw new ArgumentException($"Unsupported CloudEvents spec version '{versionIdText}'");
                 }
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes)

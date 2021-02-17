@@ -43,6 +43,7 @@ namespace CloudNative.CloudEvents.Http
 
         static void MapAttributesToWebRequest(CloudEvent cloudEvent, HttpWebRequest httpWebRequest)
         {
+            httpWebRequest.Headers.Add(HttpUtilities.SpecVersionHttpHeader, HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
             foreach (var attributeAndValue in cloudEvent.GetPopulatedAttributes())
             {
                 var attribute = attributeAndValue.Key;
