@@ -33,11 +33,14 @@ namespace CloudNative.CloudEvents
             else
             {
                 var headers = httpRequest.Headers;
-                CloudEventsSpecVersion version = CloudEventsSpecVersion.Default;
-                if (headers.TryGetValue(HttpUtilities.SpecVersionHttpHeader, out var values))
+                if (!headers.TryGetValue(HttpUtilities.SpecVersionHttpHeader, out var versionId))
                 {
-                    string versionId = values.First();
-                    version = CloudEventsSpecVersion.FromVersionId(versionId);
+                    throw new ArgumentException("Request is not a CloudEvent");
+                }
+                var version = CloudEventsSpecVersion.FromVersionId(versionId.First());
+                if (version is null)
+                {
+                    throw new ArgumentException($"Unsupported CloudEvents spec version '{versionId.First()}'");
                 }
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);

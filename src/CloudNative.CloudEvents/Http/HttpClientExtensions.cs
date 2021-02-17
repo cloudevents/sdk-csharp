@@ -106,11 +106,17 @@ namespace CloudNative.CloudEvents.Http
             }
             else
             {
-                CloudEventsSpecVersion version = CloudEventsSpecVersion.Default;
-                if (headers.Contains(HttpUtilities.SpecVersionHttpHeader))
+                string versionId = headers.Contains(HttpUtilities.SpecVersionHttpHeader)
+                    ? headers.GetValues(HttpUtilities.SpecVersionHttpHeader).First()
+                    : null;
+                if (versionId is null)
                 {
-                    string versionId = headers.GetValues(HttpUtilities.SpecVersionHttpHeader).First();
-                    version = CloudEventsSpecVersion.FromVersionId(versionId);
+                    throw new ArgumentException("Request is not a CloudEvent");
+                }
+                var version = CloudEventsSpecVersion.FromVersionId(versionId);
+                if (version is null)
+                {
+                    throw new ArgumentException($"Unsupported CloudEvents spec version '{versionId}'");
                 }
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
