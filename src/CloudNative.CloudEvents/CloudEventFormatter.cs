@@ -79,8 +79,7 @@ namespace CloudNative.CloudEvents
         /// information such as the charset parameter may be needed in order to decode the data.</param>
         /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The CloudEvent derived from the structured data.</returns>
-        public virtual CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            throw new NotImplementedException();
+        public abstract CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
 
         /// <summary>
         /// Encodes a CloudEvent as the body of a structured-mode message.
@@ -89,8 +88,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">On successful return, the content type of the structured-mode data.
         /// Must not be null (on return).</param>
         /// <returns>The structured-mode representation of the CloudEvent.</returns>
-        public virtual byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
-            throw new NotImplementedException();
+        public abstract byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType);
 
         /// <summary>
         /// Encodes the data from <paramref name="cloudEvent"/> in a manner suitable for a binary mode message.
@@ -98,8 +96,7 @@ namespace CloudNative.CloudEvents
         /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be encoded by this
         /// event formatter.</exception>
         /// <returns>The binary-mode representation of the CloudEvent.</returns>
-        public virtual byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
-            throw new NotImplementedException();
+        public abstract byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent);
 
         /// <summary>
         /// Decodes the given data obtained from a binary-mode message, populating the <see cref="CloudEvent.Data"/>
@@ -111,7 +108,6 @@ namespace CloudNative.CloudEvents
         /// <param name="cloudEvent">The CloudEvent whose Data property should be populated. Must not be null.</param>
         /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be decoded by this
         /// event formatter.</exception>
-        public virtual void DecodeBinaryModeEventData(byte[] data, CloudEvent cloudEvent) =>
-            throw new NotImplementedException();
+        public abstract void DecodeBinaryModeEventData(byte[] data, CloudEvent cloudEvent);
     }
 }
