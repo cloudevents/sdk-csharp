@@ -19,7 +19,7 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
                'specversion' : '1.0',
                'type' : 'com.github.pull.create',
                'id' : 'A234-1234-1234',
-               'time' : '2018-04-05T17:31:00Z',
+               'source' : '//event-source',
                'traceparent' : '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
                'tracestate' : 'rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4=',
            }".Replace('\'', '"');

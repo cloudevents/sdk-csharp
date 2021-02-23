@@ -17,7 +17,7 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
                'specversion' : '1.0',
                'type' : 'com.github.pull.create',
                'id' : 'A234-1234-1234',
-               'time' : '2018-04-05T17:31:00Z',
+               'source' : '//event-source',
                'sequencetype' : 'Integer',
                'sequence' : '25'
            }".Replace('\'', '"');

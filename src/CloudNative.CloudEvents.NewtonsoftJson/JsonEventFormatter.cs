@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents.NewtonsoftJson
 {
+    // TODO: Rename to JsonCloudEventFormatter? NewtonsoftJsonCloudEventFormatter?
+
     /// <summary>
     /// Formatter that implements the JSON Event Format.
     /// </summary>
@@ -58,7 +60,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
     /// <para>
     /// In a binary mode message, the data is parsed based on the content type of the message. When the content
     /// type is absent or has a media type of "application/json", the data is parsed as JSON, with the result as
-    /// a <see cref="JToken"/>. When the content type has a media type beginning with "text/", the data is parsed
+    /// a <see cref="JToken"/> (or null if the data is empty). When the content type has a media type beginning with "text/", the data is parsed
     /// as a string. In all other cases, the data is left as a byte array.
     /// </para>
     /// </remarks>
@@ -120,8 +122,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
             PopulateAttributesFromStructuredEvent(cloudEvent, jObject);
             PopulateDataFromStructuredEvent(cloudEvent, jObject);
-
-            return cloudEvent;
+            return cloudEvent.Validate();
         }
 
         private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
@@ -141,7 +142,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                     continue;
                 }
 
-                var attribute = cloudEvent.GetAttribute(key);
+                // TODO: Validate that if the attribute is known, the token type is appropriate. Possibly
+                // only for known-to-spec-version attributes? If an integer extension attribute has a value of "1",
+                // is that okay?
 
                 // Set the attribute in the event, taking account of mismatches between the type in the JObject
                 // and the attribute type as best we can.
@@ -153,10 +156,14 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 {
                     JTokenType.String => (string)value,
                     JTokenType.Boolean => CloudEventAttributeType.Boolean.Format((bool)value),
-                    JTokenType.Null => null, // TODO: Check we want to do this. It's a bit weird.
+                    JTokenType.Null => null,
                     JTokenType.Integer => CloudEventAttributeType.Integer.Format((int)value),
                     _ => throw new ArgumentException($"Invalid token type '{value.Type}' for CloudEvent attribute")
                 };
+                if (attributeValue is null)
+                {
+                    continue;
+                }
                 // Note: we *could* infer an extension type of integer and Boolean, but not other extension types.
                 // (We don't want to assume that everything that looks like a timestamp is a timestamp, etc.)
                 // Stick to strings for consistency.
@@ -166,16 +173,29 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         private void PopulateDataFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
         {
+            // Fetch data and data_base64 tokens, and treat null as missing.
             jObject.TryGetValue(Data, out var dataToken);
+            if (dataToken is JToken { Type: JTokenType.Null })
+            {
+                dataToken = null;
+            }
             jObject.TryGetValue(DataBase64, out var dataBase64Token);
+            if (dataBase64Token is JToken { Type: JTokenType.Null })
+            {
+                dataBase64Token = null;
+            }
+
+            // If we don't have any data, we're done.
             if (dataToken is null && dataBase64Token is null)
             {
                 return;
             }
+            // We can't handle both properties being set.
             if (dataToken is object && dataBase64Token is object)
             {
                 throw new ArgumentException($"Structured mode content cannot contain both '{Data}' and '{DataBase64}' properties.");
             }
+            // Okay, we have exactly one non-null data/data_base64 property. Decode it.
             if (dataBase64Token is object)
             {
                 if (dataBase64Token.Type != JTokenType.String)
@@ -186,10 +206,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else
             {
-                if (dataToken.Type == JTokenType.Null)
-                {
-                    return;
-                }
                 // Convert JSON string tokens to string values when the content type suggests that's appropriate,
                 // otherwise leave the token as it is.
                 cloudEvent.Data = dataToken.Type == JTokenType.String && cloudEvent.DataContentType?.StartsWith("text/") == true
@@ -205,12 +221,31 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 CharSet = Encoding.UTF8.WebName
             };
 
+            var stream = new MemoryStream();
+            var writer = new JsonTextWriter(new StreamWriter(stream));
+            writer.WriteStartObject();
             JObject jObject = new JObject();
-            jObject[CloudEventsSpecVersion.SpecVersionAttribute.Name] = cloudEvent.SpecVersion.VersionId;
+            writer.WritePropertyName(CloudEventsSpecVersion.SpecVersionAttribute.Name);
+            writer.WriteValue(cloudEvent.SpecVersion.VersionId);
             var attributes = cloudEvent.GetPopulatedAttributes();
             foreach (var keyValuePair in attributes)
             {
-                jObject[keyValuePair.Key.Name] = JToken.FromObject(keyValuePair.Value);
+                var attribute = keyValuePair.Key;
+                var value = keyValuePair.Value;
+                writer.WritePropertyName(attribute.Name);
+                // TODO: Maybe we should have an enum associated with CloudEventsAttributeType?
+                if (attribute.Type == CloudEventAttributeType.Integer)
+                {
+                    writer.WriteValue((int)value);
+                }
+                else if (attribute.Type == CloudEventAttributeType.Boolean)
+                {
+                    writer.WriteValue((bool)value);
+                }
+                else
+                {
+                    writer.WriteValue(attribute.Type.Format(value));
+                }
             }
 
             if (cloudEvent.Data is object)
@@ -218,28 +253,29 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 ContentType dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
                 if (dataContentType.MediaType == JsonMediaType)
                 {
-                    jObject[Data] = cloudEvent.Data is JToken token
-                        ? token
-                        : JToken.FromObject(cloudEvent.Data);
+                    writer.WritePropertyName(Data);
+                    serializer.Serialize(writer, cloudEvent.Data);
                 }
                 else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
                 {
-                    jObject[Data] = text;
+                    writer.WritePropertyName(Data);
+                    writer.WriteValue(text);
                 }
                 else if (cloudEvent.Data is byte[] binary)
                 {
-                    jObject[DataBase64] = Convert.ToBase64String(binary);
+                    writer.WritePropertyName(DataBase64);
+                    writer.WriteValue(Convert.ToBase64String(binary));
                 }
                 else
                 {
                     throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type '{cloudEvent.DataContentType}'");
                 }
             }
-
-            return Encoding.UTF8.GetBytes(jObject.ToString());
+            writer.WriteEndObject();
+            writer.Flush();
+            return stream.ToArray();
         }
 
-        // TODO: How should the caller know whether the result is "raw" or should be stored in data_base64?
         public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             if (cloudEvent.Data is null)
@@ -249,8 +285,13 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
             if (contentType.MediaType == JsonMediaType)
             {
-                string json = JsonConvert.SerializeObject(cloudEvent.Data);
-                return contentType.GetEncoding().GetBytes(json);
+                // TODO: Make this more efficient. We could write to a StreamWriter with a MemoryStream,
+                // but then we end up with a BOM in most cases, which I suspect we don't want.
+                // An alternative is to make sure that contentType.GetEncoding() always returns an encoding
+                // without a preamble (or rewrite StreamWriter...)
+                var stringWriter = new StringWriter();
+                serializer.Serialize(stringWriter, cloudEvent.Data);
+                return contentType.GetEncoding().GetBytes(stringWriter.ToString());
             }
             if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
             {
@@ -271,8 +312,15 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
             if (contentType.MediaType == JsonMediaType)
             {
-                var jsonReader = CreateJsonReader(new MemoryStream(value), encoding);
-                cloudEvent.Data = JToken.Load(jsonReader);
+                if (value.Length > 0)
+                {
+                    var jsonReader = CreateJsonReader(new MemoryStream(value), encoding);
+                    cloudEvent.Data = JToken.Load(jsonReader);
+                }
+                else
+                {
+                    cloudEvent.Data = null;
+                }
             }
             else if (contentType.MediaType.StartsWith("text/") == true)
             {
