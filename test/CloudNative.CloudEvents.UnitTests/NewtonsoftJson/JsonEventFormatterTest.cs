@@ -721,7 +721,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             return cloudEvent.Data;
         }
 
-        private static JObject CreateMinimalValidJObject() =>
+        internal static JObject CreateMinimalValidJObject() =>
             new JObject
             {
                 ["specversion"] = "1.0",
@@ -733,7 +733,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         /// <summary>
         /// Parses JSON as a JObject with settings that prevent any additional conversions.
         /// </summary>
-        private static JObject ParseJson(byte[] data)
+        internal static JObject ParseJson(byte[] data)
         {
             string text = Encoding.UTF8.GetString(data);
             var serializer = new JsonSerializer
