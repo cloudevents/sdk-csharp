@@ -440,7 +440,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
         }
 
-        [Fact(Skip = "Not yet implemented")]
+        [Fact]
         public void DecodeStructuredModeMessage_TypeNotString()
         {
             var obj = new JObject
@@ -509,6 +509,27 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             AssertTimestampsEqual(SampleTimestamp, (DateTimeOffset)cloudEvent["timestamp"]);
             Assert.Equal(SampleUri, cloudEvent["uri"]);
             Assert.Equal(SampleUriReference, cloudEvent["urireference"]);
+        }
+
+        [Fact]
+        public void DecodeStructuredModeMessage_IncorrectExtensionTypeWithValidValue()
+        {
+            var obj = new JObject
+            {
+                ["specversion"] = "1.0",
+                ["type"] = "test-type",
+                ["id"] = "test-id",
+                ["source"] = "//source",
+                // Incorrect type, but is a valid value for the extension
+                ["integer"] = "10",
+            };
+            // Decode the event, providing the extension with the correct type.
+            byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
+            var formatter = new JsonEventFormatter();
+            var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, AllTypesExtensions);
+
+            // The value will have been decoded according to the extension.
+            Assert.Equal(10, cloudEvent["integer"]);
         }
 
         // There are other invalid token types as well; this is just one of them.
