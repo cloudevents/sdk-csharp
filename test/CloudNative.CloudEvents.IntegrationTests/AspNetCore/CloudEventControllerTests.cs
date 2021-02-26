@@ -40,7 +40,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
                 [expectedExtensionKey] = expectedExtensionValue
             };
 
-            var httpContent = new CloudEventHttpContent(cloudEvent, contentMode, new JsonEventFormatter());
+            var httpContent = cloudEvent.ToHttpContent(contentMode, new JsonEventFormatter());
 
             // Act
             var result = await _factory.CreateClient().PostAsync("/api/events/receive", httpContent);

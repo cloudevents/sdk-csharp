@@ -41,7 +41,7 @@ namespace HttpSend
                 Data = JsonConvert.SerializeObject("hey there!")
             };
 
-            var content = new CloudEventHttpContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+            var content = cloudEvent.ToHttpContent(ContentMode.Structured, new JsonEventFormatter());
 
             var httpClient = new HttpClient();
             // your application remains in charge of adding any further headers or 
