@@ -52,6 +52,52 @@ namespace CloudNative.CloudEvents
         public static CloudEventAttributeType Timestamp { get; } = new TimestampType();
 
         /// <summary>
+        /// Enum of event types, to allow efficient switching over CloudEventAttributeType.
+        /// Each attribute type has a unique value, returned by <see cref="OrdinalType"/>.
+        /// </summary>
+        /// <remarks>
+        /// This type is nested as relatively few consumers will need to use it.
+        /// </remarks>
+        public enum Ordinal
+        {
+            // Note: changing the values here is a breaking change.
+
+            /// <summary>
+            /// Ordinal for <see cref="CloudEventAttributeType.Binary"/>
+            /// </summary>
+            Binary = 0,
+            /// <summary>
+            /// Ordinal for <see cref="CloudEventAttributeType.Boolean"/>
+            /// </summary>
+            Boolean = 1,
+            /// <summary>
+            /// Ordinal for <see cref="CloudEventAttributeType.Integer"/>
+            /// </summary>
+            Integer = 2,
+            /// <summary>
+            /// Ordinal for <see cref="CloudEventAttributeType.String"/>
+            /// </summary>
+            String = 3,
+            /// <summary>
+            /// Ordinal for <see cref="CloudEventAttributeType.Uri"/>
+            /// </summary>
+            Uri = 4,
+            /// <summary>
+            /// Ordinal for <see cref="CloudEventAttributeType.UriReference"/>
+            /// </summary>
+            UriReference = 5,
+            /// <summary>
+            /// Ordinal for <see cref="CloudEventAttributeType.Timestamp"/>
+            /// </summary>
+            Timestamp = 6
+        }
+
+        /// <summary>
+        /// The <see cref="Ordinal"/> value for this type.
+        /// </summary>
+        public Ordinal OrdinalType { get; }
+
+        /// <summary>
         /// The name of the type, as it is written in the CloudEvents specification.
         /// </summary>
         public string Name { get; }
@@ -86,15 +132,16 @@ namespace CloudNative.CloudEvents
         /// <param name="value">The value to validate. Must be non-null, and suitable for this attribute type.</param>
         public abstract void Validate(object value);
 
-        private CloudEventAttributeType(string name, Type clrType)
+        private CloudEventAttributeType(string name, Ordinal ordinal, Type clrType)
         {
             Name = name;
+            OrdinalType = ordinal;
             ClrType = clrType;
         }
 
         private abstract class GenericCloudEventsAttributeType<T> : CloudEventAttributeType
         {
-            protected GenericCloudEventsAttributeType(string name) : base(name, typeof(T))
+            protected GenericCloudEventsAttributeType(string name, Ordinal ordinal) : base(name, ordinal, typeof(T))
             {
             }
 
@@ -128,7 +175,7 @@ namespace CloudNative.CloudEvents
 
         private class BooleanType : GenericCloudEventsAttributeType<bool>
         {
-            public BooleanType() : base("Boolean")
+            public BooleanType() : base("Boolean", Ordinal.Boolean)
             {
             }
 
@@ -141,7 +188,7 @@ namespace CloudNative.CloudEvents
 
         private class StringType : GenericCloudEventsAttributeType<string>
         {
-            public StringType() : base("String")
+            public StringType() : base("String", Ordinal.String)
             {
             }
 
@@ -211,7 +258,7 @@ namespace CloudNative.CloudEvents
 
         private class TimestampType : GenericCloudEventsAttributeType<DateTimeOffset>
         {
-            public TimestampType() : base("Timestamp")
+            public TimestampType() : base("Timestamp", Ordinal.Timestamp)
             {
             }
 
@@ -232,7 +279,7 @@ namespace CloudNative.CloudEvents
         // differences to make it not worthwhile.
         private class UriType : GenericCloudEventsAttributeType<Uri>
         {
-            public UriType() : base("URI")
+            public UriType() : base("URI", Ordinal.Uri)
             {
             }
 
@@ -261,7 +308,7 @@ namespace CloudNative.CloudEvents
 
         private class UriReferenceType : GenericCloudEventsAttributeType<Uri>
         {
-            public UriReferenceType() : base("URI-Reference")
+            public UriReferenceType() : base("URI-Reference", Ordinal.UriReference)
             {
             }
 
@@ -272,7 +319,7 @@ namespace CloudNative.CloudEvents
 
         private class BinaryType : GenericCloudEventsAttributeType<byte[]>
         {
-            public BinaryType() : base("Binary")
+            public BinaryType() : base("Binary", Ordinal.Binary)
             {
             }
 
@@ -282,7 +329,7 @@ namespace CloudNative.CloudEvents
 
         private class IntegerType : GenericCloudEventsAttributeType<int>
         {
-            public IntegerType() : base("Integer")
+            public IntegerType() : base("Integer", Ordinal.Integer)
             {
             }
 
