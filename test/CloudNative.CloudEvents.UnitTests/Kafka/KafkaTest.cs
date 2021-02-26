@@ -38,7 +38,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 ["comexampleextension1"] = "value"
             };
        
-            var message = new KafkaCloudEventMessage(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+            var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, new JsonEventFormatter());
 
             Assert.True(message.IsCloudEvent());
 
@@ -82,7 +82,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 [Partitioning.PartitionKeyAttribute] = "hello much wow"
             };
 
-            var message = new KafkaCloudEventMessage(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
 
             // using serialization to create fully independent copy thus simulating message transport
