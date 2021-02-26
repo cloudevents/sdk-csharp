@@ -2,11 +2,11 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using Amqp;
+using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.Net.Mime;
-using Amqp;
 using Xunit;
-using CloudNative.CloudEvents.NewtonsoftJson;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
 namespace CloudNative.CloudEvents.Amqp.UnitTests
@@ -29,8 +29,8 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
                 Data = "<much wow=\"xml\"/>",
                 ["comexampleextension1"] = "value"
             };
-            
-            var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Structured, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
 
@@ -69,7 +69,7 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
             };
 
             // No formatter is needed for binary mode.
-            var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, null);
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, null);
             Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
 
@@ -103,7 +103,7 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
                 Data = "<much wow=\"xml\"/>"
             };
 
-            var message = new AmqpCloudEventMessage(cloudEvent, ContentMode.Binary, null);
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, null);
             var encodedAmqpMessage = message.Encode();
 
             var message1 = Message.Decode(encodedAmqpMessage);

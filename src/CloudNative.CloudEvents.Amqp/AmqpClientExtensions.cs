@@ -3,6 +3,7 @@
 // See LICENSE file in the project root for full license information.
 
 using Amqp;
+using Amqp.Framing;
 using Amqp.Types;
 using System;
 using System.IO;
@@ -93,6 +94,97 @@ namespace CloudNative.CloudEvents.Amqp
         {
             contentType = (message.Properties.ContentType as Symbol)?.ToString();
             return contentType?.StartsWith(CloudEvent.MediaType) == true;
+        }
+
+        public static Message ToAmqpMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
+        {
+            var applicationProperties = MapHeaders(cloudEvent);
+            RestrictedDescribed bodySection;
+            Properties properties;
+
+            switch (contentMode)
+            {
+                case ContentMode.Structured:
+                    bodySection = new Data
+                    {
+                        Binary = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType)
+                    };
+                    // TODO: What about the other parts of the content type?
+                    properties = new Properties { ContentType = contentType.MediaType };
+                    break;
+                case ContentMode.Binary:
+                    bodySection = SerializeData(cloudEvent.Data);
+                    properties = new Properties { ContentType = cloudEvent.DataContentType };
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");
+            }
+            return new Message
+            {
+                ApplicationProperties = applicationProperties,
+                BodySection = bodySection,
+                Properties = properties
+            };
+        }
+
+        private static ApplicationProperties MapHeaders(CloudEvent cloudEvent)
+        {
+            var applicationProperties = new ApplicationProperties();
+            var properties = applicationProperties.Map;
+            properties.Add(SpecVersionAmqpHeader, cloudEvent.SpecVersion.VersionId);
+
+            foreach (var pair in cloudEvent.GetPopulatedAttributes())
+            {
+                var attribute = pair.Key;
+
+                // The content type is specified elsewhere.
+                if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute)
+                {
+                    continue;
+                }
+
+                string propKey = AmqpHeaderPrefix + attribute.Name;
+
+                // TODO: Check that AMQP can handle byte[], bool and int values
+                object propValue = pair.Value switch
+                {
+                    Uri uri => uri.ToString(),
+                    // AMQPNetLite doesn't support DateTimeOffset values, so convert to UTC.
+                    // That means we can't roundtrip events with non-UTC timestamps, but that's not awful.
+                    DateTimeOffset dto => dto.UtcDateTime,
+                    _ => pair.Value
+                };
+                properties.Add(propKey, propValue);
+            }
+            return applicationProperties;
+        }
+
+        /// <summary>
+        /// Convert data into a suitable format for inclusion in an AMQP record.
+        /// TODO: Asynchronous version?
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private static RestrictedDescribed SerializeData(object data)
+        {
+            switch (data)
+            {
+                case null:
+                    return null;
+                case byte[] bytes:
+                    return new Data { Binary = bytes };
+                case MemoryStream memoryStream:
+                    // Note: this will return the whole stream, regardless of position...
+                    return new Data { Binary = memoryStream.ToArray() };
+                case Stream stream:
+                    var buffer = new MemoryStream();
+                    stream.CopyTo(buffer);
+                    return new Data { Binary = buffer.ToArray() };
+                case string text:
+                    return new AmqpValue { Value = text };
+                default:
+                    throw new ArgumentException($"Unsupported type for AMQP data: {data.GetType()}");
+            }
         }
     }
 }
