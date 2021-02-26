@@ -66,6 +66,18 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
     /// </remarks>
     public class JsonEventFormatter : CloudEventFormatter
     {
+        private static readonly IReadOnlyDictionary<CloudEventAttributeType, JTokenType> expectedTokenTypesForReservedAttributes =
+            new Dictionary<CloudEventAttributeType, JTokenType>
+            {
+                { CloudEventAttributeType.Binary, JTokenType.String },
+                { CloudEventAttributeType.Boolean, JTokenType.Boolean },
+                { CloudEventAttributeType.Integer, JTokenType.Integer },
+                { CloudEventAttributeType.String, JTokenType.String },
+                { CloudEventAttributeType.Timestamp, JTokenType.String },
+                { CloudEventAttributeType.Uri, JTokenType.String },
+                { CloudEventAttributeType.UriReference, JTokenType.String }
+            };
+
         private const string JsonMediaType = "application/json";
         private const string DataBase64 = "data_base64";
         private const string Data = "data";
@@ -142,12 +154,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                     continue;
                 }
 
-                // TODO: Validate that if the attribute is known, the token type is appropriate. Possibly
-                // only for known-to-spec-version attributes? If an integer extension attribute has a value of "1",
-                // is that okay?
-
-                // Set the attribute in the event, taking account of mismatches between the type in the JObject
-                // and the attribute type as best we can.
+                // For non-extension attributes, validate that the token type is as expected.
+                // We're more forgiving for extension attributes: if an integer-typed extension attribute
+                // has a value of "10" (i.e. as a string), that's fine. (If it has a value of "garbage",
+                // that will throw in SetAttributeFromString.)
+                ValidateTokenTypeForAttribute(cloudEvent.GetAttribute(key), value.Type);
 
                 // TODO: This currently performs more conversions than it really should, in the cause of simplicity.
                 // We basically need a matrix of "attribute type vs token type" but that's rather complicated.
@@ -168,6 +179,23 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 // (We don't want to assume that everything that looks like a timestamp is a timestamp, etc.)
                 // Stick to strings for consistency.
                 cloudEvent.SetAttributeFromString(key, attributeValue);
+            }
+        }
+
+        private void ValidateTokenTypeForAttribute(CloudEventAttribute attribute, JTokenType tokenType)
+        {
+            // We can't validate unknown attributes, don't check for extension attributes,
+            // and null values will be ignored anyway.
+            if (attribute is null || attribute.IsExtension || tokenType == JTokenType.Null)
+            {
+                return;
+            }
+            // We use TryGetValue so that if a new attribute type is added without this being updated, we "fail valid".
+            // (That should only happen in major versions anyway, but it's worth being somewhat forgiving here.)
+            if (expectedTokenTypesForReservedAttributes.TryGetValue(attribute.Type, out JTokenType expectedTokenType) &&
+                tokenType != expectedTokenType)
+            {
+                throw new ArgumentException($"Invalid token type '{tokenType}' for CloudEvent attribute '{attribute.Name}' with type '{attribute.Type}'");
             }
         }
 
