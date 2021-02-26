@@ -95,7 +95,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             };
 
             string ctx = Guid.NewGuid().ToString();
-            var content = new CloudEventHttpContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            var content = cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter());
             content.Headers.Add(TestContextHeader, ctx);
 
             PendingRequests.TryAdd(ctx, context =>
@@ -215,7 +215,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             };
 
             string ctx = Guid.NewGuid().ToString();
-            var content = new CloudEventHttpContent(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+            var content = cloudEvent.ToHttpContent(ContentMode.Structured, new JsonEventFormatter());
             content.Headers.Add(TestContextHeader, ctx);
 
             PendingRequests.TryAdd(ctx, context =>

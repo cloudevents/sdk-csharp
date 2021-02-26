@@ -6,17 +6,18 @@ using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.Net.Http.Headers;
 using Xunit;
+using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
 namespace CloudNative.CloudEvents.Http.UnitTests
 {
-    public class CloudEventHttpContentTest
+    public class HttpContentExtensionsTest
     {
         [Fact]
         public void ContentType_FromCloudEvent_BinaryMode()
         {
-            var cloudEvent = CreateEmptyCloudEvent();
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.DataContentType = "text/plain";
-            var content = new CloudEventHttpContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            var content = cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter());
             var expectedContentType = new MediaTypeHeaderValue("text/plain");
             Assert.Equal(expectedContentType, content.Headers.ContentType);
         }
@@ -27,26 +28,18 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         [Fact]
         public void NoContentType_NoContent()
         {
-            var cloudEvent = CreateEmptyCloudEvent();
-            var content = new CloudEventHttpContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var content = cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter());
             Assert.Null(content.Headers.ContentType);
         }
 
         [Fact]
         public void NoContentType_WithContent()
         {
-            var cloudEvent = CreateEmptyCloudEvent();
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = "Some text";
-            var exception = Assert.Throws<ArgumentException>(() => new CloudEventHttpContent(cloudEvent, ContentMode.Binary, new JsonEventFormatter()));
+            var exception = Assert.Throws<ArgumentException>(() => cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter()));
             Assert.StartsWith(Strings.ErrorContentTypeUnspecified, exception.Message);
         }
-
-        private static CloudEvent CreateEmptyCloudEvent() =>
-            new CloudEvent
-            { 
-                Type = "type",
-                Source = new Uri("https://source"),
-                Id = "id"
-            };
     }
 }
