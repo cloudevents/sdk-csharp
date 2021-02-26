@@ -3,6 +3,8 @@
 // See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using Xunit;
 
@@ -31,6 +33,19 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("Timestamp", CloudEventAttributeType.Timestamp.Name);
             Assert.Equal("URI", CloudEventAttributeType.Uri.Name);
             Assert.Equal("URI-Reference", CloudEventAttributeType.UriReference.Name);
+        }
+
+        [Fact]
+        public void OrdinalTypeNameMatchesPropertyName()
+        {
+            var properties = typeof(CloudEventAttributeType)
+                .GetProperties(BindingFlags.Public | BindingFlags.Static)
+                .Where(prop => prop.PropertyType == typeof(CloudEventAttributeType));
+            foreach (var property in properties)
+            {
+                var type = (CloudEventAttributeType) property.GetValue(null);
+                Assert.Equal(property.Name, type.Ordinal.ToString());
+            }
         }
 
         [Theory]
