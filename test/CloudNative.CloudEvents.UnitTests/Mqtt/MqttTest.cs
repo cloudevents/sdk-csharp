@@ -63,7 +63,7 @@ namespace CloudNative.CloudEvents.Mqtt.UnitTests
                 tcs.SetResult(args.ApplicationMessage.ToCloudEvent(jsonEventFormatter));
 
             var result = await client.SubscribeAsync("abc");
-            await client.PublishAsync(new MqttCloudEventMessage(cloudEvent, new JsonEventFormatter()) { Topic = "abc" });
+            await client.PublishAsync(cloudEvent.ToMqttApplicationMessage(new JsonEventFormatter(), topic: "abc"));
             var receivedCloudEvent = await tcs.Task;
 
             Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
