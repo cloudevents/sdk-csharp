@@ -118,7 +118,7 @@ namespace CloudNative.CloudEvents
             {
                 throw new ArgumentException($"Text for attribute '{Name}' is invalid: {e.Message}", nameof(value), e);
             }
-            return Validate(Type.Parse(text));
+            return Validate(value);
         }
 
         public string Format(object value) => Type.Format(Validate(value));
