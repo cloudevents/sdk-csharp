@@ -8,6 +8,8 @@ using System.Globalization;
 namespace CloudNative.CloudEvents
 {
     // TODO: Expose the generic type? That might avoid boxing, and make various aspects more type-safe at compile time.
+    // TODO: Clarify validation requirements. At the moment I suspect we're validating more often than we need to.
+    // (This is just a little inefficient.)
 
     /// <summary>
     /// The type of an event attribute, providing simple formatting and parsing functionality.
@@ -143,9 +145,68 @@ namespace CloudNative.CloudEvents
             {
             }
 
-            // TODO: Validation
+            // Note: these methods deliberately don't validate, to avoid repeated validation.
+            // The "owning attribute" already validates the value when parsing or formatting.
             protected override string FormatImpl(string value) => value;
             protected override string ParseImpl(string value) => value;
+
+            protected override void ValidateImpl(string value)
+            {
+                bool lastCharWasHighSurrogate = false;
+                for (int i = 0; i < value.Length; i++)
+                {
+                    char c = value[i];
+                    // Directly from the spec
+                    if (c <= 0x1f || (c >= 0x7f && c <= 0x9f))
+                    {
+                        throw new ArgumentException($"Control character U+{(ushort)c:x4} is not permitted in string attributes");
+                    }
+                    // First two ranges in http://www.unicode.org/faq/private_use.html#noncharacters
+                    if (c >= 0xfffe || (c >= 0xfdd0 && c <= 0xfdef))
+                    {
+                        throw new ArgumentException($"Noncharacter U+{(ushort)c:x4} is not permitted in string attributes");
+                    }
+
+                    // Handle surrogate pairs, based on this character and whether the last character was a high surrogate.
+                    // Every high surrogate must be followed by a low surrogate, and every low surrogate must be preceded by a high surrogate.
+                    // Confusingly, the "high surrogate" region [U+D800, U+DBFF] is lower in value than the "low surrogate" region [U+DC00, U+DFFF].
+                    if (char.IsSurrogate(c))
+                    {
+                        if (char.IsHighSurrogate(c))
+                        {
+                            if (lastCharWasHighSurrogate)
+                            {
+                                throw new ArgumentException($"High surrogate character U+{(ushort)value[i - 1]:x4} must be followed by a low surrogate character");
+                            }
+                            lastCharWasHighSurrogate = true;
+                        }
+                        else
+                        {
+                            if (!lastCharWasHighSurrogate)
+                            {
+                                throw new ArgumentException($"Low surrogate character U+{(ushort)c:x4} must be preceded by a high surrogate character");
+                            }
+                            // Convert the surrogate pair to validate it's not a non-character.
+                            // This is the third rule in http://www.unicode.org/faq/private_use.html#noncharacters
+                            int utf32 = char.ConvertToUtf32(value[i - 1], c);
+                            var last16Bits = utf32 & 0xffff;
+                            if (last16Bits == 0xffff || last16Bits == 0xfffe)
+                            {
+                                throw new ArgumentException($"Noncharacter U+{utf32:x} is not permitted in string attributes");
+                            }
+                            lastCharWasHighSurrogate = false;
+                        }
+                    }
+                    else if (lastCharWasHighSurrogate)
+                    {
+                        throw new ArgumentException($"High surrogate character U+{(ushort)value[i - 1]:x4} must be followed by a low surrogate character");
+                    }
+                }
+                if (lastCharWasHighSurrogate)
+                {
+                    throw new ArgumentException($"String must not end with high surrogate character U+{(ushort)value[value.Length - 1]:x4}");
+                }
+            }
         }
 
         private class TimestampType : GenericCloudEventsAttributeType<DateTimeOffset>

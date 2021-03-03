@@ -150,37 +150,41 @@ namespace CloudNative.CloudEvents.UnitTests
             [InlineData("test")]
             [InlineData("TEST")]
             [InlineData("\U0001F600")]
+            [InlineData("x\U0001F600y")]
+            [InlineData("x\U0001F600y\U0001F600z")]
             public void ParseAndFormat_Valid(string text)
             {
                 var parseResult = (string) CloudEventAttributeType.String.Parse(text);
                 Assert.Equal(parseResult, text);
                 var formatResult = CloudEventAttributeType.String.Format(text);
                 Assert.Equal(text, formatResult);
+                CloudEventAttributeType.String.Validate(text);
             }
 
-            [Theory(Skip = "String validation isn't implemented yet")]
-            [InlineData("\n")] // Control character
-            [InlineData("\ufdd0")] // Non-character
+            [Theory]
+            [InlineData("\n")] // Control character (first range)
+            [InlineData("\u007f")] // Control character (second range)
+            [InlineData("\ufdd0")] // Non-character (first range)
+            [InlineData("\ufffe")] // Non-character (second range)
+            [InlineData("\U0001FFFE")] // Non-character (surrogate range)
+            [InlineData("\U0010FFFE")] // Non-character (surrogate range)
             public void InvalidCharacters(string text)
             {
-                Assert.Throws<ArgumentException>(() => CloudEventAttributeType.String.Parse(text));
-                Assert.Throws<ArgumentException>(() => CloudEventAttributeType.String.Format(text));
                 Assert.Throws<ArgumentException>(() => CloudEventAttributeType.String.Validate(text));
             }
 
             // Note: these are specified separately as .NET string attributes are stored as UTF-8
             // internally, which means you can't express invalid strings in attributes (and get them
             // out again).
-            [Theory(Skip = "String validation isn't implemented yet")]
-            [InlineData(0xd800, 0x20)] // Low surrogate without following high
-            [InlineData(0xdc00, 0x20)] // High surrogate without preceding low
-            [InlineData(0xdc00, 0xd800)] // High surrogate followed by low
-            [InlineData(0x20, 0xd800)] // Low surrogate at end of string
+            [Theory]
+            [InlineData(0xd800, 0x20)] // High surrogate followed by non-surrogate
+            [InlineData(0xdc00, 0x20)] // Low surrogate at start of string
+            [InlineData(0x20, 0xdc00)] // Non-surrogate followed by low surrogate
+            [InlineData(0xd800, 0xd800)] // High surrogate followed by high surrogate
+            [InlineData(0x20, 0xd800)] // High surrogate at end of string
             public void InvalidSurrogates(int first, int second)
             {
                 string text = $"{(char)first}{(char)second}";
-                Assert.Throws<ArgumentException>(() => CloudEventAttributeType.String.Parse(text));
-                Assert.Throws<ArgumentException>(() => CloudEventAttributeType.String.Format(text));
                 Assert.Throws<ArgumentException>(() => CloudEventAttributeType.String.Validate(text));
             }
         }
