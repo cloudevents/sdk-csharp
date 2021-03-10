@@ -3,9 +3,11 @@
 // See LICENSE file in the project root for full license information.
 
 using Amqp;
+using Amqp.Framing;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.Net.Mime;
+using System.Text;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
@@ -68,15 +70,13 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
                 ["comexampleextension1"] = "value"
             };
 
-            // No formatter is needed for binary mode.
-            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, null);
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
 
             var message1 = Message.Decode(encodedAmqpMessage);
             Assert.True(message1.IsCloudEvent());
-            // No formatter is needed for binary mode.
-            var receivedCloudEvent = message1.ToCloudEvent(null);
+            var receivedCloudEvent = message1.ToCloudEvent(new JsonEventFormatter());
 
             Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
@@ -103,13 +103,26 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
                 Data = "<much wow=\"xml\"/>"
             };
 
-            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, null);
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, new JsonEventFormatter());
             var encodedAmqpMessage = message.Encode();
 
             var message1 = Message.Decode(encodedAmqpMessage);
-            var receivedCloudEvent = message1.ToCloudEvent(null);
+            var receivedCloudEvent = message1.ToCloudEvent(new JsonEventFormatter());
 
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
+        }
+
+        [Fact]
+        public void EncodeTextDataInBinaryMode_PopulatesDataProperty()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            cloudEvent.DataContentType = "text/plain";
+            cloudEvent.Data = "some text";
+
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, new JsonEventFormatter());
+            var body = Assert.IsType<Data>(message.BodySection);
+            var text = Encoding.UTF8.GetString(body.Binary);
+            Assert.Equal("some text", text);
         }
     }
 }
