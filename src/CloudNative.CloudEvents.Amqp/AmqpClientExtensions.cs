@@ -19,7 +19,7 @@ namespace CloudNative.CloudEvents.Amqp
 
         public static bool IsCloudEvent(this Message message) =>
             HasCloudEventsContentType(message, out _) ||
-            message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader);        
+            message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader);
 
         public static CloudEvent ToCloudEvent(this Message message,
             CloudEventFormatter formatter,
@@ -27,7 +27,7 @@ namespace CloudNative.CloudEvents.Amqp
         {
             if (HasCloudEventsContentType(message, out var contentType))
             {
-                return formatter.DecodeStructuredModeMessage(new MemoryStream((byte[])message.Body), new ContentType(contentType), extensionAttributes);
+                return formatter.DecodeStructuredModeMessage(new MemoryStream((byte[]) message.Body), new ContentType(contentType), extensionAttributes);
             }
             else
             {
@@ -44,10 +44,9 @@ namespace CloudNative.CloudEvents.Amqp
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes)
                 {
-                    Data = message.Body,
                     DataContentType = message.Properties.ContentType
                 };
-                
+
                 foreach (var property in propertyMap)
                 {
                     if (!(property.Key is string key && key.StartsWith(AmqpHeaderPrefix)))
@@ -55,7 +54,7 @@ namespace CloudNative.CloudEvents.Amqp
                         continue;
                     }
                     string attributeName = key.Substring(AmqpHeaderPrefix.Length).ToLowerInvariant();
-                    
+
                     // We've already dealt with the spec version.
                     if (attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
                     {
@@ -72,7 +71,7 @@ namespace CloudNative.CloudEvents.Amqp
                             // *is* MinValue or MaxValue if we wanted to.)
                             dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
                         }
-                        cloudEvent[attributeName] = (DateTimeOffset)dt;
+                        cloudEvent[attributeName] = (DateTimeOffset) dt;
                     }
                     // URIs are serialized as strings, but we need to convert them back to URIs.
                     // It's simplest to let CloudEvent do this for us.
@@ -85,6 +84,18 @@ namespace CloudNative.CloudEvents.Amqp
                         cloudEvent[attributeName] = property.Value;
                     }
                 }
+                // Populate the data after the rest of the CloudEvent
+                if (message.BodySection is Data data)
+                {
+                    // Note: Fetching the Binary property will always retrieve the data. It will
+                    // be copied from the Buffer property if necessary.
+                    formatter.DecodeBinaryModeEventData(data.Binary, cloudEvent);
+                }
+                else if (message.BodySection is object)
+                {
+                    throw new ArgumentException("Binary mode data in AMQP message must be in the application data section");
+                }
+
                 return cloudEvent;
             }
         }
@@ -113,7 +124,7 @@ namespace CloudNative.CloudEvents.Amqp
                     properties = new Properties { ContentType = contentType.MediaType };
                     break;
                 case ContentMode.Binary:
-                    bodySection = SerializeData(cloudEvent.Data);
+                    bodySection = new Data { Binary = formatter.EncodeBinaryModeEventData(cloudEvent) };
                     properties = new Properties { ContentType = cloudEvent.DataContentType };
                     break;
                 default:
@@ -157,34 +168,6 @@ namespace CloudNative.CloudEvents.Amqp
                 properties.Add(propKey, propValue);
             }
             return applicationProperties;
-        }
-
-        /// <summary>
-        /// Convert data into a suitable format for inclusion in an AMQP record.
-        /// TODO: Asynchronous version?
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        private static RestrictedDescribed SerializeData(object data)
-        {
-            switch (data)
-            {
-                case null:
-                    return null;
-                case byte[] bytes:
-                    return new Data { Binary = bytes };
-                case MemoryStream memoryStream:
-                    // Note: this will return the whole stream, regardless of position...
-                    return new Data { Binary = memoryStream.ToArray() };
-                case Stream stream:
-                    var buffer = new MemoryStream();
-                    stream.CopyTo(buffer);
-                    return new Data { Binary = buffer.ToArray() };
-                case string text:
-                    return new AmqpValue { Value = text };
-                default:
-                    throw new ArgumentException($"Unsupported type for AMQP data: {data.GetType()}");
-            }
         }
     }
 }
