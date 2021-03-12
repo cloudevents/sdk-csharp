@@ -3,11 +3,8 @@
 // See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 

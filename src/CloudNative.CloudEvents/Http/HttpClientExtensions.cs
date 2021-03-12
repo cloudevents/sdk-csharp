@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents.Http
@@ -20,9 +19,7 @@ namespace CloudNative.CloudEvents.Http
     public static class HttpClientExtension
     {
         // TODO: CloudEvent.ToHttpRequestMessage?
-
-        // TODO: What does this (web hook validation) have to do with CloudEvents?
-        // Well, it's specced in the same repo: https://github.com/cloudevents/spec/blob/v1.0.1/http-webhook.md
+        // TODO: CloudEvent.ToHttpResponseMessage?
 
         /// <summary>
         /// Handle the request as WebHook validation request
@@ -57,13 +54,28 @@ namespace CloudNative.CloudEvents.Http
         }
 
         /// <summary>
-        /// Indicates whether this HttpResponseMessage holds a CloudEvent
+        /// Indicates whether this <see cref="HttpRequestMessage"/> holds a CloudEvent.
         /// </summary>
-        /// <param name="httpResponseMessage"></param>
+        /// <param name="httpRequestMessage">The message to check for the presence of a CloudEvent. Must not be null.</param>
         /// <returns>true, if the response is a CloudEvent</returns>
-        public static bool IsCloudEvent(this HttpResponseMessage httpResponseMessage) =>
-            HasCloudEventsContentType(httpResponseMessage.Content) ||
-            httpResponseMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
+        public static bool IsCloudEvent(this HttpRequestMessage httpRequestMessage)
+        {
+            Preconditions.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
+            return HasCloudEventsContentType(httpRequestMessage.Content) ||
+                httpRequestMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
+        }
+
+        /// <summary>
+        /// Indicates whether this <see cref="HttpResponseMessage"/> holds a CloudEvent.
+        /// </summary>
+        /// <param name="httpResponseMessage">The message to check for the presence of a CloudEvent. Must not be null.</param>
+        /// <returns>true, if the response is a CloudEvent</returns>
+        public static bool IsCloudEvent(this HttpResponseMessage httpResponseMessage)
+        {
+            Preconditions.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
+            return HasCloudEventsContentType(httpResponseMessage.Content) ||
+                httpResponseMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
+        }
 
         /// <summary>
         /// Indicates whether this HttpListenerRequest is a web hook validation request
@@ -73,35 +85,70 @@ namespace CloudNative.CloudEvents.Http
             httpRequestMessage.Headers.Contains("WebHook-Request-Origin");
 
         /// <summary>
-        /// Converts this response message into a CloudEvent object, with the given extensions and
-        /// overriding the default formatter.
+        /// Converts this HTTP response message into a CloudEvent object
         /// </summary>
-        /// <param name="httpResponseMessage">Response message.</param>
-        /// <param name="formatter">The event formatter to use to parse the CloudEvent.</param>
-        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent.</param>
-        /// <returns>A CloudEvent instance or 'null' if the response message doesn't hold a CloudEvent</returns>
-        public static Task<CloudEvent> ToCloudEventAsync(this HttpResponseMessage httpResponseMessage,
-            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
-            ToCloudEventInternalAsync(httpResponseMessage.Headers, httpResponseMessage.Content, formatter, extensionAttributes);
-
-        /// <summary>
-        /// Converts this HTTP request message into a CloudEvent object, with the given extension attributes.
-        /// </summary>
-        /// <param name="httpRequestMessage">HTTP request message</param>
-        /// <param name="formatter"></param>
-        /// <param name="extensionAttributes">List of extension instances</param>
-        /// <returns>A CloudEvent instance or 'null' if the request message doesn't hold a CloudEvent</returns>
-        public static Task<CloudEvent> ToCloudEventAsync(this HttpRequestMessage httpRequestMessage,
+        /// <param name="httpResponseMessage">The HTTP response message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<CloudEvent> ToCloudEventAsync(
+            this HttpResponseMessage httpResponseMessage,
             CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes) =>
-            ToCloudEventInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes);
+            ToCloudEventAsync(httpResponseMessage, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this HTTP response message into a CloudEvent object
+        /// </summary>
+        /// <param name="httpResponseMessage">The HTTP response message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<CloudEvent> ToCloudEventAsync(
+            this HttpResponseMessage httpResponseMessage,
+            CloudEventFormatter formatter,
+            IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            Preconditions.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
+            return ToCloudEventInternalAsync(httpResponseMessage.Headers, httpResponseMessage.Content, formatter, extensionAttributes, nameof(httpResponseMessage));
+        }
+
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent object.
+        /// </summary>
+        /// <param name="httpRequestMessage">The HTTP request message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<CloudEvent> ToCloudEventAsync(
+            this HttpRequestMessage httpRequestMessage,
+            CloudEventFormatter formatter,
+            params CloudEventAttribute[] extensionAttributes) =>
+            ToCloudEventAsync(httpRequestMessage, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent object.
+        /// </summary>
+        /// <param name="httpRequestMessage">The HTTP request message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<CloudEvent> ToCloudEventAsync(
+            this HttpRequestMessage httpRequestMessage,
+            CloudEventFormatter formatter,
+            IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            Preconditions.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
+            return ToCloudEventInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
+        }
 
         private static async Task<CloudEvent> ToCloudEventInternalAsync(HttpHeaders headers, HttpContent content,
-            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
         {
+            Preconditions.CheckNotNull(formatter, nameof(formatter));
+
             if (HasCloudEventsContentType(content))
             {
-                // FIXME: Handle no formatter being specified.
                 var stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
                 return await formatter.DecodeStructuredModeMessageAsync(stream, content.Headers.ContentType.ToContentType(), extensionAttributes).ConfigureAwait(false);
             }
@@ -110,15 +157,8 @@ namespace CloudNative.CloudEvents.Http
                 string versionId = headers.Contains(HttpUtilities.SpecVersionHttpHeader)
                     ? headers.GetValues(HttpUtilities.SpecVersionHttpHeader).First()
                     : null;
-                if (versionId is null)
-                {
-                    throw new ArgumentException("Request is not a CloudEvent");
-                }
-                var version = CloudEventsSpecVersion.FromVersionId(versionId);
-                if (version is null)
-                {
-                    throw new ArgumentException($"Unsupported CloudEvents spec version '{versionId}'");
-                }
+                var version = CloudEventsSpecVersion.FromVersionId(versionId)
+                    ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", paramName);
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
                 foreach (var header in headers)
@@ -139,7 +179,7 @@ namespace CloudNative.CloudEvents.Http
                     var data = await content.ReadAsByteArrayAsync().ConfigureAwait(false);
                     formatter.DecodeBinaryModeEventData(data, cloudEvent);
                 }
-                return cloudEvent;
+                return cloudEvent.ValidateForConversion(paramName);
             }
         }
 
