@@ -44,7 +44,7 @@ namespace CloudNative.CloudEvents
 
             try
             {
-                var cloudEvent = await request.ReadCloudEventAsync(_formatter);
+                var cloudEvent = await request.ToCloudEventAsync(_formatter);
                 return await InputFormatterResult.SuccessAsync(cloudEvent);
             }
             catch (Exception)
