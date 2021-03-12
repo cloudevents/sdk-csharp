@@ -16,11 +16,15 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Converts a CloudEvent to <see cref="HttpContent"/>.
         /// </summary>
-        /// <param name="cloudEvent">CloudEvent</param>
+        /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="contentMode">Content mode. Structured or binary.</param>
-        /// <param name="formatter">Event formatter</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         public static HttpContent ToHttpContent(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
+            Preconditions.CheckNotNull(cloudEvent, nameof(cloudEvent));
+            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+            Preconditions.CheckNotNull(formatter, nameof(formatter));
+
             byte[] content;
             // The content type to include in the ContentType header - may be the data content type, or the formatter's content type.
             ContentType contentType;

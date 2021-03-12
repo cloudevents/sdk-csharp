@@ -3,7 +3,7 @@
 // See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Mime;
 using System.Threading.Tasks;
@@ -16,35 +16,64 @@ namespace CloudNative.CloudEvents.Http
     /// </summary>
     public static class HttpListenerExtensions
     {
-        // TODO: Check the pattern here. I suspect that cloudEvent.CopyToAsync(response) would be more natural.
-
         /// <summary>
         /// Copies the CloudEvent into this HttpListenerResponse instance
         /// </summary>
-        /// <param name="httpListenerResponse">this</param>
-        /// <param name="cloudEvent">CloudEvent to copy</param>
+        /// <param name="cloudEvent">The CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="destination">The response to copy the CloudEvent to. Must not be null.</param>
         /// <param name="contentMode">Content mode (structured or binary)</param>
-        /// <param name="formatter">Formatter</param>
-        /// <returns>Task</returns>
-        public static Task CopyFromAsync(this HttpListenerResponse httpListenerResponse, CloudEvent cloudEvent,
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public static Task CopyToHttpListenerResponseAsync(this CloudEvent cloudEvent, HttpListenerResponse destination,
             ContentMode contentMode, CloudEventFormatter formatter)
         {
-            if (contentMode == ContentMode.Structured)
-            {
-                var buffer = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
-                httpListenerResponse.ContentType = contentType.ToString();
-                MapAttributesToListenerResponse(cloudEvent, httpListenerResponse);
-                return httpListenerResponse.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-            }
-            
-            // TODO: Check the defaulting to JSON here...
-            httpListenerResponse.ContentType = cloudEvent.DataContentType?.ToString() ?? "application/json";
-            MapAttributesToListenerResponse(cloudEvent, httpListenerResponse);
-            byte[] content = formatter.EncodeBinaryModeEventData(cloudEvent);
-            return httpListenerResponse.OutputStream.WriteAsync(content, 0, content.Length);
-        }
+            Preconditions.CheckNotNull(cloudEvent, nameof(cloudEvent));
+            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+            Preconditions.CheckNotNull(destination, nameof(destination));
+            Preconditions.CheckNotNull(formatter, nameof(formatter));
 
-        // TODO: Do we want this? It's not about CloudEvents...
+            byte[] content;
+            ContentType contentType;
+            switch (contentMode)
+            {
+                case ContentMode.Structured:
+                    content = formatter.EncodeStructuredModeMessage(cloudEvent, out contentType);
+                    break;
+                case ContentMode.Binary:
+                    content = formatter.EncodeBinaryModeEventData(cloudEvent);
+                    contentType = MimeUtilities.CreateContentTypeOrNull(cloudEvent.DataContentType);
+                        destination.ContentType = cloudEvent.DataContentType?.ToString() ?? "application/json";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");
+            }
+            if (contentType is object)
+            {
+                destination.ContentType = contentType.ToString();
+            }
+            else if (content.Length != 0)
+            {
+                throw new ArgumentException(Strings.ErrorContentTypeUnspecified, nameof(cloudEvent));
+            }
+
+            // Map headers in either mode.
+            // Including the headers in structured mode is optional in the spec (as they're already within the body) but
+            // can be useful.            
+            destination.Headers.Add(HttpUtilities.SpecVersionHttpHeader, HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
+            foreach (var attributeAndValue in cloudEvent.GetPopulatedAttributes())
+            {
+                var attribute = attributeAndValue.Key;
+                var value = attributeAndValue.Value;
+                // The content type is already handled based on the content mode.
+                if (attribute != cloudEvent.SpecVersion.DataContentTypeAttribute)
+                {
+                    string headerValue = HttpUtilities.EncodeHeaderValue(attribute.Format(value));
+                    destination.Headers.Add(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);
+                }
+            }
+
+            return destination.OutputStream.WriteAsync(content, 0, content.Length);
+        }
 
         /// <summary>
         /// Handle the request as WebHook validation request
@@ -95,32 +124,39 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.
         /// </summary>
-        /// <param name="httpListenerRequest">Listener request</param>
-        /// <param name="formatter"></param>
-        /// <param name="extensions">List of extension instances</param>
-        /// <returns>The CloudEvent corresponding to the given request.</returns>
-        /// <exception cref="ArgumentException">The request does not represent a CloudEvent,
-        /// or the event's specification version is not supported,
-        /// or the event formatter cannot interpret it.</exception>
+        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
-            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes)
+            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
+            ToCloudEvent(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this listener request into a CloudEvent object, with the given extension attributes.
+        /// </summary>
+        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
+            Preconditions.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
+            Preconditions.CheckNotNull(formatter, nameof(formatter));
+
             if (HasCloudEventsContentType(httpListenerRequest))
             {
-                return formatter.DecodeStructuredModeMessage(httpListenerRequest.InputStream, MimeUtilities.CreateContentTypeOrNull(httpListenerRequest.ContentType), extensionAttributes);
+                return formatter.DecodeStructuredModeMessage(
+                    httpListenerRequest.InputStream,
+                    MimeUtilities.CreateContentTypeOrNull(httpListenerRequest.ContentType),
+                    extensionAttributes);
             }
             else
             {
                 string versionId = httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader];
-                if (versionId is null)
-                {
-                    throw new ArgumentException("Request is not a CloudEvent");
-                }
-                var version = CloudEventsSpecVersion.FromVersionId(versionId);
-                if (version is null)
-                {
-                    throw new ArgumentException($"Unsupported CloudEvents spec version '{versionId}'");
-                }
+                var version = CloudEventsSpecVersion.FromVersionId(versionId)
+                    ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", nameof(httpListenerRequest));
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
                 var headers = httpListenerRequest.Headers;
@@ -140,22 +176,7 @@ namespace CloudNative.CloudEvents.Http
                 cloudEvent.DataContentType = httpListenerRequest.ContentType;
 
                 formatter.DecodeBinaryModeEventData(BinaryDataUtilities.ToByteArray(httpListenerRequest.InputStream), cloudEvent);
-                return cloudEvent;
-            }
-        }
-
-        private static void MapAttributesToListenerResponse(CloudEvent cloudEvent, HttpListenerResponse httpListenerResponse)
-        {
-            httpListenerResponse.Headers.Add(HttpUtilities.SpecVersionHttpHeader, HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
-            foreach (var attributeAndValue in cloudEvent.GetPopulatedAttributes())
-            {
-                var attribute = attributeAndValue.Key;
-                var value = attributeAndValue.Value;
-                if (attribute != cloudEvent.SpecVersion.DataContentTypeAttribute)
-                {
-                    string headerValue = HttpUtilities.EncodeHeaderValue(attribute.Format(value));
-                    httpListenerResponse.Headers.Add(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);
-                }
+                return cloudEvent.ValidateForConversion(nameof(httpListenerRequest));
             }
         }
 

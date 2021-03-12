@@ -40,7 +40,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                         ["utf8examplevalue"] = "æøå"
                     };
 
-                    await context.Response.CopyFromAsync(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+                    await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, new JsonEventFormatter());
                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                 }
                 catch (Exception e)
@@ -164,7 +164,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                         ["utf8examplevalue"] = "æøå"
                     };
 
-                    await context.Response.CopyFromAsync(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+                    await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Structured, new JsonEventFormatter());
                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                 }
                 catch (Exception e)

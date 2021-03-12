@@ -34,7 +34,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             string ctx = Guid.NewGuid().ToString();
             HttpWebRequest httpWebRequest = WebRequest.CreateHttp(ListenerAddress + "ep");
             httpWebRequest.Method = "POST";
-            await httpWebRequest.CopyFromAsync(cloudEvent, ContentMode.Binary, new JsonEventFormatter());
+            await cloudEvent.CopyToHttpWebRequestAsync(httpWebRequest, ContentMode.Binary, new JsonEventFormatter());
             httpWebRequest.Headers.Add(TestContextHeader, ctx);
 
             PendingRequests.TryAdd(ctx, context =>
@@ -96,16 +96,13 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             string ctx = Guid.NewGuid().ToString();
             HttpWebRequest httpWebRequest = WebRequest.CreateHttp(ListenerAddress + "ep");
             httpWebRequest.Method = "POST";
-            await httpWebRequest.CopyFromAsync(cloudEvent, ContentMode.Structured, new JsonEventFormatter());
+            await cloudEvent.CopyToHttpWebRequestAsync(httpWebRequest, ContentMode.Structured, new JsonEventFormatter());
             httpWebRequest.Headers.Add(TestContextHeader, ctx);
 
             PendingRequests.TryAdd(ctx, context =>
             {
                 try
                 {
-                    // Structured events do not contain any CloudEvent HTTP headers.
-                    Assert.Empty(context.Request.Headers.AllKeys.Where(key => key.StartsWith("ce-")));
-
                     var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
                     Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
