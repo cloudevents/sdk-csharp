@@ -107,10 +107,16 @@ namespace CloudNative.CloudEvents.UnitTests
                 Data = "text"
             };
             Assert.False(cloudEvent.IsValid);
-            var exception = Assert.Throws<InvalidOperationException>(() => cloudEvent.Validate());
-            Assert.Contains(CloudEventsSpecVersion.Default.IdAttribute.Name, exception.Message);
-            Assert.Contains(CloudEventsSpecVersion.Default.SourceAttribute.Name, exception.Message);
-            Assert.DoesNotContain(CloudEventsSpecVersion.Default.TypeAttribute.Name, exception.Message);
+            var exception1 = Assert.Throws<InvalidOperationException>(() => cloudEvent.Validate());
+            Assert.Contains(CloudEventsSpecVersion.Default.IdAttribute.Name, exception1.Message);
+            Assert.Contains(CloudEventsSpecVersion.Default.SourceAttribute.Name, exception1.Message);
+            Assert.DoesNotContain(CloudEventsSpecVersion.Default.TypeAttribute.Name, exception1.Message);
+
+            var exception2 = Assert.Throws<ArgumentException>(() => cloudEvent.ValidateForConversion("param"));
+            Assert.Equal("param", exception2.ParamName);
+            Assert.Contains(CloudEventsSpecVersion.Default.IdAttribute.Name, exception1.Message);
+            Assert.Contains(CloudEventsSpecVersion.Default.SourceAttribute.Name, exception1.Message);
+            Assert.DoesNotContain(CloudEventsSpecVersion.Default.TypeAttribute.Name, exception1.Message);
         }
 
         [Fact]
@@ -124,6 +130,7 @@ namespace CloudNative.CloudEvents.UnitTests
             };
             Assert.True(cloudEvent.IsValid);
             Assert.Same(cloudEvent, cloudEvent.Validate());
+            Assert.Same(cloudEvent, cloudEvent.ValidateForConversion("param"));
         }
 
         [Fact]
