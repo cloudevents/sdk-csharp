@@ -103,7 +103,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
-            Assert.Equal(Encoding.UTF8.GetBytes("<much wow=\"xml\"/>"), receivedCloudEvent.Data);
+            Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
             Assert.Equal("hello much wow", (string) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
             Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);

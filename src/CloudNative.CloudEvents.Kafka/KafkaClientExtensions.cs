@@ -63,9 +63,9 @@ namespace CloudNative.CloudEvents.Kafka
 
                 cloudEvent = new CloudEvent(version, extensionAttributes)
                 {
-                    Data = message.Value,
                     DataContentType = contentType
                 };
+
                 foreach (var header in message.Headers.Where(h => h.Key.StartsWith(KafkaHeaderPrefix)))
                 {
                     var attributeName = header.Key.Substring(KafkaHeaderPrefix.Length).ToLowerInvariant();
@@ -83,6 +83,7 @@ namespace CloudNative.CloudEvents.Kafka
 
                     cloudEvent.SetAttributeFromString(attributeName, attributeValue);
                 }
+                eventFormatter.DecodeBinaryModeEventData(message.Value, cloudEvent);
             }
 
             InitPartitioningKey(message, cloudEvent);
@@ -117,7 +118,7 @@ namespace CloudNative.CloudEvents.Kafka
             var headers = MapHeaders(cloudEvent, formatter);
             string key = (string) cloudEvent[Partitioning.PartitionKeyAttribute];
             byte[] value;
-            string contentTypeHeaderValue = null;
+            string contentTypeHeaderValue;
 
             if (contentMode == ContentMode.Structured)
             {
@@ -127,32 +128,8 @@ namespace CloudNative.CloudEvents.Kafka
             }
             else
             {
-                if (cloudEvent.Data is byte[] byteData)
-                {
-                    value = byteData;
-                }
-                else if (cloudEvent.Data is Stream dataStream)
-                {
-                    // TODO: Extract this common code somewhere, or use shared source to access BinaryDataUtilities.
-                    if (dataStream is MemoryStream dataMemoryStream)
-                    {
-                        value = dataMemoryStream.ToArray();
-                    }
-                    else
-                    {
-                        var buffer = new MemoryStream();
-                        dataStream.CopyTo(buffer);
-                        value = buffer.ToArray();
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException($"{cloudEvent.Data.GetType()} type is not supported for Cloud Event's Value.");
-                }
-                if (cloudEvent.DataContentType is string dataContentType)
-                {
-                    contentTypeHeaderValue = dataContentType;                    
-                }
+                value = formatter.EncodeBinaryModeEventData(cloudEvent);
+                contentTypeHeaderValue = cloudEvent.DataContentType;
             }
             if (contentTypeHeaderValue is object)
             {
