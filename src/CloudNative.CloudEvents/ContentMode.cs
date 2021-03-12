@@ -5,7 +5,7 @@
 namespace CloudNative.CloudEvents
 {
     /// <summary>
-    /// ContentMode enumeration for transports
+    /// ContentMode enumeration for protocol bindings.
     /// </summary>
     public enum ContentMode
     {

@@ -62,6 +62,7 @@ namespace CloudNative.CloudEvents
         /// Returns the CloudEvents spec version for the given version ID (e.g. "1.0"),
         /// or null if no such version is known.
         /// </summary>
+        /// <param name="versionId">The version ID to check. May be null, in which case the result will be null.</param>
         public static CloudEventsSpecVersion FromVersionId(string versionId) =>
             allVersions.FirstOrDefault(version => version.VersionId == versionId);
 

@@ -370,8 +370,9 @@ namespace CloudNative.CloudEvents
 
         /// <summary>
         /// Validates that this CloudEvent is valid in the same way as <see cref="IsValid"/>,
-        /// but throwing an exception if the event is invalid.
+        /// but throwing an <see cref="InvalidOperationException"/> if the event is invalid.
         /// </summary>
+        /// <exception cref="InvalidOperationException">The event is invalid.</exception>
         /// <returns>A reference to the same object, for simplicity of method chaining.</returns>
         public CloudEvent Validate()
         {
@@ -382,6 +383,28 @@ namespace CloudNative.CloudEvents
             var missing = SpecVersion.RequiredAttributes.Where(attr => this[attr] is null).ToList();
             string joinedMissing = string.Join(", ", missing);
             throw new InvalidOperationException($"Missing required attributes: {joinedMissing}");
+        }
+
+        // TODO: consider moving this to an extension method in an implementation helper namespace?
+
+        /// <summary>
+        /// Validates that this CloudEvent is valid in the same way as <see cref="IsValid"/>,
+        /// but throwing an <see cref="ArgumentException"/> using the given parameter name
+        /// if the event is invalid. This is typically used within protocol bindings as the last
+        /// step in conversion.
+        /// </summary>
+        /// <param name="paramName">The parameter name to use in the exception if the event is invalid.</param>
+        /// <exception cref="ArgumentException">The event is invalid.</exception>
+        /// <returns>A reference to the same object, for simplicity of method chaining.</returns>
+        public CloudEvent ValidateForConversion(string paramName)
+        {
+            if (IsValid)
+            {
+                return this;
+            }
+            var missing = SpecVersion.RequiredAttributes.Where(attr => this[attr] is null).ToList();
+            string joinedMissing = string.Join(", ", missing);
+            throw new ArgumentException($"CloudEvent is missing required attributes: {joinedMissing}", paramName);
         }
 
         /// <summary>
