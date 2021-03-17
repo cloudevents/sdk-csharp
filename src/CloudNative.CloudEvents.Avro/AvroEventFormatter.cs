@@ -53,13 +53,18 @@ namespace CloudNative.CloudEvents
 
         public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
+            data = data ?? throw new ArgumentNullException(nameof(data));
+
             var decoder = new BinaryDecoder(data);
             var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
             return DecodeGenericRecord(rawEvent, extensionAttributes);
         }
 
-        public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
+        public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            data = data ?? throw new ArgumentNullException(nameof(data));
+            return DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
+        }
 
         private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
@@ -114,11 +119,14 @@ namespace CloudNative.CloudEvents
                 }
             }
 
-            return cloudEvent;
+            return cloudEvent.ValidateForConversion(nameof(record));
         }
 
         public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
+            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
+            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+
             contentType = new ContentType(CloudEvent.MediaType + MediaTypeSuffix);
 
             // We expect the Avro encoded to detect data types that can't be represented in the schema.
