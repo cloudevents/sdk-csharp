@@ -119,6 +119,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
+            data = data ?? throw new ArgumentNullException(nameof(data));
+
             var jsonReader = CreateJsonReader(data, contentType.GetEncoding());
             var jObject = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
             return DecodeJObject(jObject, extensionAttributes);
@@ -126,6 +128,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
+            data = data ?? throw new ArgumentNullException(nameof(data));
+
             var jsonReader = CreateJsonReader(data, contentType.GetEncoding());
             var jObject = JObject.Load(jsonReader);
             return DecodeJObject(jObject, extensionAttributes);
@@ -141,16 +145,15 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 throw new ArgumentException($"Structured mode content does not represent a CloudEvent");
             }
-            var specVersion = CloudEventsSpecVersion.FromVersionId((string) specVersionToken);
-            if (specVersion is null)
-            {
-                throw new ArgumentException($"Unsupported CloudEvents spec version '{(string)specVersionToken}'");
-            }
+            var specVersion = CloudEventsSpecVersion.FromVersionId((string) specVersionToken)
+                ?? throw new ArgumentException($"Unsupported CloudEvents spec version '{(string)specVersionToken}'");
 
             var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
             PopulateAttributesFromStructuredEvent(cloudEvent, jObject);
             PopulateDataFromStructuredEvent(cloudEvent, jObject);
-            return cloudEvent.Validate();
+            // "data" is always the parameter from the public method. It's annoying not to be able to use
+            // nameof here, but this will give the appropriate result.
+            return cloudEvent.ValidateForConversion("data");
         }
 
         private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
@@ -305,6 +308,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
+            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
+            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+
             contentType = new ContentType("application/cloudevents+json")
             {
                 CharSet = Encoding.UTF8.WebName
@@ -355,7 +361,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// <see cref="DataBase64PropertyName"/> properties.
         /// </para>
         /// </remarks>
-        /// <param name="cloudEvent">The CloudEvent being encoded, which will have a non-null value of
+        /// <param name="cloudEvent">The CloudEvent being encoded, which will have a non-null value for
+        /// its <see cref="CloudEvent.Data"/> property.
+        /// <paramref name="writer"/>The writer to serialize the data to. Will not be null.</param>
         /// <see cref="CloudEvent.Data"/>.</param>
         protected virtual void EncodeStructuredModeData(CloudEvent cloudEvent, JsonWriter writer)
         {
@@ -383,6 +391,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
+            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
+            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+
             if (cloudEvent.Data is null)
             {
                 return Array.Empty<byte>();
@@ -411,6 +422,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override void DecodeBinaryModeEventData(byte[] value, CloudEvent cloudEvent)
         {
+            value = value ?? throw new ArgumentNullException(nameof(value));
+            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
+
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
 
             Encoding encoding = contentType.GetEncoding();

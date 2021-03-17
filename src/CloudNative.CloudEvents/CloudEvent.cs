@@ -390,10 +390,11 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// Validates that this CloudEvent is valid in the same way as <see cref="IsValid"/>,
         /// but throwing an <see cref="ArgumentException"/> using the given parameter name
-        /// if the event is invalid. This is typically used within protocol bindings as the last
-        /// step in conversion.
+        /// if the event is invalid. This is typically used within protocol bindings or event formatters
+        /// as the last step in decoding an event, or as the first step when encoding an event.
         /// </summary>
-        /// <param name="paramName">The parameter name to use in the exception if the event is invalid.</param>
+        /// <param name="paramName">The parameter name to use in the exception if the event is invalid.
+        /// May be null.</param>
         /// <exception cref="ArgumentException">The event is invalid.</exception>
         /// <returns>A reference to the same object, for simplicity of method chaining.</returns>
         public CloudEvent ValidateForConversion(string paramName)

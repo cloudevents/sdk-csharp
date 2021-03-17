@@ -423,8 +423,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
                 ["id"] = "test-id"
                 // Source is missing
             };
-            // TODO: Arguably ArgumentException would be neater here.
-            Assert.Throws<InvalidOperationException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
         }
 
         [Fact]
