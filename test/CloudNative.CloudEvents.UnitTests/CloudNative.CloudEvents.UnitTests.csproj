@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +23,7 @@
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Kafka\CloudNative.CloudEvents.Kafka.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Mqtt\CloudNative.CloudEvents.Mqtt.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.NewtonsoftJson\CloudNative.CloudEvents.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\..\src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 
