@@ -108,51 +108,39 @@ namespace CloudNative.CloudEvents.SystemTextJson
             DocumentOptions = documentOptions;
         }
 
-        public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
-        {
-            data = data ?? throw new ArgumentNullException(nameof(data));
-            var encoding = contentType.GetEncoding();
+        public override Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessageImpl(data, contentType, extensionAttributes, true);
 
-            JsonDocument document;
-            if (encoding is UTF8Encoding)
-            {
-                document = await JsonDocument.ParseAsync(data, DocumentOptions).ConfigureAwait(false);
-            }
-            else
-            {
-                using var reader = new StreamReader(data, encoding);
-                string json = await reader.ReadToEndAsync().ConfigureAwait(false);
-                document = JsonDocument.Parse(json, DocumentOptions);
-            }
-            using (document)
-            {
-                return DecodeJsonDocument(document, extensionAttributes);
-            }
-        }
-
-        public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
-        {
-            data = data ?? throw new ArgumentNullException(nameof(data));
-            var encoding = contentType.GetEncoding();
-            JsonDocument document;
-            if (encoding is UTF8Encoding)
-            {
-                document = JsonDocument.Parse(data, DocumentOptions);
-            }
-            else
-            {
-                using var reader = new StreamReader(data, encoding);
-                string json = reader.ReadToEnd();
-                document = JsonDocument.Parse(json, DocumentOptions);
-            }
-            using (document)
-            {
-                return DecodeJsonDocument(document, extensionAttributes);
-            }
-        }
+        public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessageImpl(data, contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
         public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
+            DecodeStructuredModeMessageImpl(new MemoryStream(data), contentType, extensionAttributes, false).GetAwaiter().GetResult();
+
+        private async Task<CloudEvent> DecodeStructuredModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
+        {
+            data = data ?? throw new ArgumentNullException(nameof(data));
+            var encoding = contentType.GetEncoding();
+            JsonDocument document;
+            if (encoding is UTF8Encoding)
+            {
+                document = async
+                    ? await JsonDocument.ParseAsync(data, DocumentOptions).ConfigureAwait(false)
+                    : JsonDocument.Parse(data, DocumentOptions);
+            }
+            else
+            {
+                using var reader = new StreamReader(data, encoding);
+                string json = async
+                    ? await reader.ReadToEndAsync().ConfigureAwait(false)
+                    : reader.ReadToEnd();
+                document = JsonDocument.Parse(json, DocumentOptions);
+            }
+            using (document)
+            {
+                return DecodeJsonDocument(document, extensionAttributes);
+            }
+        }
 
         private CloudEvent DecodeJsonDocument(JsonDocument document, IEnumerable<CloudEventAttribute> extensionAttributes = null)
         {
