@@ -110,5 +110,59 @@ namespace CloudNative.CloudEvents
         /// event formatter.</exception>
         /// <returns>The binary-mode representation of the CloudEvent.</returns>
         public abstract byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent);
+
+        /// <summary>
+        /// Decodes a collection CloudEvents from a batch-mode message body, represented as a byte array.
+        /// </summary>
+        /// <param name="data">The data within the message body. Must not be null.</param>
+        /// <param name="contentType">The content type of the message, or null if no content type is known.
+        /// Typically this is a content type with a media type with a prefix of "application/cloudevents-batch"; the additional
+        /// information such as the charset parameter may be needed in order to decode the data.</param>
+        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The collection of CloudEvents derived from the batched data.</returns>
+        public abstract IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
+
+        /// <summary>
+        /// Decodes a collection CloudEvents from a batch-mode message body, represented as a stream. The default implementation copies the
+        /// content of the stream into a byte array before passing it to <see cref="DecodeBatchModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
+        /// but this can be overridden by event formatters that can decode a stream more efficiently.
+        /// </summary>
+        /// <param name="data">The data within the message body. Must not be null.</param>
+        /// <param name="contentType">The content type of the message, or null if no content type is known.
+        /// Typically this is a content type with a media type with a prefix of "application/cloudevents"; the additional
+        /// information such as the charset parameter may be needed in order to decode the data.</param>
+        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The collection of CloudEvents derived from the batched data.</returns>
+        public virtual IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            var bytes = BinaryDataUtilities.ToByteArray(data);
+            return DecodeBatchModeMessage(bytes, contentType, extensionAttributes);
+        }
+
+        /// <summary>
+        /// Asynchronously decodes a collection CloudEvents from a batch-mode message body, represented as a stream. The default implementation asynchronously copies the
+        /// content of the stream into a byte array before passing it to <see cref="DecodeBatchModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
+        /// but this can be overridden by event formatters that can decode a stream more efficiently.
+        /// </summary>
+        /// <param name="data">The data within the message body. Must not be null.</param>
+        /// <param name="contentType">The content type of the message, or null if no content type is known.
+        /// Typically this is a content type with a media type with a prefix of "application/cloudevents"; the additional
+        /// information such as the charset parameter may be needed in order to decode the data.</param>
+        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The collection of CloudEvents derived from the batched data.</returns>
+        public virtual async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            var bytes = await BinaryDataUtilities.ToByteArrayAsync(data).ConfigureAwait(false);
+            return DecodeBatchModeMessage(bytes, contentType, extensionAttributes);
+        }
+
+        /// <summary>
+        // Encodes a sequence of CloudEvents as the body of a message.
+        /// </summary>
+        /// <param name="cloudEvents">The CloudEvents to encode. Must not be null.</param>
+        /// <param name="contentType">On successful return, the content type of the structured-mode data.
+        /// Must not be null (on return).</param>
+        /// <returns>The batch representation of the CloudEvent.</returns>
+        public abstract byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType);
     }
 }

@@ -16,6 +16,12 @@ namespace CloudNative.CloudEvents.Core
     /// </summary>
     public static class MimeUtilities
     {
+        /// <summary>
+        /// The media type to use for batch mode. This is usually suffixed with a format-specific
+        /// type, e.g. "+json".
+        /// </summary>
+        public static string BatchMediaType { get; } = CloudEvent.MediaType + "-batch";
+
         // TODO: Should we return null, and force the caller to do the appropriate defaulting?
         /// <summary>
         /// Returns an encoding from a content type, defaulting to UTF-8.
