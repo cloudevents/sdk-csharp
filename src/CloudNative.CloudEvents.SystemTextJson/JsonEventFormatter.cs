@@ -70,6 +70,9 @@ namespace CloudNative.CloudEvents.SystemTextJson
         private const string JsonMediaType = "application/json";
         private const string MediaTypeSuffix = "+json";
 
+        private static readonly string StructuredMediaType = CloudEvent.MediaType + MediaTypeSuffix;
+        private static readonly string BatchMediaType = MimeUtilities.BatchMediaType + MediaTypeSuffix;
+
         /// <summary>
         /// The property name to use for base64-encoded binary data in a structured-mode message.
         /// </summary>
@@ -121,32 +124,72 @@ namespace CloudNative.CloudEvents.SystemTextJson
         private async Task<CloudEvent> DecodeStructuredModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
         {
             Validation.CheckNotNull(data, nameof(data));
+            JsonDocument document = await ReadDocumentAsync(data, contentType, async).ConfigureAwait(false);
+            using (document)
+            {
+                return DecodeJsonElement(document.RootElement, extensionAttributes, nameof(data));
+            }
+        }
 
+        public override Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessageImpl(data, contentType, extensionAttributes, true);
+
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessageImpl(data, contentType, extensionAttributes, false).GetAwaiter().GetResult();
+
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessageImpl(new MemoryStream(data), contentType, extensionAttributes, false).GetAwaiter().GetResult();
+
+        private async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
+        {
+            Validation.CheckNotNull(data, nameof(data));
+            var document = await ReadDocumentAsync(data, contentType, async).ConfigureAwait(false);
+            using (document)
+            {
+                var root = document.RootElement;
+                if (root.ValueKind != JsonValueKind.Array)
+                {
+                    throw new ArgumentException($"Cannot decode JSON element of kind '{root.ValueKind}' as batch CloudEvent");
+                }
+                // Avoiding LINQ to avoid extraneous allocations etc.
+                List<CloudEvent> events = new List<CloudEvent>(root.GetArrayLength());
+                foreach (var element in root.EnumerateArray())
+                {
+                    events.Add(DecodeJsonElement(element, extensionAttributes, nameof(data)));
+                }
+                return events;
+            }
+        }
+
+        private async Task<JsonDocument> ReadDocumentAsync(Stream data, ContentType contentType, bool async)
+        {
             var encoding = MimeUtilities.GetEncoding(contentType);
-            JsonDocument document;
             if (encoding is UTF8Encoding)
             {
-                document = async
+                return async
                     ? await JsonDocument.ParseAsync(data, DocumentOptions).ConfigureAwait(false)
                     : JsonDocument.Parse(data, DocumentOptions);
             }
             else
             {
                 using var reader = new StreamReader(data, encoding);
-                string json = async
+                var json = async
                     ? await reader.ReadToEndAsync().ConfigureAwait(false)
                     : reader.ReadToEnd();
-                document = JsonDocument.Parse(json, DocumentOptions);
-            }
-            using (document)
-            {
-                return DecodeJsonDocument(document, extensionAttributes);
+                return JsonDocument.Parse(json, DocumentOptions);
             }
         }
 
-        private CloudEvent DecodeJsonDocument(JsonDocument document, IEnumerable<CloudEventAttribute> extensionAttributes = null)
+        // TODO: Override the other methods
+
+        private CloudEvent DecodeJsonElement(JsonElement element, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
         {
-            if (!document.RootElement.TryGetProperty(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionProperty)
+            if (element.ValueKind != JsonValueKind.Object)
+            {
+                throw new ArgumentException($"Cannot decode JSON element of kind '{element.ValueKind}' as CloudEvent");
+            }
+
+            if (!element.TryGetProperty(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionProperty)
                 || specVersionProperty.ValueKind != JsonValueKind.String)
             {
                 throw new ArgumentException($"Structured mode content does not represent a CloudEvent");
@@ -155,16 +198,14 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 ?? throw new ArgumentException($"Unsupported CloudEvents spec version '{specVersionProperty.GetString()}'");
 
             var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
-            PopulateAttributesFromStructuredEvent(cloudEvent, document);
-            PopulateDataFromStructuredEvent(cloudEvent, document);
-            // "data" is always the parameter from the public method. It's annoying not to be able to use
-            // nameof here, but this will give the appropriate result.
-            return Validation.CheckCloudEventArgument(cloudEvent, "data");
+            PopulateAttributesFromStructuredEvent(cloudEvent, element);
+            PopulateDataFromStructuredEvent(cloudEvent, element);
+            return Validation.CheckCloudEventArgument(cloudEvent, paramName);
         }
 
-        private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JsonDocument document)
+        private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JsonElement element)
         {
-            foreach (var jsonProperty in document.RootElement.EnumerateObject())
+            foreach (var jsonProperty in element.EnumerateObject())
             {
                 var name = jsonProperty.Name;
                 var value = jsonProperty.Value;
@@ -237,11 +278,11 @@ namespace CloudNative.CloudEvents.SystemTextJson
             }
         }
 
-        private void PopulateDataFromStructuredEvent(CloudEvent cloudEvent, JsonDocument document)
+        private void PopulateDataFromStructuredEvent(CloudEvent cloudEvent, JsonElement element)
         {
             // Fetch data and data_base64 tokens, and treat null as missing.
-            document.RootElement.TryGetProperty(DataPropertyName, out var dataElement);
-            document.RootElement.TryGetProperty(DataBase64PropertyName, out var dataBase64Element);
+            element.TryGetProperty(DataPropertyName, out var dataElement);
+            element.TryGetProperty(DataBase64PropertyName, out var dataBase64Element);
 
             bool dataPresent = dataElement.ValueKind != JsonValueKind.Null && dataElement.ValueKind != JsonValueKind.Undefined;
             bool dataBase64Present = dataBase64Element.ValueKind != JsonValueKind.Null && dataBase64Element.ValueKind != JsonValueKind.Undefined;
@@ -320,17 +361,45 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 ? dataElement.GetString()
                 : (object) dataElement.Clone(); // Deliberately cast to object to provide the conditional operator expression type.
 
-        public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
+        public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
         {
-            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
 
-            contentType = new ContentType("application/cloudevents+json")
+            contentType = new ContentType(BatchMediaType)
             {
                 CharSet = Encoding.UTF8.WebName
             };
 
             var stream = new MemoryStream();
             var writer = new Utf8JsonWriter(stream);
+            writer.WriteStartArray();
+            foreach (var cloudEvent in cloudEvents)
+            {
+                WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
+            }
+            writer.WriteEndArray();
+            writer.Flush();
+            return stream.ToArray();
+        }
+
+        public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
+        {
+            contentType = new ContentType(StructuredMediaType)
+            {
+                CharSet = Encoding.UTF8.WebName
+            };
+
+            var stream = new MemoryStream();
+            var writer = new Utf8JsonWriter(stream);
+            WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
+            writer.Flush();
+            return stream.ToArray();
+        }
+
+        private void WriteCloudEventForBatchOrStructuredMode(Utf8JsonWriter writer, CloudEvent cloudEvent)
+        {
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+
             writer.WriteStartObject();
             writer.WritePropertyName(CloudEventsSpecVersion.SpecVersionAttribute.Name);
             writer.WriteStringValue(cloudEvent.SpecVersion.VersionId);
@@ -360,8 +429,6 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 EncodeStructuredModeData(cloudEvent, writer);
             }
             writer.WriteEndObject();
-            writer.Flush();
-            return stream.ToArray();
         }
 
         /// <summary>

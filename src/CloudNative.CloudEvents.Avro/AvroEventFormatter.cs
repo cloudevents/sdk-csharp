@@ -67,6 +67,12 @@ namespace CloudNative.CloudEvents
             return DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
         }
 
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            throw new NotSupportedException("The Avro event formatter does not support batch content mode");
+
+        public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvent, out ContentType contentType) =>
+            throw new NotSupportedException("The Avro event formatter does not support batch content mode");
+
         private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             if (!record.TryGetValue(AttributeName, out var attrObj))

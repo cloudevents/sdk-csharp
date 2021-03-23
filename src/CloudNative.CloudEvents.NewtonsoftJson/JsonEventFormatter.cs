@@ -85,6 +85,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         private const string JsonMediaType = "application/json";
         private const string MediaTypeSuffix = "+json";
 
+        private static readonly string StructuredMediaType = CloudEvent.MediaType + MediaTypeSuffix;
+        private static readonly string BatchMediaType = MimeUtilities.BatchMediaType + MediaTypeSuffix;
+
         /// <summary>
         /// The property name to use for base64-encoded binary data in a structured-mode message.
         /// </summary>
@@ -136,6 +139,44 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
+
+        public override async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            Validation.CheckNotNull(data, nameof(data));
+
+            var jsonReader = CreateJsonReader(data, MimeUtilities.GetEncoding(contentType));
+            var array = await JArray.LoadAsync(jsonReader).ConfigureAwait(false);
+            return DecodeJArray(array, extensionAttributes, nameof(data));
+        }
+
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            Validation.CheckNotNull(data, nameof(data));
+
+            var jsonReader = CreateJsonReader(data, MimeUtilities.GetEncoding(contentType));
+            var array = JArray.Load(jsonReader);
+            return DecodeJArray(array, extensionAttributes, nameof(data));
+        }
+
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessage(new MemoryStream(data), contentType, extensionAttributes);
+
+        private IReadOnlyList<CloudEvent> DecodeJArray(JArray jArray, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
+        {
+            List<CloudEvent> events = new List<CloudEvent>(jArray.Count);
+            foreach (var token in jArray)
+            {
+                if (token is JObject obj)
+                {
+                    events.Add(DecodeJObject(obj, extensionAttributes));
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid array element index {events.Count} within batch; expected an object, but token type was '{token?.Type}'", paramName);
+                }
+            }
+            return events;
+        }
 
         private CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute> extensionAttributes = null)
         {
@@ -307,15 +348,45 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
-            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            // The cloudEvent parameter will be validated in WriteCloudEventForBatchOrStructuredMode
 
-            contentType = new ContentType("application/cloudevents+json")
+            contentType = new ContentType(StructuredMediaType)
             {
                 CharSet = Encoding.UTF8.WebName
             };
 
             var stream = new MemoryStream();
             var writer = new JsonTextWriter(new StreamWriter(stream));
+            WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
+            writer.Flush();
+            return stream.ToArray();
+        }
+
+        public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
+        {
+            Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
+
+            contentType = new ContentType(BatchMediaType)
+            {
+                CharSet = Encoding.UTF8.WebName
+            };
+
+            var stream = new MemoryStream();
+            var writer = new JsonTextWriter(new StreamWriter(stream));
+            writer.WriteStartArray();
+            foreach (var cloudEvent in cloudEvents)
+            {
+                WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
+            }
+            writer.WriteEndArray();
+            writer.Flush();
+            return stream.ToArray();
+        }
+
+        private void WriteCloudEventForBatchOrStructuredMode(JsonWriter writer, CloudEvent cloudEvent)
+        {
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+
             writer.WriteStartObject();
             writer.WritePropertyName(CloudEventsSpecVersion.SpecVersionAttribute.Name);
             writer.WriteValue(cloudEvent.SpecVersion.VersionId);
@@ -344,8 +415,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 EncodeStructuredModeData(cloudEvent, writer);
             }
             writer.WriteEndObject();
-            writer.Flush();
-            return stream.ToArray();
         }
 
         /// <summary>
