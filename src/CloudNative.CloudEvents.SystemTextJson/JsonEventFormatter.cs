@@ -108,8 +108,8 @@ namespace CloudNative.CloudEvents.SystemTextJson
             DocumentOptions = documentOptions;
         }
 
-        public override Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredModeMessageImpl(data, contentType, extensionAttributes, true);
+        public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            await DecodeStructuredModeMessageImpl(data, contentType, extensionAttributes, true).ConfigureAwait(false);
 
         public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             DecodeStructuredModeMessageImpl(data, contentType, extensionAttributes, false).GetAwaiter().GetResult();
@@ -240,31 +240,26 @@ namespace CloudNative.CloudEvents.SystemTextJson
         {
             // Fetch data and data_base64 tokens, and treat null as missing.
             document.RootElement.TryGetProperty(DataPropertyName, out var dataElement);
-            if (dataElement is JsonElement { ValueKind: JsonValueKind.Null })
-            {
-                dataElement = new JsonElement();
-            }
-            document.RootElement.TryGetProperty(DataBase64PropertyName, out var dataBase64Token);
-            if (dataBase64Token is JsonElement { ValueKind: JsonValueKind.Null })
-            {
-                dataBase64Token = new JsonElement();
-            }
+            document.RootElement.TryGetProperty(DataBase64PropertyName, out var dataBase64Element);
+
+            bool dataPresent = dataElement.ValueKind != JsonValueKind.Null && dataElement.ValueKind != JsonValueKind.Undefined;
+            bool dataBase64Present = dataBase64Element.ValueKind != JsonValueKind.Null && dataBase64Element.ValueKind != JsonValueKind.Undefined;
 
             // If we don't have any data, we're done.
-            if (dataElement.ValueKind == JsonValueKind.Undefined && dataBase64Token.ValueKind == JsonValueKind.Undefined)
+            if (!dataPresent && !dataBase64Present)
             {
                 return;
             }
             // We can't handle both properties being set.
-            if (dataElement.ValueKind != JsonValueKind.Undefined && dataBase64Token.ValueKind != JsonValueKind.Undefined)
+            if (dataPresent && dataBase64Present)
             {
                 throw new ArgumentException($"Structured mode content cannot contain both '{DataPropertyName}' and '{DataBase64PropertyName}' properties.");
             }
             // Okay, we have exactly one non-null data/data_base64 property.
             // Decode it, potentially using overridden methods for specialization.
-            if (dataBase64Token.ValueKind != JsonValueKind.Undefined)
+            if (dataBase64Present)
             {
-                DecodeStructuredModeDataBase64Property(dataBase64Token, cloudEvent);
+                DecodeStructuredModeDataBase64Property(dataBase64Element, cloudEvent);
             }
             else
             {
