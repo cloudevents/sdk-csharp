@@ -37,7 +37,18 @@ namespace CloudNative.CloudEvents
     public abstract class CloudEventFormatter
     {
         /// <summary>
-        /// Asynchronously decodes a CloudEvent from a structured-mode message body, represented as a stream. The default implementation copies the
+        /// Decodes a CloudEvent from a structured-mode message body, represented as a byte array.
+        /// </summary>
+        /// <param name="data">The data within the message body. Must not be null.</param>
+        /// <param name="contentType">The content type of the message, or null if no content type is known.
+        /// Typically this is a content type with a media type of "application/cloudevents"; the additional
+        /// information such as the charset parameter may be needed in order to decode the data.</param>
+        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The CloudEvent derived from the structured data.</returns>
+        public abstract CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
+
+        /// <summary>
+        /// Decodes a CloudEvent from a structured-mode message body, represented as a stream. The default implementation copies the
         /// content of the stream into a byte array before passing it to <see cref="DecodeStructuredModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
         /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
@@ -54,7 +65,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// Decodes a CloudEvent from a structured-mode message body, represented as a stream. The default implementation asynchronously copies the
+        /// Asynchronously decodes a CloudEvent from a structured-mode message body, represented as a stream. The default implementation asynchronously copies the
         /// content of the stream into a byte array before passing it to <see cref="DecodeStructuredModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
         /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
@@ -71,17 +82,6 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// Decodes a CloudEvent from a structured-mode message body, represented as a byte array.
-        /// </summary>
-        /// <param name="data">The data within the message body. Must not be null.</param>
-        /// <param name="contentType">The content type of the message, or null if no content type is known.
-        /// Typically this is a content type with a media type of "application/cloudevents"; the additional
-        /// information such as the charset parameter may be needed in order to decode the data.</param>
-        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
-        /// <returns>The CloudEvent derived from the structured data.</returns>
-        public abstract CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
-
-        /// <summary>
         /// Encodes a CloudEvent as the body of a structured-mode message.
         /// </summary>
         /// <param name="cloudEvent">The CloudEvent to encode. Must not be null.</param>
@@ -89,14 +89,6 @@ namespace CloudNative.CloudEvents
         /// Must not be null (on return).</param>
         /// <returns>The structured-mode representation of the CloudEvent.</returns>
         public abstract byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType);
-
-        /// <summary>
-        /// Encodes the data from <paramref name="cloudEvent"/> in a manner suitable for a binary mode message.
-        /// </summary>
-        /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be encoded by this
-        /// event formatter.</exception>
-        /// <returns>The binary-mode representation of the CloudEvent.</returns>
-        public abstract byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent);
 
         /// <summary>
         /// Decodes the given data obtained from a binary-mode message, populating the <see cref="CloudEvent.Data"/>
@@ -109,5 +101,13 @@ namespace CloudNative.CloudEvents
         /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be decoded by this
         /// event formatter.</exception>
         public abstract void DecodeBinaryModeEventData(byte[] data, CloudEvent cloudEvent);
+
+        /// <summary>
+        /// Encodes the data from <paramref name="cloudEvent"/> in a manner suitable for a binary mode message.
+        /// </summary>
+        /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be encoded by this
+        /// event formatter.</exception>
+        /// <returns>The binary-mode representation of the CloudEvent.</returns>
+        public abstract byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent);
     }
 }
