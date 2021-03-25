@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Globalization;
 
@@ -49,10 +50,8 @@ namespace CloudNative.CloudEvents
         public static bool TryParse(string input, out DateTimeOffset result)
         {
             // TODO: Check this and add a test
-            if (input is null)
-            {
-                throw new ArgumentNullException(nameof(input));
-            }
+            Validation.CheckNotNull(input, nameof(input));
+            
             if (input.Length < MinLength) // "yyyy-MM-ddTHH:mm:ssZ" is the shortest possible value.
             {
                 result = default;

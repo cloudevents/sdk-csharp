@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Globalization;
 
@@ -98,7 +99,7 @@ namespace CloudNative.CloudEvents
             {
             }
 
-            public override sealed object Parse(string value) => ParseImpl(Preconditions.CheckNotNull(value, nameof(value)));
+            public override sealed object Parse(string value) => ParseImpl(Validation.CheckNotNull(value, nameof(value)));
 
             public override sealed string Format(object value)
             {
@@ -109,13 +110,13 @@ namespace CloudNative.CloudEvents
 
             public override sealed void Validate(object value)
             {
-                Preconditions.CheckNotNull(value, nameof(value));
+                Validation.CheckNotNull(value, nameof(value));
                 if (!ClrType.IsInstanceOfType(value))
                 {
                     throw new ArgumentException($"Value of type {value.GetType()} is incompatible with expected type {ClrType}", nameof(value));
                 }
 
-                ValidateImpl((T)Preconditions.CheckNotNull(value, nameof(value)));
+                ValidateImpl((T)Validation.CheckNotNull(value, nameof(value)));
             }
 
             protected abstract T ParseImpl(string value);

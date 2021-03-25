@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 
 namespace CloudNative.CloudEvents
@@ -44,7 +45,7 @@ namespace CloudNative.CloudEvents
         // TODO: Have a "mode" of Required/Optional/Extension?
 
         private CloudEventAttribute(string name, CloudEventAttributeType type, bool required, bool extension, Action<object> validator) =>
-            (Name, Type, IsRequired, IsExtension, this.validator) = (ValidateName(name), Preconditions.CheckNotNull(type, nameof(type)), required, extension, validator);
+            (Name, Type, IsRequired, IsExtension, this.validator) = (ValidateName(name), Validation.CheckNotNull(type, nameof(type)), required, extension, validator);
 
         internal static CloudEventAttribute CreateRequired(string name, CloudEventAttributeType type, Action<object> validator) =>
             new CloudEventAttribute(name, type, required: true, extension: false, validator: validator);
@@ -87,7 +88,7 @@ namespace CloudNative.CloudEvents
         /// <returns><paramref name="name"/>, for convenience.</returns>
         internal static string ValidateName(string name)
         {
-            Preconditions.CheckNotNull(name, nameof(name));
+            Validation.CheckNotNull(name, nameof(name));
             if (name.Length == 0)
             {
                 throw new ArgumentException("Attribute names must be non-empty", nameof(name));
@@ -106,7 +107,7 @@ namespace CloudNative.CloudEvents
 
         public object Parse(string text)
         {
-            Preconditions.CheckNotNull(text, nameof(text));
+            Validation.CheckNotNull(text, nameof(text));
             object value;
             // By wrapping every exception here, we always get an
             // ArgumentException (other than the ArgumentNullException above) and have the name in the message.
@@ -132,7 +133,7 @@ namespace CloudNative.CloudEvents
         /// <returns>The value, for simple method chaining.</returns>
         public object Validate(object value)
         {
-            Preconditions.CheckNotNull(value, nameof(value));
+            Validation.CheckNotNull(value, nameof(value));
             // By wrapping every exception, whether from the type or the custom validator, we always get an
             // ArgumentException (other than the ArgumentNullException above) and have the name in the message.
             try

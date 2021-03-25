@@ -95,7 +95,7 @@ following pseudo-code as structure:
   - If the message contains content, call the
     `formatter.DecodeBinaryModeEventData` method to populate the
     `CloudEvent.Data` property appropriately.
-  - Return the result of `CloudEvent.ValidateForConversion` which
+  - Return the result of `Validation.CheckCloudEventArgument` which
     will validate the event, and either return the original reference if
     the event is valid, or throw an appropriate `ArgumentException`
     otherwise.
@@ -155,9 +155,10 @@ The conversion should follow the following steps of pseudo-code:
 
 - Parameter validation (which may be completed in any order):
   - `cloudEvent` and `formatter` should be non-null
+    (`CheckCloudEventArgument` will validate this for the `cloudEvent` parameter)
   - In a `CopyTo...` method, `destination` should be non-null
   - The `contentMode` should be a known, supported value
-  - Call `cloudEvent.ValidateForConversion(nameof(cloudEvent))`
+  - Call `Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent))`
     for validation of the original CloudEvent.
 - For structured mode encoding:
   - Call `formatter.EncodeStructuredModeMessage` to encode

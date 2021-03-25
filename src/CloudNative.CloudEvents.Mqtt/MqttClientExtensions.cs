@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using MQTTnet;
 using System;
 using System.Collections.Generic;
@@ -34,8 +35,8 @@ namespace CloudNative.CloudEvents.Mqtt
         public static CloudEvent ToCloudEvent(this MqttApplicationMessage message,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            message = message ?? throw new ArgumentNullException(nameof(message));
-            formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            Validation.CheckNotNull(formatter, nameof(formatter));
+            Validation.CheckNotNull(message, nameof(message));
 
             // TODO: Determine if there's a sensible content type we should apply.
             return formatter.DecodeStructuredModeMessage(message.Payload, contentType: null, extensionAttributes);
@@ -51,9 +52,8 @@ namespace CloudNative.CloudEvents.Mqtt
         /// <param name="topic">The MQTT topic for the message. May be null.</param>
         public static MqttApplicationMessage ToMqttApplicationMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter, string topic)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
-            formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             switch (contentMode)
             {

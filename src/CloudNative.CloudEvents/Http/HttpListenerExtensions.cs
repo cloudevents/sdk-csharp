@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -27,10 +28,9 @@ namespace CloudNative.CloudEvents.Http
         public static Task CopyToHttpListenerResponseAsync(this CloudEvent cloudEvent, HttpListenerResponse destination,
             ContentMode contentMode, CloudEventFormatter formatter)
         {
-            Preconditions.CheckNotNull(cloudEvent, nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
-            Preconditions.CheckNotNull(destination, nameof(destination));
-            Preconditions.CheckNotNull(formatter, nameof(formatter));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            Validation.CheckNotNull(destination, nameof(destination));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             byte[] content;
             ContentType contentType;
@@ -142,8 +142,8 @@ namespace CloudNative.CloudEvents.Http
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            Preconditions.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
-            Preconditions.CheckNotNull(formatter, nameof(formatter));
+            Validation.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             if (HasCloudEventsContentType(httpListenerRequest))
             {
@@ -176,7 +176,7 @@ namespace CloudNative.CloudEvents.Http
                 cloudEvent.DataContentType = httpListenerRequest.ContentType;
 
                 formatter.DecodeBinaryModeEventData(BinaryDataUtilities.ToByteArray(httpListenerRequest.InputStream), cloudEvent);
-                return cloudEvent.ValidateForConversion(nameof(httpListenerRequest));
+                return Validation.CheckCloudEventArgument(cloudEvent, nameof(httpListenerRequest));
             }
         }
 

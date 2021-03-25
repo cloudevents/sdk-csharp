@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +61,7 @@ namespace CloudNative.CloudEvents.Http
         /// <returns>true, if the response is a CloudEvent</returns>
         public static bool IsCloudEvent(this HttpRequestMessage httpRequestMessage)
         {
-            Preconditions.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
+            Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
             return HasCloudEventsContentType(httpRequestMessage.Content) ||
                 httpRequestMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
         }
@@ -72,7 +73,7 @@ namespace CloudNative.CloudEvents.Http
         /// <returns>true, if the response is a CloudEvent</returns>
         public static bool IsCloudEvent(this HttpResponseMessage httpResponseMessage)
         {
-            Preconditions.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
+            Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
             return HasCloudEventsContentType(httpResponseMessage.Content) ||
                 httpResponseMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
         }
@@ -109,7 +110,7 @@ namespace CloudNative.CloudEvents.Http
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            Preconditions.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
+            Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
             return ToCloudEventInternalAsync(httpResponseMessage.Headers, httpResponseMessage.Content, formatter, extensionAttributes, nameof(httpResponseMessage));
         }
 
@@ -138,19 +139,19 @@ namespace CloudNative.CloudEvents.Http
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            Preconditions.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
+            Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
             return ToCloudEventInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
         }
 
         private static async Task<CloudEvent> ToCloudEventInternalAsync(HttpHeaders headers, HttpContent content,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
         {
-            Preconditions.CheckNotNull(formatter, nameof(formatter));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             if (HasCloudEventsContentType(content))
             {
                 var stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
-                return await formatter.DecodeStructuredModeMessageAsync(stream, content.Headers.ContentType.ToContentType(), extensionAttributes).ConfigureAwait(false);
+                return await formatter.DecodeStructuredModeMessageAsync(stream, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes).ConfigureAwait(false);
             }
             else
             {
@@ -179,7 +180,7 @@ namespace CloudNative.CloudEvents.Http
                     var data = await content.ReadAsByteArrayAsync().ConfigureAwait(false);
                     formatter.DecodeBinaryModeEventData(data, cloudEvent);
                 }
-                return cloudEvent.ValidateForConversion(paramName);
+                return Validation.CheckCloudEventArgument(cloudEvent, paramName);
             }
         }
 

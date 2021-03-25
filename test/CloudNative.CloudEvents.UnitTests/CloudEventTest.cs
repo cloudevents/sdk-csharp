@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Linq;
 using System.Net.Mime;
@@ -112,7 +113,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Contains(CloudEventsSpecVersion.Default.SourceAttribute.Name, exception1.Message);
             Assert.DoesNotContain(CloudEventsSpecVersion.Default.TypeAttribute.Name, exception1.Message);
 
-            var exception2 = Assert.Throws<ArgumentException>(() => cloudEvent.ValidateForConversion("param"));
+            var exception2 = Assert.Throws<ArgumentException>(() => Validation.CheckCloudEventArgument(cloudEvent, "param"));
             Assert.Equal("param", exception2.ParamName);
             Assert.Contains(CloudEventsSpecVersion.Default.IdAttribute.Name, exception1.Message);
             Assert.Contains(CloudEventsSpecVersion.Default.SourceAttribute.Name, exception1.Message);
@@ -130,7 +131,7 @@ namespace CloudNative.CloudEvents.UnitTests
             };
             Assert.True(cloudEvent.IsValid);
             Assert.Same(cloudEvent, cloudEvent.Validate());
-            Assert.Same(cloudEvent, cloudEvent.ValidateForConversion("param"));
+            Assert.Same(cloudEvent, Validation.CheckCloudEventArgument(cloudEvent, "param"));
         }
 
         [Fact]

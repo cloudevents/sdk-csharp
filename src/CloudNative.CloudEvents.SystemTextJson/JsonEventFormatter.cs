@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -119,8 +120,9 @@ namespace CloudNative.CloudEvents.SystemTextJson
 
         private async Task<CloudEvent> DecodeStructuredModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
         {
-            data = data ?? throw new ArgumentNullException(nameof(data));
-            var encoding = contentType.GetEncoding();
+            Validation.CheckNotNull(data, nameof(data));
+
+            var encoding = MimeUtilities.GetEncoding(contentType);
             JsonDocument document;
             if (encoding is UTF8Encoding)
             {
@@ -157,7 +159,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
             PopulateDataFromStructuredEvent(cloudEvent, document);
             // "data" is always the parameter from the public method. It's annoying not to be able to use
             // nameof here, but this will give the appropriate result.
-            return cloudEvent.ValidateForConversion("data");
+            return Validation.CheckCloudEventArgument(cloudEvent, "data");
         }
 
         private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JsonDocument document)
@@ -321,8 +323,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
 
         public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
             contentType = new ContentType("application/cloudevents+json")
             {
@@ -404,8 +405,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
 
         public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
             if (cloudEvent.Data is null)
             {
@@ -414,19 +414,19 @@ namespace CloudNative.CloudEvents.SystemTextJson
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
             if (contentType.MediaType == JsonMediaType)
             {
-                var encoding = contentType.GetEncoding();
+                var encoding = MimeUtilities.GetEncoding(contentType);
                 if (encoding is UTF8Encoding)
                 {
                     return JsonSerializer.SerializeToUtf8Bytes(cloudEvent.Data, SerializerOptions);
                 }
                 else
                 {
-                    return contentType.GetEncoding().GetBytes(JsonSerializer.Serialize(cloudEvent.Data, SerializerOptions));
+                    return MimeUtilities.GetEncoding(contentType).GetBytes(JsonSerializer.Serialize(cloudEvent.Data, SerializerOptions));
                 }
             }
             if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
             {
-                return contentType.GetEncoding().GetBytes(text);
+                return MimeUtilities.GetEncoding(contentType).GetBytes(text);
             }
             if (cloudEvent.Data is byte[] bytes)
             {
@@ -437,12 +437,12 @@ namespace CloudNative.CloudEvents.SystemTextJson
 
         public override void DecodeBinaryModeEventData(byte[] value, CloudEvent cloudEvent)
         {
-            value = value ?? throw new ArgumentNullException(nameof(value));
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
+            Validation.CheckNotNull(value, nameof(value));
+            Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
 
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
 
-            Encoding encoding = contentType.GetEncoding();
+            Encoding encoding = MimeUtilities.GetEncoding(contentType);
 
             if (contentType.MediaType == JsonMediaType)
             {

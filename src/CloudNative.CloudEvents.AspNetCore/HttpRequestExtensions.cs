@@ -3,6 +3,7 @@
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.Http;
+using CloudNative.CloudEvents.Core;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -79,13 +80,10 @@ namespace CloudNative.CloudEvents
                 cloudEvent.DataContentType = httpRequest.ContentType;
                 if (httpRequest.Body is Stream body)
                 {
-                    // TODO: This is a bit ugly. We have code in BinaryDataUtilities to handle this, but
-                    // we'd rather not expose it...
-                    var memoryStream = new MemoryStream();
-                    await body.CopyToAsync(memoryStream).ConfigureAwait(false);
-                    formatter.DecodeBinaryModeEventData(memoryStream.ToArray(), cloudEvent);
+                    byte[] data = await BinaryDataUtilities.ToByteArrayAsync(body).ConfigureAwait(false);
+                    formatter.DecodeBinaryModeEventData(data, cloudEvent);
                 }
-                return cloudEvent.ValidateForConversion(nameof(httpRequest));
+                return Validation.CheckCloudEventArgument(cloudEvent, nameof(httpRequest));
             }
         }
 
