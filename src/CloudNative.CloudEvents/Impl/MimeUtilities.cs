@@ -6,13 +6,13 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
 
-namespace CloudNative.CloudEvents
+namespace CloudNative.CloudEvents.Core
 {
     // TODO: Consider this name and namespace carefully. It really does need to be public, as all the event formatters are elsewhere.
     // But it's not ideal...
 
     /// <summary>
-    /// Utility and extension methods around MIME.
+    /// Utility methods around MIME.
     /// </summary>
     public static class MimeUtilities
     {
@@ -23,7 +23,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">The content type, or null if no content type is known.</param>
         /// <returns>An encoding suitable for the charset specified in <paramref name="contentType"/>,
         /// or UTF-8 if no charset has been specified.</returns>
-        public static Encoding GetEncoding(this ContentType contentType) =>
+        public static Encoding GetEncoding(ContentType contentType) =>
             contentType?.CharSet is string charSet ? Encoding.GetEncoding(charSet) : Encoding.UTF8;
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="headerValue">The header value to convert. May be null.</param>
         /// <returns>The converted content type, or null if <paramref name="headerValue"/> is null.</returns>
-        public static ContentType ToContentType(this MediaTypeHeaderValue headerValue) =>
+        public static ContentType ToContentType(MediaTypeHeaderValue headerValue) =>
             headerValue is null ? null : new ContentType(headerValue.ToString());
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="contentType">The content type to convert. May be null.</param>
         /// <returns>The converted media type header value, or null if <paramref name="contentType"/> is null.</returns>
-        public static MediaTypeHeaderValue ToMediaTypeHeaderValue(this ContentType contentType)
+        public static MediaTypeHeaderValue ToMediaTypeHeaderValue(ContentType contentType)
         {
             if (contentType is null)
             {

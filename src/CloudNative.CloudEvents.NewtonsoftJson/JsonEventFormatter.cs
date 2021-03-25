@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -112,23 +113,23 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// </summary>
         public JsonEventFormatter(JsonSerializer serializer)
         {
-            Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            Serializer = Validation.CheckNotNull(serializer, nameof(serializer));
         }
 
         public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            data = data ?? throw new ArgumentNullException(nameof(data));
+            Validation.CheckNotNull(data, nameof(data));
 
-            var jsonReader = CreateJsonReader(data, contentType.GetEncoding());
+            var jsonReader = CreateJsonReader(data, MimeUtilities.GetEncoding(contentType));
             var jObject = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
             return DecodeJObject(jObject, extensionAttributes);
         }
 
         public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            data = data ?? throw new ArgumentNullException(nameof(data));
+            Validation.CheckNotNull(data, nameof(data));
 
-            var jsonReader = CreateJsonReader(data, contentType.GetEncoding());
+            var jsonReader = CreateJsonReader(data, MimeUtilities.GetEncoding(contentType));
             var jObject = JObject.Load(jsonReader);
             return DecodeJObject(jObject, extensionAttributes);
         }
@@ -151,7 +152,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             PopulateDataFromStructuredEvent(cloudEvent, jObject);
             // "data" is always the parameter from the public method. It's annoying not to be able to use
             // nameof here, but this will give the appropriate result.
-            return cloudEvent.ValidateForConversion("data");
+            return Validation.CheckCloudEventArgument(cloudEvent, "data");
         }
 
         private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
@@ -306,8 +307,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
             contentType = new ContentType("application/cloudevents+json")
             {
@@ -389,8 +389,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
             if (cloudEvent.Data is null)
             {
@@ -405,11 +404,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 // without a preamble (or rewrite StreamWriter...)
                 var stringWriter = new StringWriter();
                 Serializer.Serialize(stringWriter, cloudEvent.Data);
-                return contentType.GetEncoding().GetBytes(stringWriter.ToString());
+                return MimeUtilities.GetEncoding(contentType).GetBytes(stringWriter.ToString());
             }
             if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
             {
-                return contentType.GetEncoding().GetBytes(text);
+                return MimeUtilities.GetEncoding(contentType).GetBytes(text);
             }
             if (cloudEvent.Data is byte[] bytes)
             {
@@ -420,12 +419,12 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
         public override void DecodeBinaryModeEventData(byte[] value, CloudEvent cloudEvent)
         {
-            value = value ?? throw new ArgumentNullException(nameof(value));
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
+            Validation.CheckNotNull(value, nameof(value));
+            Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
 
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
 
-            Encoding encoding = contentType.GetEncoding();
+            Encoding encoding = MimeUtilities.GetEncoding(contentType);
 
             if (contentType.MediaType == JsonMediaType)
             {

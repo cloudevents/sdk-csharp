@@ -73,10 +73,10 @@ being non-null, and additionally perform CloudEvent validation on:
 - The `CloudEvent` accepted in `EncodeBinaryModeEventData` or
   `EncodeStructuredModeMessage`
 
-Validation should be performed using the `ValidateForConversion`
+Validation should be performed using the `Validation.CheckCloudEventArgument`
 method, so that an appropriate `ArgumentException` is thrown.
 
-The formatter should *not* perform validation on the
-`CloudEvent` accepted in `DecodeBinaryModeEventData`. This is
-typically called by a protocol binding which should perform
-validation itself later.
+The formatter should *not* perform validation on the `CloudEvent`
+accepted in `DecodeBinaryModeEventData`, beyond asserting that the
+argument is not null. This is typically called by a protocol binding
+which should perform validation itself later. 

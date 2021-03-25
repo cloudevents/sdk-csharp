@@ -5,6 +5,7 @@
 using Amqp;
 using Amqp.Framing;
 using Amqp.Types;
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,8 +51,8 @@ namespace CloudNative.CloudEvents.Amqp
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            message = message ?? throw new ArgumentNullException(nameof(message));
-            formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            Validation.CheckNotNull(message, nameof(message));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             if (HasCloudEventsContentType(message, out var contentType))
             {
@@ -122,7 +123,7 @@ namespace CloudNative.CloudEvents.Amqp
                     throw new ArgumentException("Binary mode data in AMQP message must be in the application data section");
                 }
 
-                return cloudEvent.ValidateForConversion(nameof(message));
+                return Validation.CheckCloudEventArgument(cloudEvent, nameof(message));
             }
         }
 
@@ -141,9 +142,8 @@ namespace CloudNative.CloudEvents.Amqp
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         public static Message ToAmqpMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
-            formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             var applicationProperties = MapHeaders(cloudEvent);
             RestrictedDescribed bodySection;

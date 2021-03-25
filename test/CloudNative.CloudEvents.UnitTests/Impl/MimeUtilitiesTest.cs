@@ -8,7 +8,7 @@ using System.Net.Mime;
 using System.Text;
 using Xunit;
 
-namespace CloudNative.CloudEvents.UnitTests.Http
+namespace CloudNative.CloudEvents.Core.UnitTests
 {
     public class MimeUtilitiesTest
     {
@@ -21,9 +21,9 @@ namespace CloudNative.CloudEvents.UnitTests.Http
         public void ContentTypeConversions(string text)
         {
             var originalContentType = new ContentType(text);
-            var header = originalContentType.ToMediaTypeHeaderValue();
+            var header = MimeUtilities.ToMediaTypeHeaderValue(originalContentType);
             AssertEqualParts(text, header.ToString());
-            var convertedContentType = header.ToContentType();
+            var convertedContentType = MimeUtilities.ToContentType(header);
             AssertEqualParts(originalContentType.ToString(), convertedContentType.ToString());
 
             // Conversions can end up reordering the parameters. In reality we're only
@@ -40,8 +40,8 @@ namespace CloudNative.CloudEvents.UnitTests.Http
         [Fact]
         public void ContentTypeConversions_Null()
         {
-            Assert.Null(default(ContentType).ToMediaTypeHeaderValue());
-            Assert.Null(default(MediaTypeHeaderValue).ToContentType());
+            Assert.Null(MimeUtilities.ToMediaTypeHeaderValue(default(ContentType)));
+            Assert.Null(MimeUtilities.ToContentType(default(MediaTypeHeaderValue)));
         }
 
         [Theory]
@@ -50,7 +50,7 @@ namespace CloudNative.CloudEvents.UnitTests.Http
         public void ContentTypeGetEncoding(string charSet)
         {
             var contentType = new ContentType($"text/plain; charset={charSet}");
-            Encoding encoding = contentType.GetEncoding();
+            Encoding encoding = MimeUtilities.GetEncoding(contentType);
             Assert.Equal(charSet, encoding.WebName);
         }
 
@@ -58,7 +58,7 @@ namespace CloudNative.CloudEvents.UnitTests.Http
         public void ContentTypeGetEncoding_NoContentType()
         {
             ContentType contentType = null;
-            Encoding encoding = contentType.GetEncoding();
+            Encoding encoding = MimeUtilities.GetEncoding(contentType);
             Assert.Equal(Encoding.UTF8, encoding);
         }
 
@@ -66,7 +66,7 @@ namespace CloudNative.CloudEvents.UnitTests.Http
         public void ContentTypeGetEncoding_NoCharSet()
         {
             ContentType contentType = new ContentType("text/plain");
-            Encoding encoding = contentType.GetEncoding();
+            Encoding encoding = MimeUtilities.GetEncoding(contentType);
             Assert.Equal(Encoding.UTF8, encoding);
         }
 

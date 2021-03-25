@@ -3,6 +3,7 @@
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.Extensions;
+using CloudNative.CloudEvents.Core;
 using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
@@ -50,8 +51,8 @@ namespace CloudNative.CloudEvents.Kafka
         public static CloudEvent ToCloudEvent(this Message<string, byte[]> message,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            message = message ?? throw new ArgumentNullException(nameof(message));
-            formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            Validation.CheckNotNull(message, nameof(message));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             if (!IsCloudEvent(message))
             {
@@ -104,7 +105,7 @@ namespace CloudNative.CloudEvents.Kafka
             }
 
             InitPartitioningKey(message, cloudEvent);
-            return cloudEvent.ValidateForConversion(nameof(message));
+            return Validation.CheckCloudEventArgument(cloudEvent, nameof(message));
         }
 
         private static string ExtractContentType(Message<string, byte[]> message)
@@ -133,15 +134,11 @@ namespace CloudNative.CloudEvents.Kafka
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         public static Message<string, byte[]> ToKafkaMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
-            formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             // TODO: Is this appropriate? Why can't we transport a CloudEvent without data in Kafka?
-            if (cloudEvent.Data == null)
-            {
-                throw new ArgumentNullException(nameof(cloudEvent.Data));
-            }
+            Validation.CheckArgument(cloudEvent.Data is object, nameof(cloudEvent), "Only CloudEvents with data can be converted to Kafka messages");
             var headers = MapHeaders(cloudEvent, formatter);
             string key = (string) cloudEvent[Partitioning.PartitionKeyAttribute];
             byte[] value;

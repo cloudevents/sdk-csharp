@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,33 +63,32 @@ namespace CloudNative.CloudEvents
         /// to an empty sequence.</param>
         public CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            // TODO: Validate that all attributes are extension attributes.
             // TODO: Work out how to be more efficient, e.g. not creating a dictionary at all if there are no
             // extension attributes.
-            SpecVersion = Preconditions.CheckNotNull(specVersion, nameof(specVersion));
+            SpecVersion = Validation.CheckNotNull(specVersion, nameof(specVersion));
             if (extensionAttributes is object)
             {
                 foreach (var extension in extensionAttributes)
                 {
-                    Preconditions.CheckArgument(
+                    Validation.CheckArgument(
                         extension is object,
                         nameof(extensionAttributes),
                         "Extension attribute collection cannot contain null elements");
-                    Preconditions.CheckArgument(
+                    Validation.CheckArgument(
                         extension.Name != CloudEventsSpecVersion.SpecVersionAttributeName,
                         nameof(extensionAttributes),
                         "The 'specversion' attribute cannot be specified as an extension attribute");
-                    Preconditions.CheckArgument(
+                    Validation.CheckArgument(
                         SpecVersion.GetAttributeByName(extension.Name) is null,
                         nameof(extensionAttributes),
                         "'{0}' cannot be specified as the name of an extension attribute; it is already a context attribute",
                         extension.Name);
-                    Preconditions.CheckArgument(
+                    Validation.CheckArgument(
                         extension.IsExtension,
                         nameof(extensionAttributes),
                         "'{0}' is not an extension attribute",
                         extension.Name);
-                    Preconditions.CheckArgument(
+                    Validation.CheckArgument(
                         !this.extensionAttributes.ContainsKey(extension.Name),
                         nameof(extensionAttributes),
                         "'{0}' cannot be specified more than once as an extension attribute");
@@ -123,8 +123,8 @@ namespace CloudNative.CloudEvents
         {
             get
             {
-                Preconditions.CheckNotNull(attribute, nameof(attribute));
-                Preconditions.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                Validation.CheckNotNull(attribute, nameof(attribute));
+                Validation.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
 
                 // TODO: Is this validation definitely useful? It does mean we never return something
                 // that's invalid for the attribute, which is potentially good...
@@ -137,14 +137,14 @@ namespace CloudNative.CloudEvents
             }
             set
             {
-                Preconditions.CheckNotNull(attribute, nameof(attribute));
-                Preconditions.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                Validation.CheckNotNull(attribute, nameof(attribute));
+                Validation.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
 
                 string name = attribute.Name;
                 var knownAttribute = GetAttribute(name);
 
                 // TODO: Are we happy to add the extension in even if the value is null?
-                Preconditions.CheckArgument(knownAttribute is object || attribute.IsExtension,
+                Validation.CheckArgument(knownAttribute is object || attribute.IsExtension,
                     nameof(attribute),
                     "Cannot add an unknown non-extension attribute to an event.");
 
@@ -178,14 +178,14 @@ namespace CloudNative.CloudEvents
             get
             {
                 // TODO: Validate the attribute name is valid (e.g. not upper case)? Seems overkill.
-                Preconditions.CheckNotNull(attributeName, nameof(attributeName));
-                Preconditions.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
-                return attributeValues.GetValueOrDefault(Preconditions.CheckNotNull(attributeName, nameof(attributeName)));
+                Validation.CheckNotNull(attributeName, nameof(attributeName));
+                Validation.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                return attributeValues.GetValueOrDefault(Validation.CheckNotNull(attributeName, nameof(attributeName)));
             }            
             set
             {
-                Preconditions.CheckNotNull(attributeName, nameof(attributeName));
-                Preconditions.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                Validation.CheckNotNull(attributeName, nameof(attributeName));
+                Validation.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
 
                 var knownAttribute = GetAttribute(attributeName);
 
@@ -193,7 +193,7 @@ namespace CloudNative.CloudEvents
                 // (It's a simple way of populating extensions after the fact...)
                 if (knownAttribute is null)
                 {
-                    Preconditions.CheckArgument(value is null || value is string,
+                    Validation.CheckArgument(value is null || value is string,
                         nameof(value), "Cannot assign value of type {0} to unknown attribute '{1}'",
                         value.GetType(), attributeName);
                     knownAttribute = CloudEventAttribute.CreateExtension(attributeName, CloudEventAttributeType.String);
@@ -352,8 +352,8 @@ namespace CloudNative.CloudEvents
         /// <param name="value">The value of the attribute to set. Must not be null.</param>
         public void SetAttributeFromString(string name, string value)
         {
-            Preconditions.CheckNotNull(name, nameof(name));
-            Preconditions.CheckNotNull(value, nameof(value));
+            Validation.CheckNotNull(name, nameof(name));
+            Validation.CheckNotNull(value, nameof(value));
 
             var attribute = GetAttribute(name);
             if (attribute is null)
@@ -383,29 +383,6 @@ namespace CloudNative.CloudEvents
             var missing = SpecVersion.RequiredAttributes.Where(attr => this[attr] is null).ToList();
             string joinedMissing = string.Join(", ", missing);
             throw new InvalidOperationException($"Missing required attributes: {joinedMissing}");
-        }
-
-        // TODO: consider moving this to an extension method in an implementation helper namespace?
-
-        /// <summary>
-        /// Validates that this CloudEvent is valid in the same way as <see cref="IsValid"/>,
-        /// but throwing an <see cref="ArgumentException"/> using the given parameter name
-        /// if the event is invalid. This is typically used within protocol bindings or event formatters
-        /// as the last step in decoding an event, or as the first step when encoding an event.
-        /// </summary>
-        /// <param name="paramName">The parameter name to use in the exception if the event is invalid.
-        /// May be null.</param>
-        /// <exception cref="ArgumentException">The event is invalid.</exception>
-        /// <returns>A reference to the same object, for simplicity of method chaining.</returns>
-        public CloudEvent ValidateForConversion(string paramName)
-        {
-            if (IsValid)
-            {
-                return this;
-            }
-            var missing = SpecVersion.RequiredAttributes.Where(attr => this[attr] is null).ToList();
-            string joinedMissing = string.Join(", ", missing);
-            throw new ArgumentException($"CloudEvent is missing required attributes: {joinedMissing}", paramName);
         }
 
         /// <summary>

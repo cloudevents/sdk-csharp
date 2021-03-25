@@ -5,6 +5,7 @@
 using Avro;
 using Avro.Generic;
 using Avro.IO;
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,7 +54,7 @@ namespace CloudNative.CloudEvents
 
         public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            data = data ?? throw new ArgumentNullException(nameof(data));
+            Validation.CheckNotNull(data, nameof(data));
 
             var decoder = new BinaryDecoder(data);
             var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
@@ -62,7 +63,7 @@ namespace CloudNative.CloudEvents
 
         public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            data = data ?? throw new ArgumentNullException(nameof(data));
+            Validation.CheckNotNull(data, nameof(data));
             return DecodeStructuredModeMessage(new MemoryStream(data), contentType, extensionAttributes);
         }
 
@@ -119,13 +120,12 @@ namespace CloudNative.CloudEvents
                 }
             }
 
-            return cloudEvent.ValidateForConversion(nameof(record));
+            return Validation.CheckCloudEventArgument(cloudEvent, nameof(record));
         }
 
         public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
-            cloudEvent = cloudEvent ?? throw new ArgumentNullException(nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
             contentType = new ContentType(CloudEvent.MediaType + MediaTypeSuffix);
 

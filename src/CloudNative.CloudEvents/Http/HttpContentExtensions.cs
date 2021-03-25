@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Net.Http;
 using System.Net.Mime;
@@ -21,9 +22,8 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         public static HttpContent ToHttpContent(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
-            Preconditions.CheckNotNull(cloudEvent, nameof(cloudEvent));
-            cloudEvent.ValidateForConversion(nameof(cloudEvent));
-            Preconditions.CheckNotNull(formatter, nameof(formatter));
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            Validation.CheckNotNull(formatter, nameof(formatter));
 
             byte[] content;
             // The content type to include in the ContentType header - may be the data content type, or the formatter's content type.
@@ -43,7 +43,7 @@ namespace CloudNative.CloudEvents.Http
             var ret = new ByteArrayContent(content);
             if (contentType is object)
             {
-                ret.Headers.ContentType = contentType.ToMediaTypeHeaderValue();
+                ret.Headers.ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType);
             }
             else if (content.Length != 0)
             {
