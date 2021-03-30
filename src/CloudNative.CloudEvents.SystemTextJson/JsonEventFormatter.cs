@@ -220,16 +220,15 @@ namespace CloudNative.CloudEvents.SystemTextJson
 
             // This is deliberately written so that if a new attribute type is added without this being updated, we "fail valid".
             // (That should only happen in major versions anyway, but it's worth being somewhat forgiving here.)
-            // TODO: Can we avoid hard-coding the strings here? We could potentially introduce an enum for attribute types.
-            var valid = attribute.Type.Name switch
+            var valid = CloudEventAttributeTypes.GetOrdinal(attribute.Type) switch
             {
-                "Binary" => valueKind == JsonValueKind.String,
-                "Boolean" => valueKind == JsonValueKind.True || valueKind == JsonValueKind.False,
-                "Integer" => valueKind == JsonValueKind.Number,
-                "String" => valueKind == JsonValueKind.String,
-                "Timestamp" => valueKind == JsonValueKind.String,
-                "URI" => valueKind == JsonValueKind.String,
-                "URI-Reference" => valueKind == JsonValueKind.String,
+                CloudEventAttributeTypeOrdinal.Binary => valueKind == JsonValueKind.String,
+                CloudEventAttributeTypeOrdinal.Boolean => valueKind == JsonValueKind.True || valueKind == JsonValueKind.False,
+                CloudEventAttributeTypeOrdinal.Integer => valueKind == JsonValueKind.Number,
+                CloudEventAttributeTypeOrdinal.String => valueKind == JsonValueKind.String,
+                CloudEventAttributeTypeOrdinal.Timestamp => valueKind == JsonValueKind.String,
+                CloudEventAttributeTypeOrdinal.Uri => valueKind == JsonValueKind.String,
+                CloudEventAttributeTypeOrdinal.UriReference => valueKind == JsonValueKind.String,
                 _ => true
             };
             if (!valid)
@@ -341,18 +340,18 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 var attribute = keyValuePair.Key;
                 var value = keyValuePair.Value;
                 writer.WritePropertyName(attribute.Name);
-                // TODO: Maybe we should have an enum associated with CloudEventsAttributeType?
-                if (attribute.Type == CloudEventAttributeType.Integer)
+                switch (CloudEventAttributeTypes.GetOrdinal(attribute.Type))
                 {
-                    writer.WriteNumberValue((int) value);
-                }
-                else if (attribute.Type == CloudEventAttributeType.Boolean)
-                {
-                    writer.WriteBooleanValue((bool) value);
-                }
-                else
-                {
-                    writer.WriteStringValue(attribute.Type.Format(value));
+                    case CloudEventAttributeTypeOrdinal.Integer:
+                        writer.WriteNumberValue((int) value);
+                        break;
+                    case CloudEventAttributeTypeOrdinal.Boolean:
+                        writer.WriteBooleanValue((bool) value);
+                        break;
+                    default:
+                        writer.WriteStringValue(attribute.Type.Format(value));
+                        break;
+
                 }
             }
 

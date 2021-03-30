@@ -325,18 +325,17 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 var attribute = keyValuePair.Key;
                 var value = keyValuePair.Value;
                 writer.WritePropertyName(attribute.Name);
-                // TODO: Maybe we should have an enum associated with CloudEventsAttributeType?
-                if (attribute.Type == CloudEventAttributeType.Integer)
+                switch (CloudEventAttributeTypes.GetOrdinal(attribute.Type))
                 {
-                    writer.WriteValue((int)value);
-                }
-                else if (attribute.Type == CloudEventAttributeType.Boolean)
-                {
-                    writer.WriteValue((bool)value);
-                }
-                else
-                {
-                    writer.WriteValue(attribute.Type.Format(value));
+                    case CloudEventAttributeTypeOrdinal.Integer:
+                        writer.WriteValue((int) value);
+                        break;
+                    case CloudEventAttributeTypeOrdinal.Boolean:
+                        writer.WriteValue((bool) value);
+                        break;
+                    default:
+                        writer.WriteValue(attribute.Type.Format(value));
+                        break;
                 }
             }
 
