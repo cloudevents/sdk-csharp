@@ -18,12 +18,14 @@ using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 // JObject is a really handy way of creating JSON which we can then parse with System.Text.Json
 using JObject = Newtonsoft.Json.Linq.JObject;
+using JArray = Newtonsoft.Json.Linq.JArray;
 
 namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
 {
     public class JsonEventFormatterTest
     {
         private static readonly ContentType s_jsonCloudEventContentType = new ContentType("application/cloudevents+json; charset=utf-8");
+        private static readonly ContentType s_jsonCloudEventBatchContentType = new ContentType("application/cloudevents-batch+json; charset=utf-8");
         private const string NonAsciiValue = "GBP=\u00a3";
 
         /// <summary>
@@ -351,6 +353,74 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             cloudEvent.DataContentType = "not_text/or_json";
             var formatter = new JsonEventFormatter();
             Assert.Throws<ArgumentException>(() => formatter.EncodeBinaryModeEventData(cloudEvent));
+        }
+
+        // Note: batch mode testing is restricted to the batch aspects; we assume that the
+        // per-CloudEvent implementation is shared with structured mode, so we rely on
+        // structured mode testing for things like custom serialization.
+
+        [Fact]
+        public void EncodeBatchModeMessage_Empty()
+        {
+            var cloudEvents = new CloudEvent[0];
+            var formatter = new JsonEventFormatter();
+            byte[] bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
+            var array = ParseJson(bytes);
+            Assert.Equal(JsonValueKind.Array, array.ValueKind);
+            Assert.Equal(0, array.GetArrayLength());
+        }
+
+        [Fact]
+        public void EncodeBatchModeMessage_TwoEvents()
+        {
+            var event1 = new CloudEvent().PopulateRequiredAttributes();
+            event1.Id = "event1";
+            event1.Data = "simple text";
+            event1.DataContentType = "text/plain";
+
+            var event2 = new CloudEvent().PopulateRequiredAttributes();
+            event2.Id = "event2";
+
+            var cloudEvents = new[] { event1, event2 };
+            var formatter = new JsonEventFormatter();
+            byte[] bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
+            var array = ParseJson(bytes).EnumerateArray().ToList();
+            Assert.Equal(2, array.Count);
+            
+            var asserter1 = new JsonElementAsserter
+            {
+                { "specversion", JsonValueKind.String, "1.0" },
+                { "id", JsonValueKind.String, event1.Id },
+                { "type", JsonValueKind.String, event1.Type },
+                { "source", JsonValueKind.String, "//test" },
+                { "data", JsonValueKind.String, "simple text" },
+                { "datacontenttype", JsonValueKind.String, event1.DataContentType }
+            };
+            asserter1.AssertProperties(array[0], assertCount: true);
+
+            var asserter2 = new JsonElementAsserter
+            {
+                { "specversion", JsonValueKind.String, "1.0" },
+                { "id", JsonValueKind.String, event2.Id },
+                { "type", JsonValueKind.String, event2.Type },
+                { "source", JsonValueKind.String, "//test" },
+            };
+            asserter2.AssertProperties(array[1], assertCount: true);
+        }
+
+        [Fact]
+        public void EncodeBatchModeMessage_Invalid()
+        {
+            var formatter = new JsonEventFormatter();
+            // Invalid CloudEvent
+            Assert.Throws<ArgumentException>(() => formatter.EncodeBatchModeMessage(new[] { new CloudEvent() }, out _));
+            // Null argument
+            Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(null, out _));
+            // Null value within the argument. Arguably this should throw ArgumentException instead of
+            // ArgumentNullException, but it's unlikely to cause confusion.
+            Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(new CloudEvent[1], out _));
         }
 
         [Fact]
@@ -731,6 +801,115 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             Assert.Same(bytes, data);
         }
 
+        [Fact]
+        public void DecodeBatchMode_NotArray()
+        {
+            var formatter = new JsonEventFormatter();
+            var data = Encoding.UTF8.GetBytes(CreateMinimalValidJObject().ToString());
+            Assert.Throws<ArgumentException>(() => formatter.DecodeBatchModeMessage(data, s_jsonCloudEventBatchContentType, extensionAttributes: null));
+        }
+
+        [Fact]
+        public void DecodeBatchMode_ArrayContainingNonObject()
+        {
+            var formatter = new JsonEventFormatter();
+            var array = new JArray { CreateMinimalValidJObject(), "text" };
+            var data = Encoding.UTF8.GetBytes(array.ToString());
+            Assert.Throws<ArgumentException>(() => formatter.DecodeBatchModeMessage(data, s_jsonCloudEventBatchContentType, extensionAttributes: null));
+        }
+
+        [Fact]
+        public void DecodeBatchMode_Empty()
+        {
+            var cloudEvents = DecodeBatchModeMessage(new JArray());
+            Assert.Empty(cloudEvents);
+        }
+
+        [Fact]
+        public void DecodeBatchMode_Minimal()
+        {
+            var cloudEvents = DecodeBatchModeMessage(new JArray { CreateMinimalValidJObject() });
+            var cloudEvent = Assert.Single(cloudEvents);
+            Assert.Equal("event-type", cloudEvent.Type);
+            Assert.Equal("event-id", cloudEvent.Id);
+            Assert.Equal(new Uri("//event-source", UriKind.RelativeOrAbsolute), cloudEvent.Source);
+        }
+
+        [Fact]
+        public void DecodeBatchMode_Minimal_WithStream()
+        {
+            var array = new JArray { CreateMinimalValidJObject() };
+            byte[] bytes = Encoding.UTF8.GetBytes(array.ToString());
+            var formatter = new JsonEventFormatter();
+            var cloudEvents = formatter.DecodeBatchModeMessage(new MemoryStream(bytes), s_jsonCloudEventBatchContentType, null);
+            var cloudEvent = Assert.Single(cloudEvents);
+            Assert.Equal("event-type", cloudEvent.Type);
+            Assert.Equal("event-id", cloudEvent.Id);
+            Assert.Equal(new Uri("//event-source", UriKind.RelativeOrAbsolute), cloudEvent.Source);
+        }
+
+        // Just a single test for the code that parses asynchronously... the guts are all the same.
+        [Fact]
+        public async Task DecodeBatchModeMessageAsync_Minimal()
+        {
+            var obj = new JObject
+            {
+                ["specversion"] = "1.0",
+                ["type"] = "test-type",
+                ["id"] = "test-id",
+                ["source"] = SampleUriText,
+            };
+            byte[] bytes = Encoding.UTF8.GetBytes(new JArray { obj }.ToString());
+            var stream = new MemoryStream(bytes);
+            var formatter = new JsonEventFormatter();
+            var cloudEvents = await formatter.DecodeBatchModeMessageAsync(stream, s_jsonCloudEventBatchContentType, null);
+            var cloudEvent = Assert.Single(cloudEvents);
+            Assert.Equal("test-type", cloudEvent.Type);
+            Assert.Equal("test-id", cloudEvent.Id);
+            Assert.Equal(SampleUri, cloudEvent.Source);
+        }
+
+
+        [Fact]
+        public void DecodeBatchMode_Multiple()
+        {
+            var array = new JArray
+            {
+                new JObject
+                {
+                    ["specversion"] = "1.0",
+                    ["type"] = "type1",
+                    ["id"] = "event1",
+                    ["source"] = "//event-source1",
+                    ["data"] = "simple text",
+                    ["datacontenttype"] = "text/plain"
+                },
+                new JObject
+                {
+                    ["specversion"] = "1.0",
+                    ["type"] = "type2",
+                    ["id"] = "event2",
+                    ["source"] = "//event-source2"
+                },
+            };
+            var cloudEvents = DecodeBatchModeMessage(array);
+            Assert.Equal(2, cloudEvents.Count);
+
+            var event1 = cloudEvents[0];
+            Assert.Equal("type1", event1.Type);
+            Assert.Equal("event1", event1.Id);
+            Assert.Equal(new Uri("//event-source1", UriKind.RelativeOrAbsolute), event1.Source);
+            Assert.Equal("simple text", event1.Data);
+            Assert.Equal("text/plain", event1.DataContentType);
+
+            var event2 = cloudEvents[1];
+            Assert.Equal("type2", event2.Type);
+            Assert.Equal("event2", event2.Id);
+            Assert.Equal(new Uri("//event-source2", UriKind.RelativeOrAbsolute), event2.Source);
+            Assert.Null(event2.Data);
+            Assert.Null(event2.DataContentType);
+        }
+
         private static object DecodeBinaryModeEventData(byte[] bytes, string contentType)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
@@ -786,6 +965,17 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
             var formatter = new JsonEventFormatter();
             return formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, null);
+        }
+
+        /// <summary>
+        /// Convenience method to serialize a JArray to bytes, then
+        /// decode it as a structured event with the default (System.Text.Json) JsonEventFormatter and no extension attributes.
+        /// </summary>
+        private static IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Newtonsoft.Json.Linq.JArray array)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(array.ToString());
+            var formatter = new JsonEventFormatter();
+            return formatter.DecodeBatchModeMessage(bytes, s_jsonCloudEventBatchContentType, null);
         }
 
         private class JsonElementAsserter : IEnumerable

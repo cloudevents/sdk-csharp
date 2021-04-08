@@ -84,7 +84,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             cloudEvent.Id = "test-id";
             cloudEvent.Source = new Uri("//test", UriKind.RelativeOrAbsolute);
-            cloudEvent.Type = "test-id";
+            cloudEvent.Type = "test-type";
             return cloudEvent;
         }
 
