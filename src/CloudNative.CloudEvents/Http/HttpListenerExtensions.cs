@@ -128,6 +128,30 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<CloudEvent> ToCloudEventAsync(this HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
+            // No async/await here, as the delegation is to *such* a similar method (same name, same parameter names)
+            // that the stack trace will still be very easy to understand.
+            ToCloudEventAsync(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this listener request into a CloudEvent object, with the given extension attributes.
+        /// </summary>
+        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public async static Task<CloudEvent> ToCloudEventAsync(this HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            await ToCloudEventAsyncImpl(httpListenerRequest, formatter, extensionAttributes, async: true).ConfigureAwait(false);
+
+        /// <summary>
+        /// Converts this listener request into a CloudEvent object, with the given extension attributes.
+        /// </summary>
+        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
             ToCloudEvent(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
@@ -140,17 +164,21 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
-            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            ToCloudEventAsyncImpl(httpListenerRequest, formatter, extensionAttributes, async: false).GetAwaiter().GetResult();
+
+        private async static Task<CloudEvent> ToCloudEventAsyncImpl(HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
         {
             Validation.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
             Validation.CheckNotNull(formatter, nameof(formatter));
-
+            var stream = httpListenerRequest.InputStream;
             if (HasCloudEventsContentType(httpListenerRequest))
             {
-                return formatter.DecodeStructuredModeMessage(
-                    httpListenerRequest.InputStream,
-                    MimeUtilities.CreateContentTypeOrNull(httpListenerRequest.ContentType),
-                    extensionAttributes);
+                var contentType = MimeUtilities.CreateContentTypeOrNull(httpListenerRequest.ContentType);
+                return async
+                    ? await formatter.DecodeStructuredModeMessageAsync(stream, contentType, extensionAttributes).ConfigureAwait(false)
+                    : formatter.DecodeStructuredModeMessage(stream, contentType, extensionAttributes);
             }
             else
             {
@@ -175,7 +203,10 @@ namespace CloudNative.CloudEvents.Http
                 // it's in the regular content type.
                 cloudEvent.DataContentType = httpListenerRequest.ContentType;
 
-                formatter.DecodeBinaryModeEventData(BinaryDataUtilities.ToByteArray(httpListenerRequest.InputStream), cloudEvent);
+                byte[] data = async
+                    ? await BinaryDataUtilities.ToByteArrayAsync(stream).ConfigureAwait(false)
+                    : BinaryDataUtilities.ToByteArray(stream);
+                formatter.DecodeBinaryModeEventData(data, cloudEvent);
                 return Validation.CheckCloudEventArgument(cloudEvent, nameof(httpListenerRequest));
             }
         }
