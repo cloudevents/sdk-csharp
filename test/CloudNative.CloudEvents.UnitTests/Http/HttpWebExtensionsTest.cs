@@ -39,43 +39,28 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
             PendingRequests.TryAdd(ctx, context =>
             {
-                try
-                {
-                    var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
+                var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
-                    Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
-                    Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
-                    Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-                    AssertTimestampsEqual(SampleTimestamp, cloudEvent.Time.Value);
-                    Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
-                    Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
+                Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
+                Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+                Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
+                Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+                AssertTimestampsEqual(SampleTimestamp, cloudEvent.Time.Value);
+                Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
+                Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-                    // The non-ASCII attribute value should have been URL-encoded using UTF-8 for the header.
-                    Assert.Equal("%C3%A6%C3%B8%C3%A5", context.Request.Headers["ce-utf8examplevalue"]);
+                // The non-ASCII attribute value should have been URL-encoded using UTF-8 for the header.
+                Assert.Equal("%C3%A6%C3%B8%C3%A5", context.Request.Headers["ce-utf8examplevalue"]);
 
-                    Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
-                    Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
-                    context.Response.StatusCode = (int)HttpStatusCode.NoContent;
-                }
-                catch (Exception e)
-                {
-                    using (var sw = new StreamWriter(context.Response.OutputStream))
-                    {
-                        sw.Write(e.ToString());
-                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    }
-                }
-
-                context.Response.Close();
+                Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
+                Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
+                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                 return Task.CompletedTask;
             });
 
             var result = (HttpWebResponse)await httpWebRequest.GetResponseAsync();
-            if (result.StatusCode != HttpStatusCode.NoContent)
-            {
-                throw new InvalidOperationException(result.StatusCode.ToString());
-            }
+            var content = new StreamReader(result.GetResponseStream()).ReadToEnd();
+            Assert.True(result.StatusCode == HttpStatusCode.NoContent, content);
         }
 
         [Fact]
@@ -101,40 +86,25 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
             PendingRequests.TryAdd(ctx, context =>
             {
-                try
-                {
-                    var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
+                var receivedCloudEvent = context.Request.ToCloudEvent(new JsonEventFormatter());
 
-                    Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
-                    Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
-                    Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
-                    Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-                    AssertTimestampsEqual(SampleTimestamp, cloudEvent.Time.Value);
-                    Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
-                    Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
+                Assert.Equal(CloudEventsSpecVersion.V1_0, receivedCloudEvent.SpecVersion);
+                Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+                Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
+                Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+                AssertTimestampsEqual(SampleTimestamp, cloudEvent.Time.Value);
+                Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
+                Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-                    Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
-                    Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
-                    context.Response.StatusCode = (int)HttpStatusCode.NoContent;
-                }
-                catch (Exception e)
-                {
-                    using (var sw = new StreamWriter(context.Response.OutputStream))
-                    {
-                        sw.Write(e.ToString());
-                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    }
-                }
-
-                context.Response.Close();
+                Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
+                Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
+                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
                 return Task.CompletedTask;
             });
 
-            var result = (HttpWebResponse)await httpWebRequest.GetResponseAsync();
-            if (result.StatusCode != HttpStatusCode.NoContent)
-            {
-                throw new InvalidOperationException(result.StatusCode.ToString());
-            }
+            var result = (HttpWebResponse) await httpWebRequest.GetResponseAsync();
+            var content = new StreamReader(result.GetResponseStream()).ReadToEnd();
+            Assert.True(result.StatusCode == HttpStatusCode.NoContent, content);
         }
     }
 }
