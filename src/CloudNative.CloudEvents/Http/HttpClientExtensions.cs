@@ -55,10 +55,13 @@ namespace CloudNative.CloudEvents.Http
         }
 
         /// <summary>
-        /// Indicates whether this <see cref="HttpRequestMessage"/> holds a CloudEvent.
+        /// Indicates whether this <see cref="HttpRequestMessage"/> holds a single CloudEvent.
         /// </summary>
+        /// <remarks>
+        /// This method returns false for batch requests, as they need to be parsed differently.
+        /// </remarks>
         /// <param name="httpRequestMessage">The message to check for the presence of a CloudEvent. Must not be null.</param>
-        /// <returns>true, if the response is a CloudEvent</returns>
+        /// <returns>true, if the request is a CloudEvent</returns>
         public static bool IsCloudEvent(this HttpRequestMessage httpRequestMessage)
         {
             Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
@@ -67,7 +70,7 @@ namespace CloudNative.CloudEvents.Http
         }
 
         /// <summary>
-        /// Indicates whether this <see cref="HttpResponseMessage"/> holds a CloudEvent.
+        /// Indicates whether this <see cref="HttpResponseMessage"/> holds a single CloudEvent.
         /// </summary>
         /// <param name="httpResponseMessage">The message to check for the presence of a CloudEvent. Must not be null.</param>
         /// <returns>true, if the response is a CloudEvent</returns>
@@ -76,6 +79,28 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
             return HasCloudEventsContentType(httpResponseMessage.Content) ||
                 httpResponseMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
+        }
+
+        /// <summary>
+        /// Indicates whether this <see cref="HttpRequestMessage"/> holds a batch of CloudEvents.
+        /// </summary>
+        /// <param name="httpRequestMessage">The message to check for the presence of a CloudEvent batch. Must not be null.</param>
+        /// <returns>true, if the request is a CloudEvent batch</returns>
+        public static bool IsCloudEventBatch(this HttpRequestMessage httpRequestMessage)
+        {
+            Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
+            return HasCloudEventsBatchContentType(httpRequestMessage.Content);
+        }
+        
+        /// <summary>
+        /// Indicates whether this <see cref="HttpResponseMessage"/> holds a batch of CloudEvents.
+        /// </summary>
+        /// <param name="httpResponseMessage">The message to check for the presence of a CloudEvent batch. Must not be null.</param>
+        /// <returns>true, if the response is a CloudEvent batch</returns>
+        public static bool IsCloudEventBatch(this HttpResponseMessage httpResponseMessage)
+        {
+            Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
+            return HasCloudEventsBatchContentType(httpResponseMessage.Content);
         }
 
         /// <summary>
@@ -184,9 +209,90 @@ namespace CloudNative.CloudEvents.Http
             }
         }
 
+        /// <summary>
+        /// Converts this HTTP response message into a CloudEvent object
+        /// </summary>
+        /// <param name="httpResponseMessage">The HTTP response message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpResponseMessage httpResponseMessage,
+            CloudEventFormatter formatter,
+            params CloudEventAttribute[] extensionAttributes) =>
+            ToCloudEventBatchAsync(httpResponseMessage, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this HTTP response message into a CloudEvent object
+        /// </summary>
+        /// <param name="httpResponseMessage">The HTTP response message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpResponseMessage httpResponseMessage,
+            CloudEventFormatter formatter,
+            IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
+            return ToCloudEventBatchInternalAsync(httpResponseMessage.Headers, httpResponseMessage.Content, formatter, extensionAttributes, nameof(httpResponseMessage));
+        }
+
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent object.
+        /// </summary>
+        /// <param name="httpRequestMessage">The HTTP request message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpRequestMessage httpRequestMessage,
+            CloudEventFormatter formatter,
+            params CloudEventAttribute[] extensionAttributes) =>
+            ToCloudEventBatchAsync(httpRequestMessage, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent object.
+        /// </summary>
+        /// <param name="httpRequestMessage">The HTTP request message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpRequestMessage httpRequestMessage,
+            CloudEventFormatter formatter,
+            IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
+            return ToCloudEventBatchInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
+        }
+
+        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpHeaders headers, HttpContent content,
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
+        {
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            if (HasCloudEventsBatchContentType(content))
+            {
+                var stream = await content.ReadAsStreamAsync().ConfigureAwait(false);
+                return await formatter
+                    .DecodeBatchModeMessageAsync(stream, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                throw new ArgumentException("HTTP message does not represent a CloudEvents batch.", paramName);
+            }
+        }
+
         // TODO: This would include "application/cloudeventsarerubbish" for example...
         private static bool HasCloudEventsContentType(HttpContent content) =>
             content?.Headers?.ContentType is var contentType &&
-            contentType.MediaType.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase);
+            contentType.MediaType.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) &&
+            !contentType.MediaType.StartsWith(MimeUtilities.BatchMediaType);
+
+        private static bool HasCloudEventsBatchContentType(HttpContent content) =>
+            content?.Headers?.ContentType is var contentType &&
+            contentType.MediaType.StartsWith(MimeUtilities.BatchMediaType);
     }
 }

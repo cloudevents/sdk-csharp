@@ -2,12 +2,16 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
@@ -16,6 +20,147 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 {
     public class HttpClientExtensionsTest : HttpTestBase
     {
+        private static readonly CloudEventAttribute[] EmptyExtensionArray = new CloudEventAttribute[0];
+        private static readonly IEnumerable<CloudEventAttribute> EmptyExtensionSequence = new List<CloudEventAttribute>();
+
+        public static TheoryData<string, HttpContent, IDictionary<string, string>> SingleCloudEventMessages = new TheoryData<string, HttpContent, IDictionary<string, string>>
+        {
+            {
+                "Binary",
+                new StringContent("content is ignored", Encoding.UTF8, "text/plain"),
+                new Dictionary<string, string>
+                {
+                    { "ce-specversion", "1.0" },
+                    { "ce-type", "test-type" },
+                    { "ce-id", "test-id" },
+                    { "ce-source", "//test" }
+                }
+            },
+            {
+                "Structured",
+                new StringContent("content is ignored", Encoding.UTF8, "application/cloudevents+json"),
+                null
+            }
+        };
+
+        public static TheoryData<string, HttpContent, IDictionary<string, string>> BatchMessages = new TheoryData<string, HttpContent, IDictionary<string, string>>
+        {
+            {
+                "Batch",
+                new StringContent("content is ignored", Encoding.UTF8, "application/cloudevents-batch+json"),
+                null
+            }
+        };
+
+        public static TheoryData<string, HttpContent, IDictionary<string, string>> NonCloudEventMessages = new TheoryData<string, HttpContent, IDictionary<string, string>>
+        {
+            {
+                "Plain text",
+                new StringContent("content is ignored", Encoding.UTF8, "text/plain"),
+                null
+            }
+        };
+
+        [Theory]
+        [MemberData(nameof(SingleCloudEventMessages))]
+        public void IsCloudEvent_True(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage { Content = content };
+            CopyHeaders(headers, request.Headers);            
+            Assert.True(request.IsCloudEvent());
+
+            var response = new HttpResponseMessage { Content = content };
+            CopyHeaders(headers, response.Headers);
+            Assert.True(request.IsCloudEvent());
+        }
+
+        [Theory]
+        [MemberData(nameof(BatchMessages))]
+        [MemberData(nameof(NonCloudEventMessages))]
+        public void IsCloudEvent_False(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage { Content = content };
+            CopyHeaders(headers, request.Headers);
+            Assert.False(request.IsCloudEvent());
+
+            var response = new HttpResponseMessage { Content = content };
+            CopyHeaders(headers, response.Headers);
+            Assert.False(request.IsCloudEvent());
+        }
+
+        [Theory]
+        [MemberData(nameof(BatchMessages))]
+        public void IsCloudEventBatch_True(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage { Content = content };
+            CopyHeaders(headers, request.Headers);
+            Assert.True(request.IsCloudEventBatch());
+
+            var response = new HttpResponseMessage { Content = content };
+            CopyHeaders(headers, response.Headers);
+            Assert.True(request.IsCloudEventBatch());
+        }
+
+        [Theory]
+        [MemberData(nameof(SingleCloudEventMessages))]
+        [MemberData(nameof(NonCloudEventMessages))]
+        public void IsCloudEventBatch_False(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage { Content = content };
+            CopyHeaders(headers, request.Headers);
+            Assert.False(request.IsCloudEventBatch());
+
+            var response = new HttpResponseMessage { Content = content };
+            CopyHeaders(headers, response.Headers);
+            Assert.False(request.IsCloudEventBatch());
+        }
+
+        [Fact]
+        public async Task ToCloudEventBatchAsync_Valid()
+        {
+            var event1 = new CloudEvent().PopulateRequiredAttributes();
+            event1.Id = "event1";
+            event1.Data = "simple text";
+            event1.DataContentType = "text/plain";
+
+            var event2 = new CloudEvent().PopulateRequiredAttributes();
+            event2.Id = "event2";
+
+            var batch = new[] { event1, event2 };
+
+            var formatter = new JsonEventFormatter();
+            var contentBytes = formatter.EncodeBatchModeMessage(batch, out var contentType);
+
+            AssertBatchesEqual(batch, await CreateRequestMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+            AssertBatchesEqual(batch, await CreateRequestMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+            AssertBatchesEqual(batch, await CreateResponseMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+            AssertBatchesEqual(batch, await CreateResponseMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+        }
+
+        [Fact]
+        public async Task ToCloudEventBatchAsync_Invalid()
+        {
+            // Most likely accident: calling ToCloudEventBatchAsync with a single event in structured mode.
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequestMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequestMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateResponseMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateResponseMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+        }
 
         [Fact]
         public async Task HttpBinaryClientReceiveTest()
@@ -217,5 +362,35 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 throw new InvalidOperationException(result.Content.ReadAsStringAsync().GetAwaiter().GetResult());
             }
         }
+
+        private static void CopyHeaders(IDictionary<string, string> source, HttpHeaders target)
+        {
+            if (source is null)
+            {
+                return;
+            }
+            foreach (var header in source)
+            {
+                target.Add(header.Key, header.Value);
+            }
+        }
+
+        private static HttpRequestMessage CreateRequestMessage(byte[] content, ContentType contentType) =>
+            new HttpRequestMessage
+            {
+                Content = new ByteArrayContent(content)
+                {
+                    Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
+                }
+            };
+
+        private static HttpResponseMessage CreateResponseMessage(byte[] content, ContentType contentType) =>
+            new HttpResponseMessage
+            {
+                Content = new ByteArrayContent(content)
+                {
+                    Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
+                }
+            };
     }
 }

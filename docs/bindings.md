@@ -63,7 +63,9 @@ perform full decoding and validation. Typically it checks metadata
 for one of:
 
 - A content type beginning with "application/cloudevents" (for
-  structured content mode events)
+  structured content mode events) but *not* beginning with
+  "application/cloudevents-batch" (even if the binding does not
+  currently support batch events)
 - The presence of a CloudEvents specification version header (for
   binary mode events)
 
@@ -176,3 +178,34 @@ The conversion should follow the following steps of pseudo-code:
 Note that depending on the protocol binding, when encoding a CloudEvent
 in binary mode, it *may* still be worth populating metadata in the
 message from the CloudEvent attributes.
+
+## Batch conversions
+
+Protocol bindings that support batch conversions should introduce
+equivalent batch methods:
+
+```
+public static bool IsCloudEventBatch(this ProtocolMessage message);
+
+public static IReadOnlyList<CloudEvent> ToCloudEventBatch(
+    this ProtocolMessage message,
+    CloudEventFormatter formatter,
+    params CloudEventAtribute[] extensionAttributes);
+
+public static IReadOnlyList<CloudEvent> ToCloudEventBatch(
+    this ProtocolMessage message,
+    CloudEventFormatter formatter,
+    IEnumerable<CloudEventAtribute> extensionAttributes);
+
+public static ProtocolMessage ToProtocolMessage(
+    this IReadOnlyList<CloudEvent> cloudEvents,
+    CloudEventFormatter formatter);
+
+public static void CopyToProtocolMessage(
+    this IReadOnlyList<CloudEvent> cloudEvents,
+    ProtocolMessage destination,
+    CloudEventFormatter formatter);
+```
+
+Note that no `ContentMode` is specified when converting to protocol
+messages, as there is no ambiguity.

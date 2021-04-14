@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Xunit;
 
 namespace CloudNative.CloudEvents.UnitTests
@@ -131,6 +132,33 @@ namespace CloudNative.CloudEvents.UnitTests
                 Assert.True(false, "Expected both values to be null, or neither to be null");
             }
             AssertTimestampsEqual(expected.Value, actual.Value);
+        }
+
+        // TODO: Use this more widely
+        internal static void AssertCloudEventsEqual(CloudEvent expected, CloudEvent actual)
+        {
+            Assert.Equal(expected.SpecVersion, actual.SpecVersion);
+            var expectedAttributes = expected.GetPopulatedAttributes().ToList();
+            var actualAttributes = actual.GetPopulatedAttributes().ToList();
+
+            Assert.Equal(expectedAttributes.Count, actualAttributes.Count);
+            foreach (var expectedAttribute in expectedAttributes)
+            {
+                var actualAttribute = actualAttributes.FirstOrDefault(actual => actual.Key.Name == expectedAttribute.Key.Name);
+                Assert.NotNull(actualAttribute.Key);
+
+                Assert.Equal(actualAttribute.Key.Type, expectedAttribute.Key.Type);
+                Assert.Equal(actualAttribute.Value, expectedAttribute.Value);
+            }
+        }
+
+        internal static void AssertBatchesEqual(IReadOnlyList<CloudEvent> expectedBatch, IReadOnlyList<CloudEvent> actualBatch)
+        {
+            Assert.Equal(expectedBatch.Count, actualBatch.Count);
+            foreach (var pair in expectedBatch.Zip(actualBatch, (x, y) => (x, y)))
+            {
+                AssertCloudEventsEqual(pair.x, pair.y);
+            }
         }
     }
 }

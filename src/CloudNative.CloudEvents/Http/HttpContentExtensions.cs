@@ -4,6 +4,7 @@
 
 using CloudNative.CloudEvents.Core;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Mime;
 
@@ -72,6 +73,32 @@ namespace CloudNative.CloudEvents.Http
                 }
             }
             return ret;
+        }
+
+        /// <summary>
+        /// Converts a CloudEvent batch to <see cref="HttpContent"/>.
+        /// </summary>
+        /// <param name="cloudEvents">The CloudEvent batch to convert. Must not be null, and every element must be non-null reference to a valid CloudEvent.</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        public static HttpContent ToHttpContent(this IReadOnlyList<CloudEvent> cloudEvents, CloudEventFormatter formatter)
+        {
+            Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
+            foreach (var cloudEvent in cloudEvents)
+            {
+                Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvents));
+            }
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            // TODO: Validate that all events in the batch have the same version?
+            // See https://github.com/cloudevents/spec/issues/807
+
+            byte[] content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+
+            // Note: we don't populate any other headers for batch mode.
+            return new ByteArrayContent(content)
+            {
+                Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
+            };
         }
     }
 }

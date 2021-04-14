@@ -2,9 +2,11 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
@@ -40,6 +42,27 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             cloudEvent.Data = "Some text";
             var exception = Assert.Throws<ArgumentException>(() => cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter()));
             Assert.StartsWith(Strings.ErrorContentTypeUnspecified, exception.Message);
+        }
+
+        [Fact]
+        public async Task ToHttpContent_Batch()
+        {
+            var event1 = new CloudEvent().PopulateRequiredAttributes();
+            event1.Id = "event1";
+            event1.Data = "simple text";
+            event1.DataContentType = "text/plain";
+
+            var event2 = new CloudEvent().PopulateRequiredAttributes();
+            event2.Id = "event2";
+
+            var batch = new[] { event1, event2 };
+
+            var formatter = new JsonEventFormatter();
+            var content = batch.ToHttpContent(formatter);
+
+            var bytes = await content.ReadAsByteArrayAsync();
+            var parsedBatch = formatter.DecodeBatchModeMessage(bytes, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes: null);
+            AssertBatchesEqual(batch, parsedBatch);
         }
     }
 }
