@@ -79,13 +79,6 @@ namespace CloudNative.CloudEvents.Http
         public static string EncodeHeaderValue(string value)
         {
             Validation.CheckNotNull(value, nameof(value));
-            const string HexDigits = "0123456789ABCDEF";
-
-            // TODO: Use stackalloc, or perform the UTF-8 encoding manually.
-            // (It's pretty simple to do.)
-
-            // Buffer to use for UTF-8 encoding.
-            byte[] buffer = null;
 
             var builder = new StringBuilder(value.Length);
             for (int i = 0; i < value.Length; i++)
@@ -113,25 +106,45 @@ namespace CloudNative.CloudEvents.Http
                     continue;
                 }
 
-                // Full-on UTF-8 encoding now...
-                if (buffer is null)
+                // Full-on UTF-8 encoding now... it's simple enough to inline this
+                // code, avoiding any allocation for Encoding.UTF8.GetBytes.
+                // The Wikipedia page on UTF-8 is helpful for understanding this: https://en.wikipedia.org/wiki/UTF-8
+                if (codePoint < 0x80)
                 {
-                    buffer = new byte[4];
+                    AppendPercentEncodedByte(codePoint);
                 }
-                int charCount = codePoint > 0xffff ? 2 : 1;
-                int byteCount = Encoding.UTF8.GetBytes(value, i, charCount, buffer, 0);
-                for (int j = 0; j < byteCount; j++)
+                else if (codePoint < 0x800)
                 {
-                    builder.Append('%');
-                    builder.Append(HexDigits[buffer[j] >> 4]);
-                    builder.Append(HexDigits[buffer[j] & 0x0f]);
+                    AppendPercentEncodedByte(0b11000000 | (codePoint >> 6));
+                    AppendPercentEncodedByte(0b10000000 | (codePoint & 0b111111));
                 }
-
-                // Ensure we iterate over code points, not UTF-16 code units.
-                // (The -1 is because we're already incrementing at the top of the loop.)
-                i += charCount - 1;
+                else if (codePoint < 0x10000)
+                {
+                    AppendPercentEncodedByte(0b11100000 | (codePoint >> 12));
+                    AppendPercentEncodedByte(0b10000000 | ((codePoint >> 6) & 0b111111));
+                    AppendPercentEncodedByte(0b10000000 | (codePoint & 0b111111));
+                }
+                else
+                {
+                    AppendPercentEncodedByte(0b11110000 | (codePoint >> 18));
+                    AppendPercentEncodedByte(0b10000000 | ((codePoint >> 12) & 0b111111));
+                    AppendPercentEncodedByte(0b10000000 | ((codePoint >> 6) & 0b111111));
+                    AppendPercentEncodedByte(0b10000000 | (codePoint & 0b111111));
+                    // Non-BMP character: this will have been represented as a surrogate
+                    // pair in the input string, so skip over the second UTF-16 code unit.
+                    i++;
+                }
             }
             return builder.ToString();
+
+            // Note: parameter is int rather than byte to avoid lots of casts in the call site.
+            void AppendPercentEncodedByte(int b)
+            {
+                const string HexDigits = "0123456789ABCDEF";
+                builder.Append('%');
+                builder.Append(HexDigits[b >> 4]);
+                builder.Append(HexDigits[b & 0x0f]);
+            }
         }
 
         /// <summary>

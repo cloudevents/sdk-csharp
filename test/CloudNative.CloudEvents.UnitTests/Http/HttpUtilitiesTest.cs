@@ -16,6 +16,9 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         [InlineData("percent%encoded", "percent%25encoded")]
         [InlineData("quote\"encoded", "quote%22encoded")]
         [InlineData("caf\u00e9", "caf%C3%A9")]
+        // This wouldn't be a valid attribute value in CloudEvents 1.0, but we encode ASCII control characters
+        // for good measure, so let's test it.
+        [InlineData("line1\r\nline2", "line1%0D%0Aline2")]
         public void RoundTripHeaderValue(string original, string encoded)
         {
             var actualEncoded = HttpUtilities.EncodeHeaderValue(original);
