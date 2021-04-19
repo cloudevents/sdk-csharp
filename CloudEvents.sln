@@ -23,8 +23,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Amq
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Kafka", "src\CloudNative.CloudEvents.Kafka\CloudNative.CloudEvents.Kafka.csproj", "{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.AspNetCore", "src\CloudNative.CloudEvents.AspNetCore\CloudNative.CloudEvents.AspNetCore.csproj", "{C726DD78-2D56-48D3-928A-D10226E3750B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.AspNetCoreSample", "samples\CloudNative.CloudEvents.AspNetCoreSample\CloudNative.CloudEvents.AspNetCoreSample.csproj", "{9760D744-D1BF-40E3-BD6F-7F639BFB9188}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.IntegrationTests", "test\CloudNative.CloudEvents.IntegrationTests\CloudNative.CloudEvents.IntegrationTests.csproj", "{9639E4FD-0438-4901-B57F-EFF773B19D5A}"
@@ -33,7 +31,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Avr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.NewtonsoftJson", "src\CloudNative.CloudEvents.NewtonsoftJson\CloudNative.CloudEvents.NewtonsoftJson.csproj", "{9DC17081-21D8-4123-8650-D97C2153DB8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudNative.CloudEvents.SystemTextJson", "src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj", "{FACB3EF2-F078-479A-A91C-719894CB66BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.SystemTextJson", "src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj", "{FACB3EF2-F078-479A-A91C-719894CB66BF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Http", "src\CloudNative.CloudEvents.Http\CloudNative.CloudEvents.Http.csproj", "{C10612CF-F682-4A3B-9855-085C885912DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -117,18 +117,6 @@ Global
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Release|x64.Build.0 = Release|Any CPU
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Release|x86.ActiveCfg = Release|Any CPU
 		{193D6D9D-C1A0-459E-86CF-F207CDF0FC73}.Release|x86.Build.0 = Release|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|x64.Build.0 = Debug|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Debug|x86.Build.0 = Debug|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|x64.ActiveCfg = Release|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|x64.Build.0 = Release|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|x86.ActiveCfg = Release|Any CPU
-		{C726DD78-2D56-48D3-928A-D10226E3750B}.Release|x86.Build.0 = Release|Any CPU
 		{9760D744-D1BF-40E3-BD6F-7F639BFB9188}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9760D744-D1BF-40E3-BD6F-7F639BFB9188}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9760D744-D1BF-40E3-BD6F-7F639BFB9188}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -189,6 +177,18 @@ Global
 		{FACB3EF2-F078-479A-A91C-719894CB66BF}.Release|x64.Build.0 = Release|Any CPU
 		{FACB3EF2-F078-479A-A91C-719894CB66BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{FACB3EF2-F078-479A-A91C-719894CB66BF}.Release|x86.Build.0 = Release|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Debug|x64.Build.0 = Debug|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Debug|x86.Build.0 = Debug|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Release|x64.ActiveCfg = Release|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Release|x64.Build.0 = Release|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Release|x86.ActiveCfg = Release|Any CPU
+		{C10612CF-F682-4A3B-9855-085C885912DB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
