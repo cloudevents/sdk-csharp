@@ -212,7 +212,6 @@ namespace CloudNative.CloudEvents.Http
         }
 
         private static bool HasCloudEventsContentType(HttpListenerRequest request) =>
-            request.ContentType is string contentType &&
-            contentType.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase);
+            MimeUtilities.IsCloudEventsContentType(request.ContentType);
     }
 }

@@ -27,8 +27,7 @@ namespace CloudNative.CloudEvents.Kafka
 
         public static bool IsCloudEvent(this Message<string, byte[]> message) =>
             GetHeaderValue(message, SpecVersionKafkaHeader) is object ||
-            (ExtractContentType(message)?.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) == true);
-
+            MimeUtilities.IsCloudEventsContentType(ExtractContentType(message));
 
         /// <summary>
         /// Converts this Kafka message into a CloudEvent object.
@@ -64,7 +63,7 @@ namespace CloudNative.CloudEvents.Kafka
             CloudEvent cloudEvent;
 
             // Structured mode
-            if (contentType?.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) == true)
+            if (MimeUtilities.IsCloudEventsContentType(contentType))
             {
                 cloudEvent = formatter.DecodeStructuredModeMessage(message.Value, new ContentType(contentType), extensionAttributes);
             }

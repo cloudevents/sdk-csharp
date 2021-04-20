@@ -78,5 +78,30 @@ namespace CloudNative.CloudEvents.Core.UnitTests
             ContentType ct = MimeUtilities.CreateContentTypeOrNull(text);
             Assert.Equal(text, ct?.ToString());
         }
+
+        [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData(null, false)]
+        [InlineData("application/cloudevents", true)]
+        [InlineData("application/cloudevents+json", true)]
+        // It's not entirely clear that this *should* be true...
+        [InlineData("application/cloudeventstrailing", true)]
+        [InlineData("application/cloudevents-batch", false)]
+        [InlineData("application/cloudevents-batch+json", false)]
+        public void IsCloudEventsContentType(string contentType, bool expectedResult) =>
+            Assert.Equal(expectedResult, MimeUtilities.IsCloudEventsContentType(contentType));
+
+        [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData(null, false)]
+        [InlineData("application/cloudevents", false)]
+        [InlineData("application/cloudevents+json", false)]
+        [InlineData("application/cloudeventstrailing", false)]
+        [InlineData("application/cloudevents-batch", true)]
+        // It's not entirely clear that this *should* be true...
+        [InlineData("application/cloudevents-batchtrailing", true)]
+        [InlineData("application/cloudevents-batch+json", true)]
+        public void IsCloudEventsBatchContentType(string contentType, bool expectedResult) =>
+            Assert.Equal(expectedResult, MimeUtilities.IsCloudEventsBatchContentType(contentType));
     }
 }
