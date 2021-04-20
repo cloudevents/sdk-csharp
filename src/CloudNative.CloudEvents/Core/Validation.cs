@@ -3,6 +3,7 @@
 // See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CloudNative.CloudEvents.Core
@@ -93,6 +94,22 @@ namespace CloudNative.CloudEvents.Core
             var missing = cloudEvent.SpecVersion.RequiredAttributes.Where(attr => cloudEvent[attr] is null).ToList();
             string joinedMissing = string.Join(", ", missing);
             throw new ArgumentException($"CloudEvent is missing required attributes: {joinedMissing}", paramName);
+        }
+
+        /// <summary>
+        /// Validates that the specified batch is valid, by asserting that it is non-null,
+        /// and that it only contains non-null references to valid CloudEvents.
+        /// </summary>
+        /// <param name="cloudEvents">The event batch to validate.
+        /// <param name="paramName">The parameter name to use in the exception if <paramref name="cloudEvent"/> is null or invalid.
+        /// May be null.</param>
+        public static void CheckCloudEventBatchArgument(IReadOnlyList<CloudEvent> cloudEvents, string paramName)
+        {
+            CheckNotNull(cloudEvents, paramName);
+            foreach (var cloudEvent in cloudEvents)
+            {
+                CheckCloudEventArgument(cloudEvent, paramName);
+            }
         }
     }
 }

@@ -82,11 +82,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         public static HttpContent ToHttpContent(this IReadOnlyList<CloudEvent> cloudEvents, CloudEventFormatter formatter)
         {
-            Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
-            foreach (var cloudEvent in cloudEvents)
-            {
-                Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvents));
-            }
+            Validation.CheckCloudEventBatchArgument(cloudEvents, nameof(cloudEvents)); 
             Validation.CheckNotNull(formatter, nameof(formatter));
 
             // TODO: Validate that all events in the batch have the same version?

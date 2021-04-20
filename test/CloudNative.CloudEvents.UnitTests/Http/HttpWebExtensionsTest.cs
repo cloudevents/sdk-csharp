@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.IO;
@@ -105,6 +106,51 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var result = (HttpWebResponse) await httpWebRequest.GetResponseAsync();
             var content = new StreamReader(result.GetResponseStream()).ReadToEnd();
             Assert.True(result.StatusCode == HttpStatusCode.NoContent, content);
+        }
+
+        [Fact]
+        public async Task CopyToHttpWebRequestAsync_Batch()
+        {
+            var batch = CreateSampleBatch();
+            HttpWebRequest request = WebRequest.CreateHttp(ListenerAddress + "ep");
+            request.Method = "POST";
+            await batch.CopyToHttpWebRequestAsync(request, new JsonEventFormatter());
+
+            var (bytes, contentType) = await SendRequestAsync(request, async context =>
+            {
+                var bytes = await BinaryDataUtilities.ToByteArrayAsync(context.Request.InputStream);
+                var contentType = context.Request.Headers["Content-Type"];
+                return (bytes, contentType);
+            });
+
+            Assert.Equal(MimeUtilities.BatchMediaType + "+json; charset=utf-8", contentType);
+            var parsedBatch = new JsonEventFormatter().DecodeBatchModeMessage(bytes, MimeUtilities.CreateContentTypeOrNull(contentType), extensionAttributes: null);
+            AssertBatchesEqual(batch, parsedBatch);
+        }
+
+        /// <summary>
+        /// Executes the given request, expecting the given handler to be called.
+        /// An empty response is proided on success.
+        /// </summary>
+        private async Task<T> SendRequestAsync<T>(HttpWebRequest request, Func<HttpListenerContext, Task<T>> handler)
+        {
+            var guid = Guid.NewGuid().ToString();
+            request.Headers.Add(TestContextHeader, guid);
+
+            T result = default;
+            bool executed = false;
+
+            PendingRequests[guid] = async context =>
+            {
+                executed = true;
+                result = await handler(context);
+                context.Response.StatusCode = (int) HttpStatusCode.NoContent;
+            };
+
+            using var response = (HttpWebResponse) await request.GetResponseAsync();
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.True(executed);
+            return result;
         }
     }
 }

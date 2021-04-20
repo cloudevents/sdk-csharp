@@ -4,6 +4,7 @@
 
 using CloudNative.CloudEvents.Core;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Mime;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace CloudNative.CloudEvents.Http
         // TODO: HttpWebResponse as well?
 
         /// <summary>
-        /// Copies a <see cref="CloudEvent"/>into the specified <see cref="HttpWebRequest"/>.
+        /// Copies a <see cref="CloudEvent"/> into the specified <see cref="HttpWebRequest"/>.
         /// </summary>
         /// <param name="cloudEvent">CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="destination">The request to populate. Must not be null.</param>
@@ -72,6 +73,28 @@ namespace CloudNative.CloudEvents.Http
                     destination.Headers.Add(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);
                 }
             }
+            await destination.GetRequestStream().WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Copies a <see cref="CloudEvent"/> batch into the specified <see cref="HttpWebRequest"/>.
+        /// </summary>
+        /// <param name="cloudEvent">CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="destination">The request to populate. Must not be null.</param>
+        /// <param name="contentMode">Content mode (structured or binary)</param>
+        /// <param name="contentMode">Content mode (structured or binary)</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public static async Task CopyToHttpWebRequestAsync(this IReadOnlyList<CloudEvent> cloudEvents,
+            HttpWebRequest destination,
+            CloudEventFormatter formatter)
+        {
+            Validation.CheckCloudEventBatchArgument(cloudEvents, nameof(cloudEvents));
+            Validation.CheckNotNull(destination, nameof(destination));
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            byte[] content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            destination.ContentType = contentType.ToString();
             await destination.GetRequestStream().WriteAsync(content, 0, content.Length).ConfigureAwait(false);
         }
     }
