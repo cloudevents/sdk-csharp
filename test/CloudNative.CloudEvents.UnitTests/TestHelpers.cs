@@ -90,6 +90,22 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
         /// <summary>
+        /// Creates a batch of two CloudEvents, one of which has (plain text) content.
+        /// </summary>
+        internal static List<CloudEvent> CreateSampleBatch()
+        {
+            var event1 = new CloudEvent().PopulateRequiredAttributes();
+            event1.Id = "event1";
+            event1.Data = "simple text";
+            event1.DataContentType = "text/plain";
+
+            var event2 = new CloudEvent().PopulateRequiredAttributes();
+            event2.Id = "event2";
+
+            return new List<CloudEvent> { event1, event2 };
+        }
+
+        /// <summary>
         /// Asserts that two timestamp values are equal, expressing the expected value as a
         /// string for compact testing.
         /// </summary>

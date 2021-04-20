@@ -18,14 +18,14 @@ namespace CloudNative.CloudEvents.Http
     public static class HttpListenerExtensions
     {
         /// <summary>
-        /// Copies the CloudEvent into this HttpListenerResponse instance
+        /// Copies a <see cref="CloudEvent"/> into an <see cref="HttpListenerResponse" />.
         /// </summary>
         /// <param name="cloudEvent">The CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="destination">The response to copy the CloudEvent to. Must not be null.</param>
         /// <param name="contentMode">Content mode (structured or binary)</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public static Task CopyToHttpListenerResponseAsync(this CloudEvent cloudEvent, HttpListenerResponse destination,
+        public static async Task CopyToHttpListenerResponseAsync(this CloudEvent cloudEvent, HttpListenerResponse destination,
             ContentMode contentMode, CloudEventFormatter formatter)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
@@ -72,7 +72,33 @@ namespace CloudNative.CloudEvents.Http
                 }
             }
 
-            return destination.OutputStream.WriteAsync(content, 0, content.Length);
+            await destination.OutputStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Copies a <see cref="CloudEvent"/> batch into an <see cref="HttpListenerResponse" />.
+        /// </summary>
+        /// <param name="cloudEvent">The CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="destination">The response to copy the CloudEvent to. Must not be null.</param>
+        /// <param name="contentMode">Content mode (structured or binary)</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public static async Task CopyToHttpListenerResponseAsync(this IReadOnlyList<CloudEvent> cloudEvents,
+            HttpListenerResponse destination, CloudEventFormatter formatter)
+        {
+            Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
+            foreach (var cloudEvent in cloudEvents)
+            {
+                Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvents));
+            }
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            // TODO: Validate that all events in the batch have the same version?
+            // See https://github.com/cloudevents/spec/issues/807
+
+            byte[] content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            destination.ContentType = contentType.ToString();
+            await destination.OutputStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -213,5 +239,8 @@ namespace CloudNative.CloudEvents.Http
 
         private static bool HasCloudEventsContentType(HttpListenerRequest request) =>
             MimeUtilities.IsCloudEventsContentType(request.ContentType);
+
+        private static bool HasCloudEventsBatchContentType(HttpListenerRequest request) =>
+            MimeUtilities.IsCloudEventsBatchContentType(request.ContentType);
     }
 }
