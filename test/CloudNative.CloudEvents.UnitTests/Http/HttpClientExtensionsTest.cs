@@ -130,15 +130,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         [Fact]
         public async Task ToCloudEventBatchAsync_Valid()
         {
-            var event1 = new CloudEvent().PopulateRequiredAttributes();
-            event1.Id = "event1";
-            event1.Data = "simple text";
-            event1.DataContentType = "text/plain";
-
-            var event2 = new CloudEvent().PopulateRequiredAttributes();
-            event2.Id = "event2";
-
-            var batch = new[] { event1, event2 };
+            var batch = CreateSampleBatch();
 
             var formatter = new JsonEventFormatter();
             var contentBytes = formatter.EncodeBatchModeMessage(batch, out var contentType);

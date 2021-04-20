@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using CloudNative.CloudEvents.UnitTests;
 using System;
@@ -11,6 +12,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
 namespace CloudNative.CloudEvents.Http.UnitTests
 {
@@ -96,6 +98,25 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.Equal(originalCloudEvent.Data, parsedCloudEvent.Data);
         }
 
+        [Fact]
+        public async Task CopyToHttpListenerResponseAsync_Batch()
+        {
+            var batch = CreateSampleBatch();
+
+            var response = await GetResponseAsync(async context =>
+            {
+                await batch.CopyToHttpListenerResponseAsync(context.Response, new JsonEventFormatter());
+                context.Response.StatusCode = 200;
+            });
+
+            response.EnsureSuccessStatusCode();
+            var content = response.Content;
+            Assert.Equal(MimeUtilities.BatchMediaType + "+json", content.Headers.ContentType.MediaType);
+            var bytes = await content.ReadAsByteArrayAsync();
+            var parsedBatch = new JsonEventFormatter().DecodeBatchModeMessage(bytes, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes: null);
+            AssertBatchesEqual(batch, parsedBatch);
+        }
+
         /// <summary>
         /// Executes the given request, expecting the given handler to be called.
         /// An empty response is proided on success.
@@ -121,6 +142,30 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.True(response.IsSuccessStatusCode, content);
             Assert.True(executed);
             return result;
+        }
+
+        /// <summary>
+        /// Executes a simple GET request that will invoke the given handler, and returns the response (as an HttpResponseMessage).
+        /// The handler is responsible for writing the response.
+        /// </summary>
+        private async Task<HttpResponseMessage> GetResponseAsync(Func<HttpListenerContext, Task> handler)
+        {
+            var guid = Guid.NewGuid().ToString();
+            var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress);
+            request.Headers.Add(TestContextHeader, guid);
+
+            bool executed = false;
+
+            PendingRequests[guid] = async context =>
+            {
+                executed = true;
+                await handler(context);
+            };
+
+            var httpClient = new HttpClient();
+            var response = await httpClient.SendAsync(request);
+            Assert.True(executed);
+            return response;
         }
     }
 }
