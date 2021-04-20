@@ -287,12 +287,9 @@ namespace CloudNative.CloudEvents.Http
 
         // TODO: This would include "application/cloudeventsarerubbish" for example...
         private static bool HasCloudEventsContentType(HttpContent content) =>
-            content?.Headers?.ContentType is var contentType &&
-            contentType.MediaType.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) &&
-            !contentType.MediaType.StartsWith(MimeUtilities.BatchMediaType);
+            MimeUtilities.IsCloudEventsContentType(content?.Headers?.ContentType?.MediaType);
 
         private static bool HasCloudEventsBatchContentType(HttpContent content) =>
-            content?.Headers?.ContentType is var contentType &&
-            contentType.MediaType.StartsWith(MimeUtilities.BatchMediaType);
+            MimeUtilities.IsCloudEventsBatchContentType(content?.Headers?.ContentType?.MediaType);
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using System;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
@@ -67,5 +68,23 @@ namespace CloudNative.CloudEvents.Core
         /// <returns>The converted content type, or null if <paramref name="contentType"/> is null.</returns>
         public static ContentType CreateContentTypeOrNull(string contentType) =>
             contentType is null ? null : new ContentType(contentType);
+
+        /// <summary>
+        /// Determines whether the given content type denotes a (non-batch) CloudEvent.
+        /// </summary>
+        /// <param name="contentType">The content type to check. May be null, in which case the result is false.</param>
+        /// <returns>true if the given content type denotes a (non-batch) CloudEvent; false otherwise</returns>
+        public static bool IsCloudEventsContentType(string contentType) =>
+            contentType is string &&
+            contentType.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) &&
+            !contentType.StartsWith(BatchMediaType, StringComparison.InvariantCultureIgnoreCase);
+
+        /// <summary>
+        /// Determines whether the given content type denotes a CloudEvent batch.
+        /// </summary>
+        /// <param name="contentType">The content type to check. May be null, in which case the result is false.</param>
+        /// <returns>true if the given content type represents a CloudEvent batch; false otherwise</returns>
+        public static bool IsCloudEventsBatchContentType(string contentType) =>
+            contentType is string && contentType.StartsWith(BatchMediaType, StringComparison.InvariantCultureIgnoreCase);
     }
 }

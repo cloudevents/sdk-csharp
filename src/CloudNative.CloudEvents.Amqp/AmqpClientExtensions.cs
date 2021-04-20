@@ -127,11 +127,10 @@ namespace CloudNative.CloudEvents.Amqp
             }
         }
 
-        // TODO: Check that it really is meant to be case-sensitive. (Original code was inconsistent.)
         private static bool HasCloudEventsContentType(Message message, out string contentType)
         {
-            contentType = (message.Properties.ContentType as Symbol)?.ToString();
-            return contentType?.StartsWith(CloudEvent.MediaType) == true;
+            contentType = message.Properties.ContentType?.ToString();
+            return MimeUtilities.IsCloudEventsContentType(contentType);
         }
 
         /// <summary>
