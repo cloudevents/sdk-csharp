@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Amqp\CloudNative.CloudEvents.Amqp.csproj" />
+    <ProjectReference Include="..\..\src\CloudNative.CloudEvents.AspNetCore\CloudNative.CloudEvents.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Avro\CloudNative.CloudEvents.Avro.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Kafka\CloudNative.CloudEvents.Kafka.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Mqtt\CloudNative.CloudEvents.Mqtt.csproj" />

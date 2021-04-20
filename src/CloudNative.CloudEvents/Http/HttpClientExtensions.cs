@@ -235,7 +235,7 @@ namespace CloudNative.CloudEvents.Http
             IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
-            return ToCloudEventBatchInternalAsync(httpResponseMessage.Headers, httpResponseMessage.Content, formatter, extensionAttributes, nameof(httpResponseMessage));
+            return ToCloudEventBatchInternalAsync(httpResponseMessage.Content, formatter, extensionAttributes, nameof(httpResponseMessage));
         }
 
         /// <summary>
@@ -264,10 +264,10 @@ namespace CloudNative.CloudEvents.Http
             IEnumerable<CloudEventAttribute> extensionAttributes)
         {
             Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
-            return ToCloudEventBatchInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
+            return ToCloudEventBatchInternalAsync(httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
         }
 
-        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpHeaders headers, HttpContent content,
+        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpContent content,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
         {
             Validation.CheckNotNull(formatter, nameof(formatter));

@@ -20,9 +20,6 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 {
     public class HttpClientExtensionsTest : HttpTestBase
     {
-        private static readonly CloudEventAttribute[] EmptyExtensionArray = new CloudEventAttribute[0];
-        private static readonly IEnumerable<CloudEventAttribute> EmptyExtensionSequence = new List<CloudEventAttribute>();
-
         public static TheoryData<string, HttpContent, IDictionary<string, string>> SingleCloudEventMessages = new TheoryData<string, HttpContent, IDictionary<string, string>>
         {
             {

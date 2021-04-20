@@ -47,10 +47,12 @@ namespace CloudNative.CloudEvents
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute> extensionAttributes)
         {
+            Validation.CheckNotNull(httpRequest, nameof(httpRequest));
+            Validation.CheckNotNull(formatter, nameof(formatter));
             if (HasCloudEventsContentType(httpRequest))
             {
-                // TODO: Handle formatter being null
-                return await formatter.DecodeStructuredModeMessageAsync(httpRequest.Body, MimeUtilities.CreateContentTypeOrNull(httpRequest.ContentType), extensionAttributes).ConfigureAwait(false);
+                var contentType = MimeUtilities.CreateContentTypeOrNull(httpRequest.ContentType);
+                return await formatter.DecodeStructuredModeMessageAsync(httpRequest.Body, contentType, extensionAttributes).ConfigureAwait(false);
             }
             else
             {
@@ -87,7 +89,51 @@ namespace CloudNative.CloudEvents
             }
         }
 
+        /// <summary>
+        /// Converts this HTTP request into a batch of CloudEvents.
+        /// </summary>
+        /// <param name="httpRequest">The HTTP request to decode. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to process the request body. Must not be null.</param>
+        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The decoded CloudEvent.</returns>
+        /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
+        public static ValueTask<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpRequest httpRequest,
+            CloudEventFormatter formatter,
+            params CloudEventAttribute[] extensionAttributes) =>
+            ToCloudEventBatchAsync(httpRequest, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this HTTP request into a batch of CloudEvents.
+        /// </summary>
+        /// <param name="httpRequest">The HTTP request to decode. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to process the request body. Must not be null.</param>
+        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The decoded CloudEvent.</returns>
+        /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
+        public static async ValueTask<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpRequest httpRequest,
+            CloudEventFormatter formatter,
+            IEnumerable<CloudEventAttribute> extensionAttributes)
+        {
+            Validation.CheckNotNull(httpRequest, nameof(httpRequest));
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            if (HasCloudEventsBatchContentType(httpRequest))
+            {
+                var contentType = MimeUtilities.CreateContentTypeOrNull(httpRequest.ContentType);
+                return await formatter.DecodeBatchModeMessageAsync(httpRequest.Body, contentType, extensionAttributes).ConfigureAwait(false);
+            }
+            else
+            {
+                throw new ArgumentException("HTTP message does not represent a CloudEvents batch.", nameof(httpRequest));
+            }
+        }
+
         private static bool HasCloudEventsContentType(HttpRequest request) =>
             MimeUtilities.IsCloudEventsContentType(request?.ContentType);
+
+        private static bool HasCloudEventsBatchContentType(HttpRequest request) =>
+            MimeUtilities.IsCloudEventsBatchContentType(request?.ContentType);
     }
 }
