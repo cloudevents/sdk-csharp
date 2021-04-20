@@ -15,6 +15,9 @@ namespace CloudNative.CloudEvents.UnitTests
     /// </summary>
     internal static class TestHelpers
     {
+        internal static CloudEventAttribute[] EmptyExtensionArray { get; } = new CloudEventAttribute[0];
+        internal static IEnumerable<CloudEventAttribute> EmptyExtensionSequence { get; } = new List<CloudEventAttribute>().AsReadOnly();
+
         /// <summary>
         /// A set of extension attributes covering all attributes types.
         /// The name of each attribute is the lower-cased form of the attribute type
