@@ -37,8 +37,8 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             var formatter = new JsonEventFormatter();
             var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
-            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray).AsTask());
-            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence).AsTask());
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
         }
 
         private static HttpRequest CreateRequest(byte[] content, ContentType contentType) =>
