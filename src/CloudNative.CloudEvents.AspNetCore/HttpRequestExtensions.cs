@@ -28,7 +28,7 @@ namespace CloudNative.CloudEvents
         /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The decoded CloudEvent.</returns>
         /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
-        public static ValueTask<CloudEvent> ToCloudEventAsync(
+        public static Task<CloudEvent> ToCloudEventAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes) =>
@@ -42,7 +42,7 @@ namespace CloudNative.CloudEvents
         /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The decoded CloudEvent.</returns>
         /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
-        public static async ValueTask<CloudEvent> ToCloudEventAsync(
+        public static async Task<CloudEvent> ToCloudEventAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute> extensionAttributes)
@@ -97,7 +97,7 @@ namespace CloudNative.CloudEvents
         /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The decoded CloudEvent.</returns>
         /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
-        public static ValueTask<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+        public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
             params CloudEventAttribute[] extensionAttributes) =>
@@ -111,7 +111,7 @@ namespace CloudNative.CloudEvents
         /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The decoded CloudEvent.</returns>
         /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
-        public static async ValueTask<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+        public static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute> extensionAttributes)
