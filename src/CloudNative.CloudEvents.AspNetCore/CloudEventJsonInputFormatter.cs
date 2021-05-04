@@ -9,7 +9,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CloudNative.CloudEvents
+namespace CloudNative.CloudEvents.AspNetCore
 {
     // FIXME: This doesn't get called for binary CloudEvents without content, or with a different data content type.
     // FIXME: This shouldn't really be tied to JSON. We need to work out how we actually want this to be used.

@@ -1,9 +1,13 @@
 # SDK documentation
 
+**Note: all of this documentation is specific to versions 2.0-beta.2 and onwards**
+
 This directory contains documentation on:
 
-- Using the SDK as a consumer
-- Implementing new event formats and protocol bindings
+- [Usage guide](guide.md) (this is the most appropriate starting point for most
+  developers if they simply plan on *using* the CloudEvents SDK)
+- [Changes since version 1.x of the CloudNative.CloudEvents packages](changes-since-1x.md)
+- Implementing new [event formats](formatters.md) and [protocol bindings](bindings.md)
 
 ## Implementation utility classes
 
