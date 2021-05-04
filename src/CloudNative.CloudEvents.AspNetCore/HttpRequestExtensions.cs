@@ -11,7 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CloudNative.CloudEvents
+namespace CloudNative.CloudEvents.AspNetCore
 {
     /// <summary>
     /// Extension methods to convert between HTTP requests and CloudEvents.
@@ -58,7 +58,7 @@ namespace CloudNative.CloudEvents
             {
                 var headers = httpRequest.Headers;
                 headers.TryGetValue(HttpUtilities.SpecVersionHttpHeader, out var versionId);
-                var version = CloudEventsSpecVersion.FromVersionId(versionId.First())
+                var version = CloudEventsSpecVersion.FromVersionId(versionId.FirstOrDefault())
                     ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", nameof(httpRequest));
 
                 if (version is null)
