@@ -37,4 +37,5 @@ jobs:
       run: |
         dotnet pack -c Release -o $PWD/nuget
         # For now, just display the NuGet packages we'd push in reality.
-        ls nuget
+        for file in nuget/*.nupkg; do echo "Pushing $file"; done
+
