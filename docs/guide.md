@@ -12,14 +12,14 @@ unnecessary dependencies. These packages are:
 
 |NuGet package|Description|
 |-|-|
-|[CloudNative.CloudEvents](https://www.nuget.org/packages/CloudNative.CloudEvents)|core SDK
-|[CloudNative.CloudEvents.Amqp](https://www.nuget.org/packages/CloudNative.CloudEvents.Amqp)|AMQP protocol binding using [AMQPNetLite](https://www.nuget.org/packages/AMQPNetLite)
-|[CloudNative.CloudEvents.AspNetCore](https://www.nuget.org/packages/CloudNative.CloudEvents.AspNetCore)|ASP.NET Core support for CloudEvents
-|[CloudNative.CloudEvents.Avro](https://www.nuget.org/packages/CloudNative.CloudEvents.Avro)|Avro event formatter using [Apache.Avro](https://www.nuget.org/packages/Apache.Avro)
-|[CloudNative.CloudEvents.Kafka](https://www.nuget.org/packages/CloudNative.CloudEvents.Kafka)|Kafka protocol binding using [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka)
-|[CloudNative.CloudEvents.Mqtt](https://www.nuget.org/packages/CloudNative.CloudEvents.Mqtt)|MQTT protocol binding using [MQTTnet](https://www.nuget.org/packages/MQTTnet)
-|[CloudNative.CloudEvents.NewtonsoftJson](https://www.nuget.org/packages/CloudNative.CloudEvents.NewtonsoftJson)|JSON event formatter using [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json)
-|[CloudNative.CloudEvents.System.Text.Json](https://www.nuget.org/packages/CloudNative.CloudEvents.SystemTextJson)|JSON event formatter using [System.Text.Json](https://www.nuget.org/packages/System.Text.Json)
+|[CloudNative.CloudEvents](https://www.nuget.org/packages/CloudNative.CloudEvents)|Core SDK|
+|[CloudNative.CloudEvents.Amqp](https://www.nuget.org/packages/CloudNative.CloudEvents.Amqp)|AMQP protocol binding using [AMQPNetLite](https://www.nuget.org/packages/AMQPNetLite)|
+|[CloudNative.CloudEvents.AspNetCore](https://www.nuget.org/packages/CloudNative.CloudEvents.AspNetCore)|ASP.NET Core support for CloudEvents|
+|[CloudNative.CloudEvents.Avro](https://www.nuget.org/packages/CloudNative.CloudEvents.Avro)|Avro event formatter using [Apache.Avro](https://www.nuget.org/packages/Apache.Avro)|
+|[CloudNative.CloudEvents.Kafka](https://www.nuget.org/packages/CloudNative.CloudEvents.Kafka)|Kafka protocol binding using [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka)|
+|[CloudNative.CloudEvents.Mqtt](https://www.nuget.org/packages/CloudNative.CloudEvents.Mqtt)|MQTT protocol binding using [MQTTnet](https://www.nuget.org/packages/MQTTnet)|
+|[CloudNative.CloudEvents.NewtonsoftJson](https://www.nuget.org/packages/CloudNative.CloudEvents.NewtonsoftJson)|JSON event formatter using [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json)|
+|[CloudNative.CloudEvents.System.Text.Json](https://www.nuget.org/packages/CloudNative.CloudEvents.SystemTextJson)|JSON event formatter using [System.Text.Json](https://www.nuget.org/packages/System.Text.Json)|
 
 Note that protocol bindings for HTTP using `HttpRequestMessage`,
 `HttpResponseMessage`, `HttpContent`, `HttpListenerRequest`,
