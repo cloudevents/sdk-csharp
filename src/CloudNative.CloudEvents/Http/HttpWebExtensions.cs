@@ -24,7 +24,6 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="cloudEvent">CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="destination">The request to populate. Must not be null.</param>
         /// <param name="contentMode">Content mode (structured or binary)</param>
-        /// <param name="contentMode">Content mode (structured or binary)</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public static async Task CopyToHttpWebRequestAsync(this CloudEvent cloudEvent, HttpWebRequest destination,
@@ -79,10 +78,8 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Copies a <see cref="CloudEvent"/> batch into the specified <see cref="HttpWebRequest"/>.
         /// </summary>
-        /// <param name="cloudEvent">CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="cloudEvents">CloudEvent batch to copy. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="destination">The request to populate. Must not be null.</param>
-        /// <param name="contentMode">Content mode (structured or binary)</param>
-        /// <param name="contentMode">Content mode (structured or binary)</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public static async Task CopyToHttpWebRequestAsync(this IReadOnlyList<CloudEvent> cloudEvents,

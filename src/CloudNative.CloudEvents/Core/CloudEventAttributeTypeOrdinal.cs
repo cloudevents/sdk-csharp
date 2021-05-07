@@ -6,7 +6,7 @@ namespace CloudNative.CloudEvents.Core
 {
     /// <summary>
     /// Enum of attribute types, to allow efficient switching over <see cref="CloudEventAttributeType"/>.
-    /// Each attribute type has a unique value, returned by <see cref="CloudEventAttribute.Ordinal"/>.
+    /// Each attribute type has a unique value, returned by <see cref="CloudEventAttributeType.Ordinal"/>.
     /// </summary>
     /// <remarks>
     /// This type is in the "Core" namespace and exposed via CloudEventAttributeTypes as relatively few consumers will need to use it.

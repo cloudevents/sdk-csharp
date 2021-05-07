@@ -53,8 +53,16 @@ namespace CloudNative.CloudEvents
         internal static CloudEventAttribute CreateOptional(string name, CloudEventAttributeType type, Action<object> validator) =>
             new CloudEventAttribute(name, type, required: false, extension: false, validator: validator);
 
+        /// <summary>
+        /// Creates an extension attribute with the given name and type.
+        /// </summary>
+        /// <param name="name">The extension attribute name. Must not be null, and must not be 'specversion'.</param>
+        /// <param name="type">The extension attribute type. Must not be null.</param>
+        /// <returns>The extension attribute represented as a <see cref="CloudEventAttribute"/>.</returns>
         public static CloudEventAttribute CreateExtension(string name, CloudEventAttributeType type)
         {
+            Validation.CheckNotNull(name, nameof(name));
+            Validation.CheckNotNull(type, nameof(type));
             if (name == CloudEventsSpecVersion.SpecVersionAttributeName)
             {
                 throw new ArgumentException($"The attribute name '{name}' is reserved and cannot be used for an extension attribute.");
@@ -65,16 +73,20 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// Creates an extension attribute with a custom validator.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="type"></param>
+        /// <param name="name">The extension attribute name. Must not be null, and must not be 'specversion'.</param>
+        /// <param name="type">The extension attribute type. Must not be null.</param>
         /// <param name="validator">Validator to use when parsing or formatting values.
         /// This is only ever called with a non-null value which can be cast to the attribute type's corresponding
         /// CLR type. If the validator throws any exception, it is wrapped in an ArgumentException containing the
         /// attribute details.</param>
-        /// <returns></returns>
+        /// <returns>The extension attribute represented as a <see cref="CloudEventAttribute"/>.</returns>
         public static CloudEventAttribute CreateExtension(string name, CloudEventAttributeType type, Action<object> validator) =>
             new CloudEventAttribute(name, type, required: false, extension: true, validator: validator);
 
+        /// <summary>
+        /// Returns the name of the attribute.
+        /// </summary>
+        /// <returns>The name of the attribute.</returns>
         public override string ToString() => Name;
 
         /// <summary>
@@ -105,6 +117,11 @@ namespace CloudNative.CloudEvents
             return name;
         }
 
+        /// <summary>
+        /// Parses the given string representation of an attribute value into a suitable CLR representation.
+        /// </summary>
+        /// <param name="text">The text representation to parse. Must not be null, and must be a valid value for this attribute.</param>
+        /// <returns>The CLR representation of the given textual value for this attribute.</returns>
         public object Parse(string text)
         {
             Validation.CheckNotNull(text, nameof(text));
@@ -122,6 +139,11 @@ namespace CloudNative.CloudEvents
             return Validate(value);
         }
 
+        /// <summary>
+        /// Formats the given value for this attribute as a string.
+        /// </summary>
+        /// <param name="value">The value to format. Must not be null, and must be a suitable value for this attribute.</param>
+        /// <returns>The string representation of this attribute.</returns>
         public string Format(object value) => Type.Format(Validate(value));
 
         /// <summary>

@@ -78,9 +78,8 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Copies a <see cref="CloudEvent"/> batch into an <see cref="HttpListenerResponse" />.
         /// </summary>
-        /// <param name="cloudEvent">The CloudEvent to copy. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="cloudEvents">The CloudEvent batch to copy. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="destination">The response to copy the CloudEvent to. Must not be null.</param>
-        /// <param name="contentMode">Content mode (structured or binary)</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public static async Task CopyToHttpListenerResponseAsync(this IReadOnlyList<CloudEvent> cloudEvents,
@@ -147,7 +146,7 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.
         /// </summary>
-        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="httpListenerRequest">The listener request to convert. Must not be null.</param>
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
@@ -160,7 +159,7 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.
         /// </summary>
-        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="httpListenerRequest">The listener request to convert. Must not be null.</param>
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
@@ -171,7 +170,7 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.
         /// </summary>
-        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="httpListenerRequest">The listener request to convert. Must not be null.</param>
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
@@ -182,7 +181,7 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.
         /// </summary>
-        /// <param name="httpResponseMessage">The listener request to convert. Must not be null.</param>
+        /// <param name="httpListenerRequest">The listener request to convert. Must not be null.</param>
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>

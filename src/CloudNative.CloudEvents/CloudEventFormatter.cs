@@ -44,7 +44,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">The content type of the message, or null if no content type is known.
         /// Typically this is a content type with a media type of "application/cloudevents"; the additional
         /// information such as the charset parameter may be needed in order to decode the data.</param>
-        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The CloudEvent derived from the structured data.</returns>
         public abstract CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
 
@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">The content type of the message, or null if no content type is known.
         /// Typically this is a content type with a media type of "application/cloudevents"; the additional
         /// information such as the charset parameter may be needed in order to decode the data.</param>
-        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The decoded CloudEvent.</returns>
         public virtual CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
@@ -74,7 +74,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">The content type of the message, or null if no content type is known.
         /// Typically this is a content type with a media type of "application/cloudevents"; the additional
         /// information such as the charset parameter may be needed in order to decode the data.</param>
-        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The CloudEvent derived from the structured data.</returns>
         public virtual async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
@@ -118,7 +118,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">The content type of the message, or null if no content type is known.
         /// Typically this is a content type with a media type with a prefix of "application/cloudevents-batch"; the additional
         /// information such as the charset parameter may be needed in order to decode the data.</param>
-        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The collection of CloudEvents derived from the batched data.</returns>
         public abstract IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
 
@@ -131,7 +131,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">The content type of the message, or null if no content type is known.
         /// Typically this is a content type with a media type with a prefix of "application/cloudevents"; the additional
         /// information such as the charset parameter may be needed in order to decode the data.</param>
-        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The collection of CloudEvents derived from the batched data.</returns>
         public virtual IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
@@ -148,7 +148,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">The content type of the message, or null if no content type is known.
         /// Typically this is a content type with a media type with a prefix of "application/cloudevents"; the additional
         /// information such as the charset parameter may be needed in order to decode the data.</param>
-        /// <param name="extensions">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The collection of CloudEvents derived from the batched data.</returns>
         public virtual async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
@@ -157,7 +157,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        // Encodes a sequence of CloudEvents as the body of a message.
+        /// Encodes a sequence of CloudEvents as the body of a message.
         /// </summary>
         /// <param name="cloudEvents">The CloudEvents to encode. Must not be null.</param>
         /// <param name="contentType">On successful return, the content type of the structured-mode data.
