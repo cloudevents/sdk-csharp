@@ -21,6 +21,26 @@ namespace CloudNative.CloudEvents.AspNetCore
         // TODO: CopyToHttpRequest, and deal with HttpResponse as well.
 
         /// <summary>
+        /// Indicates whether this <see cref="HttpRequest"/> holds a single CloudEvent.
+        /// </summary>
+        /// <remarks>
+        /// This method returns false for batch requests, as they need to be parsed differently.
+        /// </remarks>
+        /// <param name="httpRequest">The request to check for the presence of a CloudEvent. Must not be null.</param>
+        /// <returns>true, if the request is a CloudEvent</returns>
+        public static bool IsCloudEvent(this HttpRequest httpRequest) =>
+            httpRequest.Headers.ContainsKey(HttpUtilities.SpecVersionHttpHeader) ||
+            HasCloudEventsContentType(httpRequest);
+
+        /// <summary>
+        /// Indicates whether this <see cref="HttpRequest"/> holds a batch of CloudEvents.
+        /// </summary>
+        /// <param name="httpRequest">The request to check for the presence of a CloudEvent batch. Must not be null.</param>
+        /// <returns>true, if the request is a CloudEvent batch</returns>
+        public static bool IsCloudEventBatch(this HttpRequest httpRequest) =>
+            HasCloudEventsBatchContentType(httpRequest);
+
+        /// <summary>
         /// Converts this HTTP request into a CloudEvent object.
         /// </summary>
         /// <param name="httpRequest">The HTTP request to decode. Must not be null.</param>

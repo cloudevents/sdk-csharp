@@ -6,6 +6,7 @@ using CloudNative.CloudEvents.NewtonsoftJson;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Mime;
 using System.Threading.Tasks;
@@ -16,7 +17,95 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
 {
     public class HttpRequestExtensionsTest
     {
-        // TODO: Non-batch tests
+        public static TheoryData<string, string, IDictionary<string, string>> SingleCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>>
+        {
+            {
+                "Binary",
+                "text/plain",
+                new Dictionary<string, string>
+                {
+                    { "ce-specversion", "1.0" },
+                    { "ce-type", "test-type" },
+                    { "ce-id", "test-id" },
+                    { "ce-source", "//test" }
+                }
+            },
+            {
+                "Structured",
+                "application/cloudevents+json",
+                null
+            }
+        };
+
+        public static TheoryData<string, string, IDictionary<string, string>> BatchMessages = new TheoryData<string, string, IDictionary<string, string>>
+        {
+            {
+                "Batch",
+                "application/cloudevents-batch+json",
+                null
+            }
+        };
+
+        public static TheoryData<string, string, IDictionary<string, string>> NonCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>>
+        {
+            {
+                "Plain text",
+                "text/plain",
+                null
+            }
+        };
+
+        [Theory]
+        [MemberData(nameof(SingleCloudEventMessages))]
+        public void IsCloudEvent_True(string description, string contentType, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = CreateRequest(new byte[0], new ContentType(contentType));
+            CopyHeaders(headers, request);
+            Assert.True(request.IsCloudEvent());
+        }
+
+        [Theory]
+        [MemberData(nameof(BatchMessages))]
+        [MemberData(nameof(NonCloudEventMessages))]
+        public void IsCloudEvent_False(string description, string contentType, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = CreateRequest(new byte[0], new ContentType(contentType));
+            CopyHeaders(headers, request);
+            Assert.False(request.IsCloudEvent());
+        }
+
+        [Theory]
+        [MemberData(nameof(BatchMessages))]
+        public void IsCloudEventBatch_True(string description, string contentType, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = CreateRequest(new byte[0], new ContentType(contentType));
+            CopyHeaders(headers, request);
+            Assert.True(request.IsCloudEventBatch());
+        }
+
+        [Theory]
+        [MemberData(nameof(SingleCloudEventMessages))]
+        [MemberData(nameof(NonCloudEventMessages))]
+        public void IsCloudEventBatch_False(string description, string contentType, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = CreateRequest(new byte[0], new ContentType(contentType));
+            CopyHeaders(headers, request);
+            Assert.False(request.IsCloudEventBatch());
+        }
+
+        // TODO: Non-batch conversion tests
 
         [Fact]
         public async Task ToCloudEventBatchAsync_Valid()
@@ -47,5 +136,17 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
                 ContentType = contentType.ToString(),
                 Body = new MemoryStream(content)
             };
+
+        private static void CopyHeaders(IDictionary<string, string> source, HttpRequest target)
+        {
+            if (source is null)
+            {
+                return;
+            }
+            foreach (var header in source)
+            {
+                target.Headers.Add(header.Key, header.Value);
+            }
+        }
     }
 }
