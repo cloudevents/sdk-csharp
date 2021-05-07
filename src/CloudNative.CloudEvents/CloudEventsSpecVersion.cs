@@ -28,8 +28,14 @@ namespace CloudNative.CloudEvents
         // Populated by the constructor.
         private static readonly List<CloudEventsSpecVersion> allVersions = new List<CloudEventsSpecVersion>();
 
+        /// <summary>
+        /// The default <see cref="CloudEventsSpecVersion"/> produced by this version of the librari.
+        /// </summary>
         public static CloudEventsSpecVersion Default => V1_0;
 
+        /// <summary>
+        /// The <see cref="CloudEventsSpecVersion"/> for version 1.0 of the CloudEvents specification.
+        /// </summary>
         public static CloudEventsSpecVersion V1_0 { get; } = new CloudEventsSpecVersion(
             "1.0",
             CreateRequired("id", CloudEventAttributeType.String, NonEmptyString),
@@ -46,12 +52,39 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public string VersionId { get; }
 
+        /// <summary>
+        /// The attribute for the <see cref="CloudEvent.Id"/> property.
+        /// </summary>
         public CloudEventAttribute IdAttribute { get; }
+
+        /// <summary>
+        /// The attribute for the <see cref="CloudEvent.DataContentType"/> property.
+        /// </summary>
         public CloudEventAttribute DataContentTypeAttribute { get; }
+
+        /// <summary>
+        /// The attribute for the <see cref="CloudEvent.DataSchema"/> property.
+        /// </summary>
         public CloudEventAttribute DataSchemaAttribute { get; }
+
+        /// <summary>
+        /// The attribute for the <see cref="CloudEvent.Source"/> property.
+        /// </summary>
         public CloudEventAttribute SourceAttribute { get; }
+
+        /// <summary>
+        /// The attribute for the <see cref="CloudEvent.Subject"/> property.
+        /// </summary>
         public CloudEventAttribute SubjectAttribute { get; }
+
+        /// <summary>
+        /// The attribute for the <see cref="CloudEvent.Time"/> property.
+        /// </summary>
         public CloudEventAttribute TimeAttribute { get; }
+
+        /// <summary>
+        /// The attribute for the <see cref="CloudEvent.Type"/> property.
+        /// </summary>
         public CloudEventAttribute TypeAttribute { get; }
 
         private Dictionary<string, CloudEventAttribute> attributesByName;

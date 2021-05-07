@@ -12,13 +12,18 @@ using System.Threading.Tasks;
 namespace CloudNative.CloudEvents.Http
 {
     /// <summary>
-    /// Common functionality used by all Http code.
-    /// TODO: Can we make this internal again? It's useful in the ASP.NET Core package, but I don't really like having it public...
+    /// Common functionality used by all HTTP code.
     /// </summary>
     public static class HttpUtilities
     {
+        /// <summary>
+        /// The prefix used by all CloudEvents HTTP headers.
+        /// </summary>
         public const string HttpHeaderPrefix = "ce-";
 
+        /// <summary>
+        /// The name of the HTTP header used to specify the CloudEvents specification version in an HTTP message.
+        /// </summary>
         public const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";
 
         /// <summary>

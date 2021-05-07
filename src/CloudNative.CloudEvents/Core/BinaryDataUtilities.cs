@@ -13,16 +13,30 @@ namespace CloudNative.CloudEvents.Core
     /// </summary>
     public static class BinaryDataUtilities
     {
+        /// <summary>
+        /// Asynchronously consumes the remaining content of the given stream, returning
+        /// it as a byte array.
+        /// </summary>
+        /// <param name="stream">The stream to read from. Must not be null.</param>
+        /// <returns>The content of the stream (from its original position), as a byte array.</returns>
         public async static Task<byte[]> ToByteArrayAsync(Stream stream)
         {
+            Validation.CheckNotNull(stream, nameof(stream));
             // TODO: Optimize if it's already a MemoryStream?
             var memory = new MemoryStream();
             await stream.CopyToAsync(memory).ConfigureAwait(false);
             return memory.ToArray();
         }
 
+        /// <summary>
+        /// Consumes the remaining content of the given stream, returning
+        /// it as a byte array.
+        /// </summary>
+        /// <param name="stream">The stream to read from. Must not be null.</param>
+        /// <returns>The content of the stream (from its original position), as a byte array.</returns>
         public static byte[] ToByteArray(Stream stream)
         {
+            Validation.CheckNotNull(stream, nameof(stream));
             var memory = new MemoryStream();
             stream.CopyTo(memory);
             return memory.ToArray();

@@ -77,8 +77,8 @@ namespace CloudNative.CloudEvents.Core
         /// but throwing an <see cref="ArgumentException"/> using the given parameter name
         /// if the event is invalid. This is typically used within protocol bindings or event formatters
         /// as the last step in decoding an event, or as the first step when encoding an event.
-        /// </summary
-        /// <param name="cloudEvent">The event to validate.
+        /// </summary>
+        /// <param name="cloudEvent">The event to validate.</param>
         /// <param name="paramName">The parameter name to use in the exception if <paramref name="cloudEvent"/> is null or invalid.
         /// May be null.</param>
         /// <exception cref="ArgumentNullException"><paramref name="cloudEvent"/> is null.</exception>
@@ -100,8 +100,8 @@ namespace CloudNative.CloudEvents.Core
         /// Validates that the specified batch is valid, by asserting that it is non-null,
         /// and that it only contains non-null references to valid CloudEvents.
         /// </summary>
-        /// <param name="cloudEvents">The event batch to validate.
-        /// <param name="paramName">The parameter name to use in the exception if <paramref name="cloudEvent"/> is null or invalid.
+        /// <param name="cloudEvents">The event batch to validate.</param>
+        /// <param name="paramName">The parameter name to use in the exception if <paramref name="cloudEvents"/> is null or invalid.
         /// May be null.</param>
         public static void CheckCloudEventBatchArgument(IReadOnlyList<CloudEvent> cloudEvents, string paramName)
         {
