@@ -112,14 +112,16 @@ namespace CloudNative.CloudEvents.SystemTextJson
             DocumentOptions = documentOptions;
         }
 
-        public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            await DecodeStructuredModeMessageImpl(data, contentType, extensionAttributes, true).ConfigureAwait(false);
+        /// <inheritdoc />
+        public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            await DecodeStructuredModeMessageImpl(body, contentType, extensionAttributes, true).ConfigureAwait(false);
 
-        public override CloudEvent DecodeStructuredModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredModeMessageImpl(data, contentType, extensionAttributes, false).GetAwaiter().GetResult();
+        /// <inheritdoc />
+        public override CloudEvent DecodeStructuredModeMessage(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessageImpl(body, contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
-        public override CloudEvent DecodeStructuredModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredModeMessageImpl(new MemoryStream(data), contentType, extensionAttributes, false).GetAwaiter().GetResult();
+        public override CloudEvent DecodeStructuredModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessageImpl(new MemoryStream(body), contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
         private async Task<CloudEvent> DecodeStructuredModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
         {
@@ -131,14 +133,17 @@ namespace CloudNative.CloudEvents.SystemTextJson
             }
         }
 
-        public override Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeBatchModeMessageImpl(data, contentType, extensionAttributes, true);
+        /// <inheritdoc />
+        public override Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessageImpl(body, contentType, extensionAttributes, true);
 
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeBatchModeMessageImpl(data, contentType, extensionAttributes, false).GetAwaiter().GetResult();
+        /// <inheritdoc />
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessageImpl(body, contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeBatchModeMessageImpl(new MemoryStream(data), contentType, extensionAttributes, false).GetAwaiter().GetResult();
+        /// <inheritdoc />
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessageImpl(new MemoryStream(body), contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
         private async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
         {
@@ -179,8 +184,6 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 return JsonDocument.Parse(json, DocumentOptions);
             }
         }
-
-        // TODO: Override the other methods
 
         private CloudEvent DecodeJsonElement(JsonElement element, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
         {
@@ -361,6 +364,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 ? dataElement.GetString()
                 : (object) dataElement.Clone(); // Deliberately cast to object to provide the conditional operator expression type.
 
+        /// <inheritdoc />
         public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
         {
             Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
@@ -382,6 +386,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
             return stream.ToArray();
         }
 
+        /// <inheritdoc />
         public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
             contentType = new ContentType(StructuredMediaType)
@@ -469,6 +474,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
             }
         }
 
+        /// <inheritdoc />
         public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
@@ -501,9 +507,10 @@ namespace CloudNative.CloudEvents.SystemTextJson
             throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type '{cloudEvent.DataContentType}'");
         }
 
-        public override void DecodeBinaryModeEventData(byte[] value, CloudEvent cloudEvent)
+        /// <inheritdoc />
+        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent)
         {
-            Validation.CheckNotNull(value, nameof(value));
+            Validation.CheckNotNull(body, nameof(body));
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
 
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
@@ -512,11 +519,11 @@ namespace CloudNative.CloudEvents.SystemTextJson
 
             if (contentType.MediaType == JsonMediaType)
             {
-                if (value.Length > 0)
+                if (body.Length > 0)
                 {
                     using JsonDocument document = encoding is UTF8Encoding
-                        ? JsonDocument.Parse(value, DocumentOptions)
-                        : JsonDocument.Parse(encoding.GetString(value), DocumentOptions);
+                        ? JsonDocument.Parse(body, DocumentOptions)
+                        : JsonDocument.Parse(encoding.GetString(body), DocumentOptions);
                     // We have to clone the data so that we can dispose of the JsonDocument.
                     cloudEvent.Data = document.RootElement.Clone();
                 }
@@ -527,11 +534,11 @@ namespace CloudNative.CloudEvents.SystemTextJson
             }
             else if (contentType.MediaType.StartsWith("text/") == true)
             {
-                cloudEvent.Data = encoding.GetString(value);
+                cloudEvent.Data = encoding.GetString(body);
             }
             else
             {
-                cloudEvent.Data = value;
+                cloudEvent.Data = body;
             }
         }
     }
