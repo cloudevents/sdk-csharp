@@ -94,15 +94,16 @@ namespace CloudNative.CloudEvents.SystemTextJson
         protected JsonDocumentOptions DocumentOptions { get; }
 
         /// <summary>
-        /// Creates a JsonEventFormatter that uses a default <see cref="JsonSerializer"/>.
+        /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
         /// </summary>
         public JsonEventFormatter() : this(null, default)
         {
         }
 
         /// <summary>
-        /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializer"/>
-        /// to serialize objects as JSON.
+        /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
         /// </summary>
         /// <param name="serializerOptions">The options to use when serializing objects to JSON. May be null.</param>
         /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
@@ -541,5 +542,79 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 cloudEvent.Data = body;
             }
         }
+    }
+
+    /// <summary>
+    /// CloudEvent formatter implementing the JSON Event Format, but with an expectation that
+    /// any CloudEvent with a data payload can be converted to <typeparamref name="T" /> using
+    /// the <see cref="JsonSerializer"/> associated with the formatter. The content type is ignored.
+    /// </summary>
+    /// <typeparam name="T">The type of data to serialize and deserialize.</typeparam>
+    public class JsonEventFormatter<T> : JsonEventFormatter
+    {
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
+        /// </summary>
+        public JsonEventFormatter()
+        {
+        }
+
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the serializer <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
+        /// </summary>
+        /// <param name="serializerOptions">The options to use when serializing and parsing. May be null.</param>
+        /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+        public JsonEventFormatter(JsonSerializerOptions serializerOptions, JsonDocumentOptions documentOptions)
+            : base(serializerOptions, documentOptions)
+        {
+        }
+
+        /// <inheritdoc />
+        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
+        {
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+
+            if (cloudEvent.Data is null)
+            {
+                return Array.Empty<byte>();
+            }
+            T data = (T)cloudEvent.Data;
+            return JsonSerializer.SerializeToUtf8Bytes(data, SerializerOptions);
+        }
+
+        /// <inheritdoc />
+        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent)
+        {
+            Validation.CheckNotNull(body, nameof(body));
+            Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
+
+            if (body.Length == 0)
+            {
+                cloudEvent.Data = null;
+                return;
+            }
+            cloudEvent.Data = JsonSerializer.Deserialize<T>(body, SerializerOptions);
+        }
+
+        /// <inheritdoc />
+        protected override void EncodeStructuredModeData(CloudEvent cloudEvent, Utf8JsonWriter writer)
+        {
+            T data = (T)cloudEvent.Data;
+            writer.WritePropertyName(DataPropertyName);
+            JsonSerializer.Serialize(writer, data, SerializerOptions);
+        }
+
+        /// <inheritdoc />
+        protected override void DecodeStructuredModeDataProperty(JsonElement dataElement, CloudEvent cloudEvent) =>
+            // Note: this is an inefficient way of doing this.
+            // See https://github.com/dotnet/runtime/issues/31274 - when that's implemented, we can use the new method here.
+            cloudEvent.Data = JsonSerializer.Deserialize<T>(dataElement.GetRawText(), SerializerOptions);
+
+        // TODO: Consider decoding the base64 data as a byte array, then using DecodeBinaryModeData.
+        /// <inheritdoc />
+        protected override void DecodeStructuredModeDataBase64Property(JsonElement dataBase64Element, CloudEvent cloudEvent) =>
+            throw new ArgumentException($"Data unexpectedly represented using '{DataBase64PropertyName}' within structured mode CloudEvent.");
     }
 }

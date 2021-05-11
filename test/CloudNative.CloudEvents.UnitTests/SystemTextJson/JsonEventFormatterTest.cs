@@ -4,7 +4,6 @@
 
 using CloudNative.CloudEvents.UnitTests;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -978,55 +977,6 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             return formatter.DecodeBatchModeMessage(bytes, s_jsonCloudEventBatchContentType, null);
         }
 
-        private class JsonElementAsserter : IEnumerable
-        {
-            private readonly List<(string name, JsonValueKind type, object value)> expectations = new List<(string, JsonValueKind, object)>();
-
-            // Just for collection initializers
-            public IEnumerator GetEnumerator() => throw new NotImplementedException();
-
-            public void Add<T>(string name, JsonValueKind type, T value) =>
-                expectations.Add((name, type, value));
-
-            public void AssertProperties(JsonElement obj, bool assertCount)
-            {
-                foreach (var expectation in expectations)
-                {
-                    Assert.True(
-                        obj.TryGetProperty(expectation.name, out var property),
-                        $"Expected property '{expectation.name}' to be present");
-                    Assert.Equal(expectation.type, property.ValueKind);
-                    // No need to check null values, as they'll have a null token type.
-                    if (expectation.value is object)
-                    {
-                        var value = property.ValueKind switch
-                        {
-                            JsonValueKind.True => true,
-                            JsonValueKind.False => false,
-                            JsonValueKind.String => property.GetString(),
-                            JsonValueKind.Number => property.GetInt32(),
-                            JsonValueKind.Null => (object) null,
-                            _ => throw new Exception($"Unhandled value kind: {property.ValueKind}")
-                        };
-
-                        Assert.Equal(expectation.value, value);
-                    }
-                }
-                if (assertCount)
-                {
-                    Assert.Equal(expectations.Count, obj.EnumerateObject().Count());
-                }
-            }
-        }
-
-        private class AttributedModel
-        {
-            public const string JsonPropertyName = "customattribute";
-
-            [JsonPropertyName(JsonPropertyName)]
-            public string AttributedProperty { get; set; }
-        }
-
         private class YearMonthDayConverter : JsonConverter<DateTime>
         {
             public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
@@ -1035,6 +985,5 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) =>
                 writer.WriteStringValue(value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         }
-
     }
 }
