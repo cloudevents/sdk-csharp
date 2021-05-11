@@ -215,6 +215,14 @@ CloudNative.CloudEvents package to avoid unnecessary dependencies.
 We would recommend using a single JSON implementation across an
 application where possible, for simplicity and consistency.
 
+Each JSON implementation provides a general-purpose event formatter
+(`JsonEventFormatter`) and a single-type event formatter
+(`JsonEventFormatter<T>`). The single-type event formatter will
+automatically deserialize to the type argument for `T`, using the
+underlying JSON API. These single-type event formatters are only
+suitable where the data is expected to be represented via JSON as
+well as the "envelope" of the structured mode message.
+
 ## Sample code for protocol bindings and event formatters
 
 Sample code for creating a CloudEvent and using it to populate an
@@ -270,7 +278,9 @@ you need to consider the representation you want the CloudEvent data
 to take when "on the wire". Likewise when you parse a CloudEvent
 from a transport message, you need to be aware of the limitations of
 the protocol binding and event formatter you're using, in terms of
-how data is deserialized.
+how data is deserialized. Every event formatter should carefully
+document how it handles data, both for serialization and
+deserialization purposes.
 
 As a concrete example, suppose you have a class `GameResult`
 representing the result of a single game, and you wish to create a
@@ -328,15 +338,15 @@ The `GameResult` object is automatically serialized as JSON in the
 HTTP request.
 
 When the CloudEvent is deserialized at the receiving side, however,
-it's a little more complex. The event formatter can use the content
-type of "application/json" to detect that this is JSON, but it
+it's a little more complex. A general purpose event formatter can use the
+content type of "application/json" to detect that this is JSON, but it
 doesn't know to deserialize it as a `GameResult`. Instead, it
 deserializes it as a `JToken` (in this case a `JObject`, as the
 content represents a JSON object). The calling code then has to use
 normal Json.NET deserialization to convert the `JObject` stored in
 `CloudEvent.Data` into a `GameResult`:
 
-<!-- Sample: DeserializeGameResult -->
+<!-- Sample: DeserializeGameResult1 -->
 
 ```csharp
 CloudEventFormatter formatter = new JsonEventFormatter();
@@ -345,11 +355,48 @@ JObject dataAsJObject = (JObject) cloudEvent.Data;
 GameResult result = dataAsJObject.ToObject<GameResult>();
 ```
 
-A future CloudEvent formatter could be written to know what type of
-data to expect and deserialize it directly; that formatter could
-even be a generic class derived from the existing
-`JsonEventFormatter`. The `JObject` behavior is particular to
-`JsonEventFormatter` - but the important point is that you need to
-be aware of what the event formatter you're using is capable of.
-Every event formatter should carefully document how it handles data,
-both for serialization and deserialization purposes.
+An alternative is to use a *single-type* event formatter, which has
+a built-in expectation of the data type to deserialize to. For
+example, instead of using the non-generic `JsonEventFormatter`
+above, we could use the generic equivalent:
+
+<!-- Sample: DeserializeGameResult2 -->
+
+```csharp
+CloudEventFormatter formatter = new JsonEventFormatter<GameResult>();
+CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
+GameResult result = (GameResult) cloudEvent.Data;
+```
+
+### CloudEventFormatterAttribute
+
+The `CloudEventFormatterAttribute` attribute (which can be abbreviated to
+`CloudEventFormatter` when specifying it on a type) can be used to
+suggest a suitable `CloudEventFormatter` type to use for a particular
+type. This attribute is expected to be used by frameworks which
+parse CloudEvents and pass them on to user-provided handlers.
+Typically the formatter type specified in the attribute is a
+single-type formatter, using the type on which the attribute is
+placed as the type argument for a generic formatter type. For
+example, the `GameResult` class above could be modified to include
+the attribute:
+
+```csharp
+[CloudEventFormatter(typeof(JsonEventFormatter<GameResult>))]
+public class GameResult
+{
+   ...
+}
+```
+
+That would allow the class to be used in frameworks that use
+`CloudEventFormatterAttribute`, without the consumer needing to know
+the details of the `CloudEventFormatter` themselves. (The consumer
+is typically just interested in the CloudEvent, not how it's being
+serialized.)
+
+The use of `CloudEventFormatterAttribute` is by no means mandatory,
+and it's entirely reasonable to ignore it even when it's present.
+It's an option to consider when writing classes representing the
+data within CloudEvents, if you're confident of the format in which
+the CloudEvent will typically be delivered.

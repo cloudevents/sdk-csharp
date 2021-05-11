@@ -20,8 +20,8 @@ batch content mode is not currently implemented in the SDK.)
 
 ## Data serialization and deserialization
 
-When serializing data in binary mode messages, all formatters should
-handle data provided as a `byte[]`, serializing it without any
+When serializing data in binary mode messages, general purpose formatters
+should handle data provided as a `byte[]`, serializing it without any
 modification. Formatters are also encouraged to support serializing
 strings in the obvious way (obeying any character encoding indicated
 in the `datacontenttype` attribute).
@@ -63,6 +63,31 @@ doesn't allow `CloudEventFormatter` instances to be used
 interchangably, it at least provides consumers with some certainty
 around what they can expect for a specific formatter.
 
+### General purpose vs single-type event formatters
+
+The above description of data handling is designed as guidance for
+general purpose event formatters, which should be able to handle any
+kind of CloudEvent data with some reasonable (and well-documented)
+behavior.
+
+CloudEvent formatters can also be designed to be "single-type",
+explicitly only handling a single type of CloudEvent data, known 
+as the *target type* of the formatter. These are typically generic
+types, where the target type is expressed as the type argument. For
+example, both of the built-in JSON formatters have a general purpose
+formatter (`JsonEventFormatter`) and a single-type formatter
+(`JsonEventFormatter<T>`).
+
+Single-type formatters should still support CloudEvents *without*
+any data (omitting any data when serializing, and deserializing to a
+CloudEvent with a null `Data` property) but may expect that any data
+that *is* provided is expected to be of their target type, and
+expressed in an appropriate format, without taking note of the data
+content type. For example, `JsonEventFormatter<PubSubMessage>` would
+throw an `IllegalCastException` if it is asked to serialize a
+CloudEvent with a `Data` property referring to an instance of
+`StorageEvent`.
+
 ## Validation
 
 Formatter implementations should validate references documented as
@@ -79,4 +104,4 @@ method, so that an appropriate `ArgumentException` is thrown.
 The formatter should *not* perform validation on the `CloudEvent`
 accepted in `DecodeBinaryModeEventData`, beyond asserting that the
 argument is not null. This is typically called by a protocol binding
-which should perform validation itself later. 
+which should perform validation itself later.
