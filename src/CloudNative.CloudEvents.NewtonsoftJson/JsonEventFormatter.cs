@@ -526,10 +526,82 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
         }
 
-        private static JsonReader CreateJsonReader(Stream stream, Encoding encoding) =>
+        internal static JsonReader CreateJsonReader(Stream stream, Encoding encoding) =>
             new JsonTextReader(new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8192, leaveOpen: true))
             {
                 DateParseHandling = DateParseHandling.None
             };
+    }
+
+    /// <summary>
+    /// CloudEvent formatter implementing the JSON Event Format, but with an expectation that
+    /// any CloudEvent with a data payload can be converted to <typeparamref name="T" /> using
+    /// the <see cref="JsonSerializer"/> associated with the formatter. The content type is ignored.
+    /// </summary>
+    /// <typeparam name="T">The type of data to serialize and deserialize.</typeparam>
+    public class JsonEventFormatter<T> : JsonEventFormatter
+    {
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses a default <see cref="JsonSerializer"/>.
+        /// </summary>
+        public JsonEventFormatter()
+        {
+        }
+
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializer"/>
+        /// to serialize objects as JSON and to deserialize them to <typeparamref name="T"/> values.
+        /// </summary>
+        public JsonEventFormatter(JsonSerializer serializer) : base(serializer)
+        {
+        }
+
+        /// <inheritdoc />
+        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
+        {
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+
+            if (cloudEvent.Data is null)
+            {
+                return Array.Empty<byte>();
+            }
+            T data = (T) cloudEvent.Data;
+            // TODO: Make this more efficient. (See base class implementation for a more detailed comment.)
+            var stringWriter = new StringWriter();
+            Serializer.Serialize(stringWriter, data);
+            return Encoding.UTF8.GetBytes(stringWriter.ToString());
+        }
+
+        /// <inheritdoc />
+        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent)
+        {
+            Validation.CheckNotNull(body, nameof(body));
+            Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
+
+            if (body.Length == 0)
+            {
+                cloudEvent.Data = null;
+                return;
+            }
+            using var jsonReader = CreateJsonReader(new MemoryStream(body), Encoding.UTF8);
+            cloudEvent.Data = Serializer.Deserialize<T>(jsonReader);
+        }
+
+        /// <inheritdoc />
+        protected override void EncodeStructuredModeData(CloudEvent cloudEvent, JsonWriter writer)
+        {
+            T data = (T)cloudEvent.Data;
+            writer.WritePropertyName(DataPropertyName);
+            Serializer.Serialize(writer, data);
+        }
+
+        /// <inheritdoc />
+        protected override void DecodeStructuredModeDataProperty(JToken dataToken, CloudEvent cloudEvent) =>
+            cloudEvent.Data = Serializer.Deserialize<T>(new JTokenReader(dataToken));
+
+        // TODO: Consider decoding the base64 data as a byte array, then using DecodeBinaryModeData.
+        /// <inheritdoc />
+        protected override void DecodeStructuredModeDataBase64Property(JToken dataBase64Token, CloudEvent cloudEvent) =>
+            throw new ArgumentException($"Data unexpectedly represented using '{DataBase64PropertyName}' within structured mode CloudEvent.");
     }
 }
