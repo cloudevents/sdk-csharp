@@ -69,11 +69,22 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
         [Fact]
-        public async Task GameResultRoundtrip()
+        public async Task GameResultRoundtrip1()
         {
             var requestMessage = SerializeGameResult();
             var request = await ConvertHttpRequestMessage(requestMessage);
-            var result = await DeserializeGameResult(request);
+            var result = await DeserializeGameResult1(request);
+            Assert.Equal("player1", result.PlayerId);
+            Assert.Equal("game1", result.GameId);
+            Assert.Equal(200, result.Score);
+        }
+
+        [Fact]
+        public async Task GameResultRoundtrip2()
+        {
+            var requestMessage = SerializeGameResult();
+            var request = await ConvertHttpRequestMessage(requestMessage);
+            var result = await DeserializeGameResult2(request);
             Assert.Equal("player1", result.PlayerId);
             Assert.Equal("game1", result.GameId);
             Assert.Equal(200, result.Score);
@@ -121,13 +132,23 @@ namespace CloudNative.CloudEvents.UnitTests
             return request;
         }
 
-        private static async Task<GameResult> DeserializeGameResult(HttpRequest request)
+        private static async Task<GameResult> DeserializeGameResult1(HttpRequest request)
         {
-            // Sample: guide.md#DeserializeGameResult
+            // Sample: guide.md#DeserializeGameResult1
             CloudEventFormatter formatter = new JsonEventFormatter();
             CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
             JObject dataAsJObject = (JObject) cloudEvent.Data;
             GameResult result = dataAsJObject.ToObject<GameResult>();
+            // End sample
+            return result;
+        }
+
+        private static async Task<GameResult> DeserializeGameResult2(HttpRequest request)
+        {
+            // Sample: guide.md#DeserializeGameResult2
+            CloudEventFormatter formatter = new JsonEventFormatter<GameResult>();
+            CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
+            GameResult result = (GameResult) cloudEvent.Data;
             // End sample
             return result;
         }
