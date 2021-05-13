@@ -15,13 +15,20 @@ namespace CloudNative.CloudEvents.AspNetCore
     // FIXME: This shouldn't really be tied to JSON. We need to work out how we actually want this to be used.
     // See 
 
+    /// <summary>
+    /// A <see cref="TextInputFormatter"/> that parses HTTP requests into CloudEvents.
+    /// </summary>
     public class CloudEventJsonInputFormatter : TextInputFormatter
     {
         private readonly CloudEventFormatter _formatter;
 
+        /// <summary>
+        /// Constructs a new instance that uses the given formatter for deserialization.
+        /// </summary>
+        /// <param name="formatter"></param>
         public CloudEventJsonInputFormatter(CloudEventFormatter formatter)
         {
-            _formatter = formatter;
+            _formatter = Validation.CheckNotNull(formatter, nameof(formatter));
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/cloudevents+json"));
 
@@ -29,6 +36,7 @@ namespace CloudNative.CloudEvents.AspNetCore
             SupportedEncodings.Add(Encoding.Unicode);
         }
 
+        /// <inheritdoc />
         public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context, Encoding encoding)
         {
             Validation.CheckNotNull(context, nameof(context));
@@ -47,14 +55,8 @@ namespace CloudNative.CloudEvents.AspNetCore
             }
         }
 
+        /// <inheritdoc />
         protected override bool CanReadType(Type type)
-        {
-            if (type == typeof(CloudEvent))
-            {
-                return base.CanReadType(type);
-            }
-
-            return false;
-        }
+             => type == typeof(CloudEvent) && base.CanReadType(type);
     }
 }

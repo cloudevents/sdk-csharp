@@ -304,7 +304,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// Decodes the "data_base64" property provided within a structured-mode message,
         /// populating the <see cref="CloudEvent.Data"/> property accordingly.
         /// </summary>
-        /// <param name="cloudEvent"></param>
         /// <remarks>
         /// <para>
         /// This implementation converts JSON string tokens to byte arrays, and fails for any other token type.
@@ -437,8 +436,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// </remarks>
         /// <param name="cloudEvent">The CloudEvent being encoded, which will have a non-null value for
         /// its <see cref="CloudEvent.Data"/> property.
-        /// <paramref name="writer"/>The writer to serialize the data to. Will not be null.</param>
-        /// <see cref="CloudEvent.Data"/>.</param>
+        /// <param name="writer"/>The writer to serialize the data to. Will not be null.</param>
         protected virtual void EncodeStructuredModeData(CloudEvent cloudEvent, JsonWriter writer)
         {
             ContentType dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);

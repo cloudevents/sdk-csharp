@@ -25,6 +25,14 @@ namespace CloudNative.CloudEvents.Kafka
 
         // TODO: Avoid all the byte[] -> string conversions? If we didn't care about case-sensitivity, we could prepare byte arrays to perform comparisons with.
 
+        /// <summary>
+        /// Indicates whether this message holds a single CloudEvent.
+        /// </summary>
+        /// <remarks>
+        /// This method returns false for batch requests, as they need to be parsed differently.
+        /// </remarks>
+        /// <param name="message">The message to check for the presence of a CloudEvent. Must not be null.</param>
+        /// <returns>true, if the request is a CloudEvent</returns>
         public static bool IsCloudEvent(this Message<string, byte[]> message) =>
             GetHeaderValue(message, SpecVersionKafkaHeader) is object ||
             MimeUtilities.IsCloudEventsContentType(ExtractContentType(message));
@@ -126,7 +134,7 @@ namespace CloudNative.CloudEvents.Kafka
                 ?.GetValueBytes();
 
         /// <summary>
-        /// Converts a CloudEvent to <see cref="Message"/>.
+        /// Converts a CloudEvent to a Kafka message.
         /// </summary>
         /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="contentMode">Content mode. Structured or binary.</param>
