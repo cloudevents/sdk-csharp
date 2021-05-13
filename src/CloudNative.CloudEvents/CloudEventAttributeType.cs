@@ -141,9 +141,11 @@ namespace CloudNative.CloudEvents
 
             protected override string FormatImpl(bool value) => value ? "true" : "false";
             protected override bool ParseImpl(string value) =>
+#pragma warning disable IDE0075 // Simplify conditional expression (the suggestion really isn't simpler)
                 value == "true" ? true
                 : value == "false" ? false
                 : throw new ArgumentException("Invalid Boolean attribute value");
+#pragma warning restore IDE0075 // Simplify conditional expression
         }
 
         private class StringType : GenericCloudEventsAttributeType<string>

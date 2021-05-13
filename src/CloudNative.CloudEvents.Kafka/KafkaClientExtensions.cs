@@ -146,7 +146,7 @@ namespace CloudNative.CloudEvents.Kafka
 
             // TODO: Is this appropriate? Why can't we transport a CloudEvent without data in Kafka?
             Validation.CheckArgument(cloudEvent.Data is object, nameof(cloudEvent), "Only CloudEvents with data can be converted to Kafka messages");
-            var headers = MapHeaders(cloudEvent, formatter);
+            var headers = MapHeaders(cloudEvent);
             string key = (string) cloudEvent[Partitioning.PartitionKeyAttribute];
             byte[] value;
             string contentTypeHeaderValue;
@@ -177,7 +177,7 @@ namespace CloudNative.CloudEvents.Kafka
             };
         }
 
-        private static Headers MapHeaders(CloudEvent cloudEvent, CloudEventFormatter formatter)
+        private static Headers MapHeaders(CloudEvent cloudEvent)
         {
             var headers = new Headers
             {
