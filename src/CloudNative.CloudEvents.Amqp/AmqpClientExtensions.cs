@@ -22,8 +22,16 @@ namespace CloudNative.CloudEvents.Amqp
 
         internal const string SpecVersionAmqpHeader = AmqpHeaderPrefix + "specversion";
 
+        /// <summary>
+        /// Indicates whether this <see cref="Message"/> holds a single CloudEvent.
+        /// </summary>
+        /// <remarks>
+        /// This method returns false for batch requests, as they need to be parsed differently.
+        /// </remarks>
+        /// <param name="message">The message to check for the presence of a CloudEvent. Must not be null.</param>
+        /// <returns>true, if the request is a CloudEvent</returns>
         public static bool IsCloudEvent(this Message message) =>
-            HasCloudEventsContentType(message, out _) ||
+            HasCloudEventsContentType(Validation.CheckNotNull(message, nameof(message)), out _) ||
             message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader);
 
         /// <summary>
@@ -42,7 +50,7 @@ namespace CloudNative.CloudEvents.Amqp
         /// <summary>
         /// Converts this AMQP message into a CloudEvent object.
         /// </summary>
-        /// <param name="httpResponseMessage">The AMQP message to convert. Must not be null.</param>
+        /// <param name="message">The AMQP message to convert. Must not be null.</param>
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
