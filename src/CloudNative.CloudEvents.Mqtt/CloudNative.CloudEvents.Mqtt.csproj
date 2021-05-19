@@ -6,10 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MQTTnet" Version="2.8.4" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="MQTTnet" Version="3.0.15" />
     <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 

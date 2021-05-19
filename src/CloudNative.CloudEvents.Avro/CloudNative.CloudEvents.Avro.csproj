@@ -9,16 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Apache.Avro" Version="1.9.1" />
-    <PackageReference Include="System.Memory" Version="4.5.3" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Apache.Avro" Version="1.10.2" />
     <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="AvroSchema.json" />
   </ItemGroup>
 
   <ItemGroup>
