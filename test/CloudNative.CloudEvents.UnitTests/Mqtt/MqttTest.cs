@@ -5,6 +5,8 @@
 using CloudNative.CloudEvents.NewtonsoftJson;
 using MQTTnet;
 using MQTTnet.Client;
+using MQTTnet.Client.Options;
+using MQTTnet.Client.Receiving;
 using MQTTnet.Server;
 using System;
 using System.Net.Mime;
@@ -59,8 +61,8 @@ namespace CloudNative.CloudEvents.Mqtt.UnitTests
 
             TaskCompletionSource<CloudEvent> tcs = new TaskCompletionSource<CloudEvent>();
             await client.ConnectAsync(options);
-            client.ApplicationMessageReceived += (sender, args) =>
-                tcs.SetResult(args.ApplicationMessage.ToCloudEvent(jsonEventFormatter));
+            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(
+                args => tcs.SetResult(args.ApplicationMessage.ToCloudEvent(jsonEventFormatter)));
 
             var result = await client.SubscribeAsync("abc");
             await client.PublishAsync(cloudEvent.ToMqttApplicationMessage(ContentMode.Structured, new JsonEventFormatter(), topic: "abc"));
