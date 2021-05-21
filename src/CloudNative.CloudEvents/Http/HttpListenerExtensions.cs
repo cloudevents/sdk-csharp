@@ -140,7 +140,7 @@ namespace CloudNative.CloudEvents.Http
         /// Indicates whether this HttpListenerRequest is a web hook validation request
         /// </summary>
         public static bool IsWebHookValidationRequest(this HttpListenerRequest httpRequestMessage) =>
-            httpRequestMessage.HttpMethod.Equals("options", StringComparison.InvariantCultureIgnoreCase) &&
+            httpRequestMessage.HttpMethod == "OPTIONS" &&
             httpRequestMessage.Headers["WebHook-Request-Origin"] is object;
 
         /// <summary>
