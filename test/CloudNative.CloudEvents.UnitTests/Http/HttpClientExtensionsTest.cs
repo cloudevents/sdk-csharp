@@ -4,6 +4,8 @@
 
 using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
+using CloudNative.CloudEvents.UnitTests;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -149,6 +151,34 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             await Assert.ThrowsAsync<ArgumentException>(() => CreateRequestMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
             await Assert.ThrowsAsync<ArgumentException>(() => CreateResponseMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
             await Assert.ThrowsAsync<ArgumentException>(() => CreateResponseMessage(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+        }
+
+        [Fact]
+        public async Task ToCloudEvent_Valid()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
+            var parsedRequest = await CreateRequestMessage(contentBytes, contentType).ToCloudEventAsync(formatter);
+            var parsedResponse = await CreateResponseMessage(contentBytes, contentType).ToCloudEventAsync(formatter);
+
+            AssertCloudEventsEqual(parsedRequest, cloudEvent);
+            AssertCloudEventsEqual(parsedResponse, cloudEvent);
+        }
+
+        [Fact]
+        public async Task ToCloudEvent_Invalid()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
+            // Remove the required 'id' attribute
+            var obj = JObject.Parse(Encoding.UTF8.GetString(contentBytes));
+            obj.Remove("id");
+            contentBytes = Encoding.UTF8.GetBytes(obj.ToString());
+
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequestMessage(contentBytes, contentType).ToCloudEventAsync(formatter));
+            await Assert.ThrowsAsync<ArgumentException>(() => CreateResponseMessage(contentBytes, contentType).ToCloudEventAsync(formatter));
         }
 
         [Fact]
