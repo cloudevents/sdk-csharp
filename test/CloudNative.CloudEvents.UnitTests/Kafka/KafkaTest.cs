@@ -17,6 +17,25 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
 {
     public class KafkaTest
     {
+        [Theory]
+        [InlineData("content-type", "application/cloudevents", true)]
+        [InlineData("content-type", "APPLICATION/CLOUDEVENTS", true)]
+        [InlineData("CONTENT-TYPE", "application/cloudevents", false)]
+        [InlineData("ce_specversion", "1.0", true)]
+        [InlineData("CE_SPECVERSION", "1.0", false)]
+        public void IsCloudEvent(string headerName, string headerValue, bool expectedResult)
+        {
+            var message = new Message<string, byte[]>
+            {
+                Headers = new Headers { { headerName, Encoding.UTF8.GetBytes(headerValue) } }
+            };
+            Assert.Equal(expectedResult, message.IsCloudEvent());
+        }
+
+        [Fact]
+        public void IsCloudEvent_NoHeaders() =>
+            Assert.False(new Message<string, byte[]>().IsCloudEvent());
+
         [Fact]
         public void KafkaStructuredMessageTest()
         {

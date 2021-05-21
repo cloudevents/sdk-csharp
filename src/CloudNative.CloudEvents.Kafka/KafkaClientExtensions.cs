@@ -23,8 +23,6 @@ namespace CloudNative.CloudEvents.Kafka
         private const string KafkaContentTypeAttributeName = "content-type";
         private const string SpecVersionKafkaHeader = KafkaHeaderPrefix + "specversion";
 
-        // TODO: Avoid all the byte[] -> string conversions? If we didn't care about case-sensitivity, we could prepare byte arrays to perform comparisons with.
-
         /// <summary>
         /// Indicates whether this message holds a single CloudEvent.
         /// </summary>
@@ -35,7 +33,7 @@ namespace CloudNative.CloudEvents.Kafka
         /// <returns>true, if the request is a CloudEvent</returns>
         public static bool IsCloudEvent(this Message<string, byte[]> message) =>
             GetHeaderValue(message, SpecVersionKafkaHeader) is object ||
-            MimeUtilities.IsCloudEventsContentType(ExtractContentType(message));
+            MimeUtilities.IsCloudEventsContentType(GetHeaderValue(message, KafkaContentTypeAttributeName));
 
         /// <summary>
         /// Converts this Kafka message into a CloudEvent object.
@@ -66,7 +64,7 @@ namespace CloudNative.CloudEvents.Kafka
                 throw new InvalidOperationException();
             }
 
-            var contentType = ExtractContentType(message);
+            var contentType = GetHeaderValue(message, KafkaContentTypeAttributeName);
 
             CloudEvent cloudEvent;
 
@@ -78,11 +76,10 @@ namespace CloudNative.CloudEvents.Kafka
             else
             {
                 // Binary mode
-                if (!(GetHeaderValue(message, SpecVersionKafkaHeader) is byte[] versionIdBytes))
+                if (!(GetHeaderValue(message, SpecVersionKafkaHeader) is string versionId))
                 {
                     throw new ArgumentException("Request is not a CloudEvent");
                 }
-                string versionId = Encoding.UTF8.GetString(versionIdBytes);
                 CloudEventsSpecVersion version = CloudEventsSpecVersion.FromVersionId(versionId)
                     ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", nameof(message));
 
@@ -115,12 +112,6 @@ namespace CloudNative.CloudEvents.Kafka
             return Validation.CheckCloudEventArgument(cloudEvent, nameof(message));
         }
 
-        private static string ExtractContentType(Message<string, byte[]> message)
-        {
-            var headerValue = GetHeaderValue(message, KafkaContentTypeAttributeName);
-            return headerValue is null ? null : Encoding.UTF8.GetString(headerValue);
-        }
-
         private static void InitPartitioningKey(Message<string, byte[]> message, CloudEvent cloudEvent)
         {
             if (!string.IsNullOrEmpty(message.Key))
@@ -129,9 +120,13 @@ namespace CloudNative.CloudEvents.Kafka
             }
         }
 
-        private static byte[] GetHeaderValue(MessageMetadata message, string headerName) =>
-            message.Headers.FirstOrDefault(x => string.Equals(x.Key, headerName, StringComparison.InvariantCultureIgnoreCase))
-                ?.GetValueBytes();
+        /// <summary>
+        /// Returns the last header value with the given name, decoded using UTF-8, or null if there is no such header.
+        /// </summary>
+        private static string GetHeaderValue(MessageMetadata message, string headerName) =>
+            Validation.CheckNotNull(message, nameof(message)).Headers is null
+            ? null
+            : message.Headers.TryGetLastBytes(headerName, out var bytes) ? Encoding.UTF8.GetString(bytes) : null;
 
         /// <summary>
         /// Converts a CloudEvent to a Kafka message.
