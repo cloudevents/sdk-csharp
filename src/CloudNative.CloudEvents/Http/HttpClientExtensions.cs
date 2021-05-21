@@ -41,10 +41,11 @@ namespace CloudNative.CloudEvents.Http
                 (request, headerName) => request.Headers.TryGetValues(headerName, out var values) ? values.FirstOrDefault() : null,
                 validateOrigin, validateRate);
 
-            var message = new HttpResponseMessage(statusCode);
+            // Note: it's a little odd to create an empty ByteArrayContent, but the Allow header is a content header, so we need content.
+            var message = new HttpResponseMessage(statusCode) { Content = new ByteArrayContent(Array.Empty<byte>()) };
             if (allowedOrigin is object)
             {
-                message.Headers.Add("Allow", "POST");
+                message.Content.Headers.Add("Allow", "POST");
                 message.Headers.Add("WebHook-Allowed-Origin", allowedOrigin);
                 if (allowedRate is object)
                 {

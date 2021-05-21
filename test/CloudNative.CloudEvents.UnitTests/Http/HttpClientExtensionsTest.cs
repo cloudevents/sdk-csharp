@@ -8,6 +8,7 @@ using CloudNative.CloudEvents.UnitTests;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -59,6 +60,20 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 null
             }
         };
+
+        [Theory]
+        [InlineData("validorigin", HttpStatusCode.OK)]
+        [InlineData("notvalidorigin", HttpStatusCode.MethodNotAllowed)]
+        public async Task HandleAsWebHookValidationRequest_Simple(string origin, HttpStatusCode expectedResponseCode)
+        {
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Options,
+                Headers = { { "WebHook-Request-Origin", origin } }
+            };
+            var response = await request.HandleAsWebHookValidationRequest(actualOrigin => actualOrigin == "validorigin", null);
+            Assert.Equal(expectedResponseCode, response.StatusCode);
+        }
 
         [Theory]
         [MemberData(nameof(SingleCloudEventMessages))]
