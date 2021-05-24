@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>CNCF CloudEvents SDK</Description>
     <LangVersion>8.0</LangVersion>
+    <PackageTags>cloudnative;cloudevents;events</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
