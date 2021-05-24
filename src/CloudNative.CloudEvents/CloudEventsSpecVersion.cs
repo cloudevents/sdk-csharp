@@ -10,8 +10,6 @@ using static CloudNative.CloudEvents.CloudEventAttribute;
 
 namespace CloudNative.CloudEvents
 {
-    // TODO: Rename to CloudEventSpecVersion? Using the plural form feels a little odd.
-
     /// <summary>
     /// Represents a version of the CloudEvents specification, including
     /// the context attribute values known to that version.
