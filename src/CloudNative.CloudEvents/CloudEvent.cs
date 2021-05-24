@@ -17,12 +17,6 @@ namespace CloudNative.CloudEvents
     /// </summary>
     public sealed class CloudEvent
     {
-        /// <summary>
-        /// The media type (also known as MIME type) for CloudEvents. Related media types
-        /// (e.g. for a batch of CloudEvents, or with a specific format) usually begin with this string.
-        /// </summary>
-        public const string MediaType = "application/cloudevents";
-
         private readonly Dictionary<string, CloudEventAttribute> extensionAttributes = new Dictionary<string, CloudEventAttribute>();
 
         /// <summary>

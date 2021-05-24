@@ -70,7 +70,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
         private const string JsonMediaType = "application/json";
         private const string MediaTypeSuffix = "+json";
 
-        private static readonly string StructuredMediaType = CloudEvent.MediaType + MediaTypeSuffix;
+        private static readonly string StructuredMediaType = MimeUtilities.MediaType + MediaTypeSuffix;
         private static readonly string BatchMediaType = MimeUtilities.BatchMediaType + MediaTypeSuffix;
 
         /// <summary>
