@@ -9,9 +9,6 @@ using System.Linq;
 
 namespace CloudNative.CloudEvents
 {
-    // TODO: Document really clearly that the SpecVersion attribute isn't included anywhere here...
-    // TODO: Consider implementing IDictionary<,>
-
     /// <summary>
     /// Represents a CloudEvent.
     /// </summary>
@@ -113,6 +110,10 @@ namespace CloudNative.CloudEvents
         /// <para>
         /// The the value being set is null, any existing value is removed from the event.
         /// </para>
+        /// <para>
+        /// The indexer cannot be used to access the 'specversion' attribute. Use <see cref="SpecVersion"/>
+        /// for that purpose.
+        /// </para>
         /// </remarks>
         /// <param name="attribute">The attribute whose value should be set or fetched.</param>
         /// <returns>The fetched attribute value, or null if the attribute has no value in this event.</returns>
@@ -170,6 +171,10 @@ namespace CloudNative.CloudEvents
         /// setting the value add a new extension attribute with the given name, and a type of string.
         /// (The value for an unknown attribute must be a string or null.)
         /// </summary>
+        /// <remarks>
+        /// The indexer cannot be used to access the 'specversion' attribute. Use <see cref="SpecVersion"/>
+        /// for that purpose.
+        /// </remarks>
         public object this[string attributeName]
         {
             get
@@ -314,13 +319,14 @@ namespace CloudNative.CloudEvents
 
         /// <summary>
         /// Returns the extension attributes known to this event, regardless of whether or not
-        /// they're populated.
+        /// they're populated. Currently the order in which the attributes is returned is not guaranteed.
         /// </summary>
         public IEnumerable<CloudEventAttribute> ExtensionAttributes => extensionAttributes.Values;
 
         /// <summary>
         /// Returns a sequence of attributes and their values, for values which are populated in this event.
         /// This does not include the CloudEvents spec version attribute.
+        /// Currently the order in which the attributes is returned is not guaranteed.
         /// </summary>
         public IEnumerable<KeyValuePair<CloudEventAttribute, object>> GetPopulatedAttributes()
         {
