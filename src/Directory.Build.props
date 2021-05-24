@@ -20,6 +20,7 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageIcon>nuget-icon.png</PackageIcon>
 
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/cloudevents/sdk-csharp</RepositoryUrl>
@@ -27,4 +28,10 @@
     <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
     <Copyright>Copyright Cloud Native Foundation</Copyright>
   </PropertyGroup>
+  
+  <!-- Package the icon specified in the PackageIcon property -->
+  <ItemGroup>
+    <None Include="$(RepoRoot)\nuget-icon.png" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
 </Project>

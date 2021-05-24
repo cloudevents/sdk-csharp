@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>ASP.Net Core extensions for CloudNative.CloudEvents</Description>
+    <PackageTags>cncf;cloudnative;cloudevents;events;aspnetcore;aspnet</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

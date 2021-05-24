@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>JSON support for the CNCF CloudEvents SDK, based on Newtonsoft.Json.</Description>
     <LangVersion>8.0</LangVersion>
+    <PackageTags>cncf;cloudnative;cloudevents;events;json;newtonsoft</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

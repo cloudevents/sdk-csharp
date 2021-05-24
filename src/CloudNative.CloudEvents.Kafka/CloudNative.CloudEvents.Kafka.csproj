@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>Kafka extensions for CloudNative.CloudEvents</Description>
+    <PackageTags>cncf;cloudnative;cloudevents;events;kafka</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>AMQP extensions for CloudNative.CloudEvents</Description>
     <LangVersion>8.0</LangVersion>
+    <PackageTags>cncf;cloudnative;cloudevents;events;amqp</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
