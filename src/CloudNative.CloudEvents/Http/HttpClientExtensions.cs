@@ -9,13 +9,14 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents.Http
 {
     /// <summary>
     /// Extension methods for <see cref="HttpClient"/> and related classes
-    /// (<see cref="HttpRequestMessage"/>, <see cref="HttpResponseMessage"/> etc).
+    /// (<see cref="HttpRequestMessage"/>, <see cref="HttpResponseMessage"/>, <see cref="HttpContent"/> etc).
     /// </summary>
     public static class HttpClientExtensions
     {
@@ -284,6 +285,88 @@ namespace CloudNative.CloudEvents.Http
             {
                 throw new ArgumentException("HTTP message does not represent a CloudEvents batch.", paramName);
             }
+        }
+
+        /// <summary>
+        /// Converts a CloudEvent to <see cref="HttpContent"/>.
+        /// </summary>
+        /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="contentMode">Content mode. Structured or binary.</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        public static HttpContent ToHttpContent(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
+        {
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            byte[] content;
+            // The content type to include in the ContentType header - may be the data content type, or the formatter's content type.
+            ContentType contentType;
+            switch (contentMode)
+            {
+                case ContentMode.Structured:
+                    content = formatter.EncodeStructuredModeMessage(cloudEvent, out contentType);
+                    break;
+                case ContentMode.Binary:
+                    content = formatter.EncodeBinaryModeEventData(cloudEvent);
+                    contentType = MimeUtilities.CreateContentTypeOrNull(cloudEvent.DataContentType);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");
+            }
+            var ret = new ByteArrayContent(content);
+            if (contentType is object)
+            {
+                ret.Headers.ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType);
+            }
+            else if (content.Length != 0)
+            {
+                throw new ArgumentException(Strings.ErrorContentTypeUnspecified, nameof(cloudEvent));
+            }
+
+            // Map headers in either mode.
+            // Including the headers in structured mode is optional in the spec (as they're already within the body) but
+            // can be useful.
+            ret.Headers.Add(HttpUtilities.SpecVersionHttpHeader, HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
+            foreach (var attributeAndValue in cloudEvent.GetPopulatedAttributes())
+            {
+                CloudEventAttribute attribute = attributeAndValue.Key;
+                string headerName = HttpUtilities.HttpHeaderPrefix + attribute.Name;
+                object value = attributeAndValue.Value;
+
+                // Skip the data content type attribute in binary mode, because it's already in the content type header.
+                if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute && contentMode == ContentMode.Binary)
+                {
+                    continue;
+                }
+                else
+                {
+                    string headerValue = HttpUtilities.EncodeHeaderValue(attribute.Format(value));
+                    ret.Headers.Add(headerName, headerValue);
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Converts a CloudEvent batch to <see cref="HttpContent"/>.
+        /// </summary>
+        /// <param name="cloudEvents">The CloudEvent batch to convert. Must not be null, and every element must be non-null reference to a valid CloudEvent.</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        public static HttpContent ToHttpContent(this IReadOnlyList<CloudEvent> cloudEvents, CloudEventFormatter formatter)
+        {
+            Validation.CheckCloudEventBatchArgument(cloudEvents, nameof(cloudEvents));
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            // TODO: Validate that all events in the batch have the same version?
+            // See https://github.com/cloudevents/spec/issues/807
+
+            byte[] content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+
+            // Note: we don't populate any other headers for batch mode.
+            return new ByteArrayContent(content)
+            {
+                Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
+            };
         }
 
         // TODO: This would include "application/cloudeventsarerubbish" for example...

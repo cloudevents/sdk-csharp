@@ -397,6 +397,49 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             }
         }
 
+        [Fact]
+        public void ContentType_FromCloudEvent_BinaryMode()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            cloudEvent.DataContentType = "text/plain";
+            var content = cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter());
+            var expectedContentType = new MediaTypeHeaderValue("text/plain");
+            Assert.Equal(expectedContentType, content.Headers.ContentType);
+        }
+
+        // We need to work out whether we want a modified version of this test.
+        // It should be okay to not set a DataContentType if there's no data...
+        // but what if there's a data value which is an empty string, empty byte array or empty stream?
+        [Fact]
+        public void NoContentType_NoContent()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var content = cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter());
+            Assert.Null(content.Headers.ContentType);
+        }
+
+        [Fact]
+        public void NoContentType_WithContent()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            cloudEvent.Data = "Some text";
+            var exception = Assert.Throws<ArgumentException>(() => cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter()));
+            Assert.StartsWith(Strings.ErrorContentTypeUnspecified, exception.Message);
+        }
+
+        [Fact]
+        public async Task ToHttpContent_Batch()
+        {
+            var batch = CreateSampleBatch();
+
+            var formatter = new JsonEventFormatter();
+            var content = batch.ToHttpContent(formatter);
+
+            var bytes = await content.ReadAsByteArrayAsync();
+            var parsedBatch = formatter.DecodeBatchModeMessage(bytes, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes: null);
+            AssertBatchesEqual(batch, parsedBatch);
+        }
+
         private static void CopyHeaders(IDictionary<string, string> source, HttpHeaders target)
         {
             if (source is null)
