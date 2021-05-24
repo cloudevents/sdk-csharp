@@ -207,8 +207,6 @@ namespace CloudNative.CloudEvents
             }
         }
 
-        // TODO: Find everywhere that assumes data is an attribute.
-
         /// <summary>
         /// CloudEvent 'data' content.  The event payload. The payload depends on the type
         /// and the 'schemaurl'. It is encoded into a media format which is specified by the
@@ -265,10 +263,9 @@ namespace CloudNative.CloudEvents
         }
 
         // TODO: Consider exposing publicly.
-        /* FIXME: Reimplement
-        internal CloudEvent WithSpecVersion(CloudEventsSpecVersion newSpecVersion) =>
-            new CloudEvent(attributes.WithSpecVersion(newSpecVersion), Extensions.Values);
-        */
+        // TODO: Reimplement when we have other versions to support.
+        // internal CloudEvent WithSpecVersion(CloudEventsSpecVersion newSpecVersion) =>
+        //    new CloudEvent(attributes.WithSpecVersion(newSpecVersion), Extensions.Values);
 
         /// <summary>
         /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/master/spec.md#subject">'subject'</see> attribute.
@@ -303,8 +300,6 @@ namespace CloudNative.CloudEvents
             get => (string)this[SpecVersion.TypeAttribute];
             set => this[SpecVersion.TypeAttribute] = value;
         }
-
-        // TODO: Should we validate that the name is a valid attribute name?
 
         /// <summary>
         /// Returns the attribute with the given name, which may be a standard

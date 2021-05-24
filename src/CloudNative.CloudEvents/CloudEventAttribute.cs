@@ -7,9 +7,6 @@ using System;
 
 namespace CloudNative.CloudEvents
 {
-    // TODO: Allow additional validation, e.g. for extensions and content type?
-    // TODO: Add Format/Parse methods that pass through to the type (and do validation when parsing)?
-
     /// <summary>
     /// An attribute that can be associated with a <see cref="CloudEvent"/>.
     /// This may be a context attribute or an extension attribute.

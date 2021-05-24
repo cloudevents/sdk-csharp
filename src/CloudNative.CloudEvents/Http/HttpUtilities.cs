@@ -12,7 +12,8 @@ using System.Threading.Tasks;
 namespace CloudNative.CloudEvents.Http
 {
     /// <summary>
-    /// Common functionality used by all HTTP code.
+    /// Common functionality used by all HTTP code. This is public to enable reuse by other packages,
+    /// e.g. ASP.NET Core code.
     /// </summary>
     public static class HttpUtilities
     {
@@ -30,10 +31,11 @@ namespace CloudNative.CloudEvents.Http
         /// Checks whether the given HTTP header name starts with "ce-", and if so, converts it into
         /// a lower-case attribute name.
         /// </summary>
+        /// <param name="headerName">The name of the header to check. Must not be null.</param>
         /// <returns>The corresponding attribute name if the header name matches the CloudEvents header prefix;
         /// null otherwise.</returns>
         public static string GetAttributeNameFromHeaderName(string headerName) =>
-            headerName.StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase)
+            Validation.CheckNotNull(headerName, nameof(headerName)).StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase)
             ? headerName.Substring(HttpHeaderPrefix.Length).ToLowerInvariant()
             : null;
 
@@ -157,7 +159,7 @@ namespace CloudNative.CloudEvents.Http
         /// then performing percent-decoding.
         /// </summary>
         /// <param name="value">The header value to decode. Must not be null.</param>
-        /// <returns>The encoded header value.</returns>
+        /// <returns>The decoded header value.</returns>
         public static string DecodeHeaderValue(string value)
         {
             Validation.CheckNotNull(value, nameof(value));

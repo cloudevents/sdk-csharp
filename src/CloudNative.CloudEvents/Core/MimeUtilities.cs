@@ -9,9 +9,6 @@ using System.Text;
 
 namespace CloudNative.CloudEvents.Core
 {
-    // TODO: Consider this name and namespace carefully. It really does need to be public, as all the event formatters are elsewhere.
-    // But it's not ideal...
-
     /// <summary>
     /// Utility methods around MIME.
     /// </summary>
@@ -29,7 +26,6 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         public static string BatchMediaType { get; } = MediaType + "-batch";
 
-        // TODO: Should we return null, and force the caller to do the appropriate defaulting?
         /// <summary>
         /// Returns an encoding from a content type, defaulting to UTF-8.
         /// </summary>
