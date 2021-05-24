@@ -16,7 +16,7 @@ namespace CloudNative.CloudEvents.Amqp
     /// <summary>
     /// Extension methods to convert between CloudEvents and AMQP messages.
     /// </summary>
-    public static class AmqpClientExtensions
+    public static class AmqpExtensions
     {
         internal const string AmqpHeaderPrefix = "cloudEvents:";
 

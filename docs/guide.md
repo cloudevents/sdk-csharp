@@ -160,11 +160,11 @@ The following table summarizes the protocol bindings available:
 
 |Protocol binding|Namespace|Types|
 |-|-|-|
-|HTTP (built-in)|CloudNative.CloudEvents.Http|HttpClientExtensions, HttpContentExtensions, HttpListenerExtensions, HttpWebExtensions|
+|HTTP (built-in)|CloudNative.CloudEvents.Http|HttpClientExtensions, HttpListenerExtensions, HttpWebExtensions|
 |HTTP (ASP.NET Core)|CloudNative.CloudEvents.AspNetCore|HttpRequestExtensions, CloudEventJsonInputFormatter|
-|AMQP|CloudNative.CloudEvents.Amqp|AmqpClientExtensions|
-|Kafka|CloudNative.CloudEvents.Kafka|KafkaClientExtensions|
-|MQTT|CloudNative.CloudEvents.Mqtt|MqttClientExtensions|
+|AMQP|CloudNative.CloudEvents.Amqp|AmqpExtensions|
+|Kafka|CloudNative.CloudEvents.Kafka|KafkaExtensions|
+|MQTT|CloudNative.CloudEvents.Mqtt|MqttExtensions|
 
 ### Content modes and batches
 

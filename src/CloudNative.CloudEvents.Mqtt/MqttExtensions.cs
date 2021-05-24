@@ -12,7 +12,7 @@ namespace CloudNative.CloudEvents.Mqtt
     /// <summary>
     /// Extension methods to convert between CloudEvents and MQTT messages.
     /// </summary>
-    public static class MqttClientExtensions
+    public static class MqttExtensions
     {
         /// <summary>
         /// Converts this MQTT message into a CloudEvent object.
