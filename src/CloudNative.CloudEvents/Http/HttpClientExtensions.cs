@@ -17,7 +17,7 @@ namespace CloudNative.CloudEvents.Http
     /// Extension methods for <see cref="HttpClient"/> and related classes
     /// (<see cref="HttpRequestMessage"/>, <see cref="HttpResponseMessage"/> etc).
     /// </summary>
-    public static class HttpClientExtension
+    public static class HttpClientExtensions
     {
         // TODO: CloudEvent.ToHttpRequestMessage?
         // TODO: CloudEvent.ToHttpResponseMessage?
