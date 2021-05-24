@@ -18,10 +18,16 @@ namespace CloudNative.CloudEvents.Core
     public static class MimeUtilities
     {
         /// <summary>
+        /// The media type (also known as MIME type) for CloudEvents. Related media types
+        /// (e.g. for a batch of CloudEvents, or with a specific format) usually begin with this string.
+        /// </summary>
+        public static string MediaType { get; } = "application/cloudevents";
+
+        /// <summary>
         /// The media type to use for batch mode. This is usually suffixed with a format-specific
         /// type, e.g. "+json".
         /// </summary>
-        public static string BatchMediaType { get; } = CloudEvent.MediaType + "-batch";
+        public static string BatchMediaType { get; } = MediaType + "-batch";
 
         // TODO: Should we return null, and force the caller to do the appropriate defaulting?
         /// <summary>
@@ -76,7 +82,7 @@ namespace CloudNative.CloudEvents.Core
         /// <returns>true if the given content type denotes a (non-batch) CloudEvent; false otherwise</returns>
         public static bool IsCloudEventsContentType(string contentType) =>
             contentType is string &&
-            contentType.StartsWith(CloudEvent.MediaType, StringComparison.InvariantCultureIgnoreCase) &&
+            contentType.StartsWith(MediaType, StringComparison.InvariantCultureIgnoreCase) &&
             !contentType.StartsWith(BatchMediaType, StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>

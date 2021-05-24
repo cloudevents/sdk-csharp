@@ -36,6 +36,8 @@ namespace CloudNative.CloudEvents
         private const string MediaTypeSuffix = "+avro";
         private const string AttributeName = "attribute";
         private const string DataName = "data";
+
+        private static readonly string CloudEventAvroMediaType = MimeUtilities.MediaType + MediaTypeSuffix;
         private static readonly RecordSchema avroSchema;
         private static readonly DefaultReader avroReader;
         private static readonly DefaultWriter avroWriter;
@@ -138,7 +140,7 @@ namespace CloudNative.CloudEvents
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
-            contentType = new ContentType(CloudEvent.MediaType + MediaTypeSuffix);
+            contentType = new ContentType(CloudEventAvroMediaType);
 
             // We expect the Avro encoded to detect data types that can't be represented in the schema.
             GenericRecord record = new GenericRecord(avroSchema);
