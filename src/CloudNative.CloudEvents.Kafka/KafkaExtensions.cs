@@ -16,7 +16,7 @@ namespace CloudNative.CloudEvents.Kafka
     /// <summary>
     /// Extension methods to convert between CloudEvents and Kafka messages.
     /// </summary>
-    public static class KafkaClientExtensions
+    public static class KafkaExtensions
     {
         private const string KafkaHeaderPrefix = "ce_";
 
