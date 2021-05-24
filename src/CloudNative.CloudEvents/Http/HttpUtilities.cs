@@ -20,12 +20,12 @@ namespace CloudNative.CloudEvents.Http
         /// <summary>
         /// The prefix used by all CloudEvents HTTP headers.
         /// </summary>
-        public const string HttpHeaderPrefix = "ce-";
+        public static string HttpHeaderPrefix { get; } = "ce-";
 
         /// <summary>
         /// The name of the HTTP header used to specify the CloudEvents specification version in an HTTP message.
         /// </summary>
-        public const string SpecVersionHttpHeader = HttpHeaderPrefix + "specversion";
+        public static string SpecVersionHttpHeader { get; } = HttpHeaderPrefix + "specversion";
 
         /// <summary>
         /// Checks whether the given HTTP header name starts with "ce-", and if so, converts it into
