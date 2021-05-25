@@ -524,7 +524,24 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
         }
 
-        internal static JsonReader CreateJsonReader(Stream stream, Encoding encoding) =>
+        /// <summary>
+        /// Creates a <see cref="JsonReader"/> for the given stream. This may be overridden in derived classes to
+        /// customize the JSON parsing process, subject to the constraints listed in the remarks.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The default implementation always creates an instance of <see cref="JsonTextReader"/>, and derived classes
+        /// may assume that (calling this implementation and casting the result before modifying it).
+        /// </para>
+        /// <para>
+        /// Implementations should ensure that <see cref="JsonReader.DateParseHandling"/> is set to <see cref="DateParseHandling.None"/>,
+        /// as timestamp parsing is performed in a CloudEvent-specific way, and Json.NET's own implementation can obscure that.
+        /// </para>
+        /// </remarks>
+        /// <param name="stream">The stream to read from. Will not be null.</param>
+        /// <param name="encoding">The expected text encoding. May be null, in which case UTF-8 should be assumed.</param>
+        /// <returns>A JsonReader suitable for reading the </returns>
+        protected virtual JsonReader CreateJsonReader(Stream stream, Encoding encoding) =>
             new JsonTextReader(new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8192, leaveOpen: true))
             {
                 DateParseHandling = DateParseHandling.None
