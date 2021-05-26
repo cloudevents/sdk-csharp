@@ -67,7 +67,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var request = new HttpRequestMessage
             {
                 RequestUri = new Uri(ListenerAddress),
-                Content = new ByteArrayContent(bytes)
+                Content = new ByteArrayContent(bytes.ToArray())
                 {
                     Headers = { { "content-type", contentType.ToString() } }
                 }

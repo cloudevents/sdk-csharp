@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents.Http
@@ -258,7 +259,7 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
             Validation.CheckNotNull(formatter, nameof(formatter));
 
-            byte[] content;
+            ReadOnlyMemory<byte> content;
             // The content type to include in the ContentType header - may be the data content type, or the formatter's content type.
             ContentType contentType;
             switch (contentMode)
@@ -273,7 +274,7 @@ namespace CloudNative.CloudEvents.Http
                 default:
                     throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");
             }
-            var ret = new ByteArrayContent(content);
+            ByteArrayContent ret = ToByteArrayContent(content);
             if (contentType is object)
             {
                 ret.Headers.ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType);
@@ -320,14 +321,19 @@ namespace CloudNative.CloudEvents.Http
             // TODO: Validate that all events in the batch have the same version?
             // See https://github.com/cloudevents/spec/issues/807
 
-            byte[] content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            ReadOnlyMemory<byte> content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
 
             // Note: we don't populate any other headers for batch mode.
-            return new ByteArrayContent(content)
-            {
-                Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
-            };
+            var ret = ToByteArrayContent(content);
+            ret.Headers.ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType);
+            return ret;
         }
+
+        private static ByteArrayContent ToByteArrayContent(ReadOnlyMemory<byte> content) =>
+            MemoryMarshal.TryGetArray(content, out var segment)
+            ? new ByteArrayContent(segment.Array, segment.Offset, segment.Count)
+            // TODO: Just throw?
+            : new ByteArrayContent(content.ToArray());
 
         // TODO: This would include "application/cloudeventsarerubbish" for example...
         private static bool HasCloudEventsContentType(HttpContent content) =>

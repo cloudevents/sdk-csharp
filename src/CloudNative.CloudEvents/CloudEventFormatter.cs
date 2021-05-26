@@ -38,7 +38,7 @@ namespace CloudNative.CloudEvents
     public abstract class CloudEventFormatter
     {
         /// <summary>
-        /// Decodes a CloudEvent from a structured-mode message body, represented as a byte array.
+        /// Decodes a CloudEvent from a structured-mode message body, represented as a read-only memory segment.
         /// </summary>
         /// <param name="body">The message body (content). Must not be null.</param>
         /// <param name="contentType">The content type of the message, or null if no content type is known.
@@ -46,11 +46,11 @@ namespace CloudNative.CloudEvents
         /// information such as the charset parameter may be needed in order to decode the message body.</param>
         /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The CloudEvent derived from the structured message body.</returns>
-        public abstract CloudEvent DecodeStructuredModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
+        public abstract CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
 
         /// <summary>
         /// Decodes a CloudEvent from a structured-mode message body, represented as a stream. The default implementation copies the
-        /// content of the stream into a byte array before passing it to <see cref="DecodeStructuredModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
+        /// content of the stream into a read-only memory segment before passing it to <see cref="DecodeStructuredModeMessage(ReadOnlyMemory{byte}, ContentType, IEnumerable{CloudEventAttribute})"/>
         /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
         /// <param name="messageBody">The message body (content). Must not be null.</param>
@@ -61,13 +61,13 @@ namespace CloudNative.CloudEvents
         /// <returns>The decoded CloudEvent.</returns>
         public virtual CloudEvent DecodeStructuredModeMessage(Stream messageBody, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            var bytes = BinaryDataUtilities.ToByteArray(messageBody);
+            var bytes = BinaryDataUtilities.ToReadOnlyMemory(messageBody);
             return DecodeStructuredModeMessage(bytes, contentType, extensionAttributes);
         }
 
         /// <summary>
         /// Asynchronously decodes a CloudEvent from a structured-mode message body, represented as a stream. The default implementation asynchronously copies the
-        /// content of the stream into a byte array before passing it to <see cref="DecodeStructuredModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
+        /// content of the stream into a read-only memory segment before passing it to <see cref="DecodeStructuredModeMessage(ReadOnlyMemory{byte}, ContentType, IEnumerable{CloudEventAttribute})"/>
         /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
         /// <param name="body">The message body (content). Must not be null.</param>
@@ -78,7 +78,7 @@ namespace CloudNative.CloudEvents
         /// <returns>The CloudEvent derived from the structured message body.</returns>
         public virtual async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            var bytes = await BinaryDataUtilities.ToByteArrayAsync(body).ConfigureAwait(false);
+            var bytes = await BinaryDataUtilities.ToReadOnlyMemoryAsync(body).ConfigureAwait(false);
             return DecodeStructuredModeMessage(bytes, contentType, extensionAttributes);
         }
 
@@ -89,7 +89,7 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">On successful return, the content type of the structured-mode message body.
         /// Must not be null (on return).</param>
         /// <returns>The structured-mode representation of the CloudEvent.</returns>
-        public abstract byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType);
+        public abstract ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType);
 
         /// <summary>
         /// Decodes the given data obtained from a binary-mode message, populating the <see cref="CloudEvent.Data"/>
@@ -101,7 +101,7 @@ namespace CloudNative.CloudEvents
         /// <param name="cloudEvent">The CloudEvent whose Data property should be populated. Must not be null.</param>
         /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be decoded by this
         /// event formatter.</exception>
-        public abstract void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent);
+        public abstract void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent);
 
         /// <summary>
         /// Encodes the data from <paramref name="cloudEvent"/> in a manner suitable for a binary mode message.
@@ -109,10 +109,10 @@ namespace CloudNative.CloudEvents
         /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be encoded by this
         /// event formatter.</exception>
         /// <returns>The binary-mode representation of the CloudEvent.</returns>
-        public abstract byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent);
+        public abstract ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent);
 
         /// <summary>
-        /// Decodes a collection CloudEvents from a batch-mode message body, represented as a byte array.
+        /// Decodes a collection CloudEvents from a batch-mode message body, represented as a read-only memory segment.
         /// </summary>
         /// <param name="body">The message body (content). Must not be null.</param>
         /// <param name="contentType">The content type of the message, or null if no content type is known.
@@ -120,11 +120,11 @@ namespace CloudNative.CloudEvents
         /// information such as the charset parameter may be needed in order to decode the message body.</param>
         /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
         /// <returns>The collection of CloudEvents derived from the batch message body.</returns>
-        public abstract IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
+        public abstract IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes);
 
         /// <summary>
         /// Decodes a collection CloudEvents from a batch-mode message body, represented as a stream. The default implementation copies the
-        /// content of the stream into a byte array before passing it to <see cref="DecodeBatchModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
+        /// content of the stream into a read-only memory segment before passing it to <see cref="DecodeBatchModeMessage(ReadOnlyMemory{byte}, ContentType, IEnumerable{CloudEventAttribute})"/>
         /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
         /// <param name="body">The message body (content). Must not be null.</param>
@@ -135,13 +135,13 @@ namespace CloudNative.CloudEvents
         /// <returns>The collection of CloudEvents derived from the batch message body.</returns>
         public virtual IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            var bytes = BinaryDataUtilities.ToByteArray(body);
+            var bytes = BinaryDataUtilities.ToReadOnlyMemory(body);
             return DecodeBatchModeMessage(bytes, contentType, extensionAttributes);
         }
 
         /// <summary>
         /// Asynchronously decodes a collection CloudEvents from a batch-mode message body, represented as a stream. The default implementation asynchronously copies the
-        /// content of the stream into a byte array before passing it to <see cref="DecodeBatchModeMessage(byte[], ContentType, IEnumerable{CloudEventAttribute})"/>
+        /// content of the stream into a read-only memory segment before passing it to <see cref="DecodeBatchModeMessage(ReadOnlyMemory{byte}, ContentType, IEnumerable{CloudEventAttribute})"/>
         /// but this can be overridden by event formatters that can decode a stream more efficiently.
         /// </summary>
         /// <param name="body">The message body (content). Must not be null.</param>
@@ -152,7 +152,7 @@ namespace CloudNative.CloudEvents
         /// <returns>The collection of CloudEvents derived from the batch message body.</returns>
         public virtual async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            var bytes = await BinaryDataUtilities.ToByteArrayAsync(body).ConfigureAwait(false);
+            var bytes = await BinaryDataUtilities.ToReadOnlyMemoryAsync(body).ConfigureAwait(false);
             return DecodeBatchModeMessage(bytes, contentType, extensionAttributes);
         }
 
@@ -163,6 +163,6 @@ namespace CloudNative.CloudEvents
         /// <param name="contentType">On successful return, the content type of the batch message body.
         /// Must not be null (on return).</param>
         /// <returns>The batch representation of the CloudEvent.</returns>
-        public abstract byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType);
+        public abstract ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType);
     }
 }

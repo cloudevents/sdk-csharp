@@ -62,7 +62,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
     /// type is absent or has a media type of "application/json", the data is parsed as JSON, with the result as
     /// a <see cref="JsonElement"/> (or null if the data is empty). When the content type has a media type beginning
     /// with "text/", the data is parsed as a string. In all other cases, the data is left as a byte array.
-    /// This behavior can be specialized by overriding <see cref="DecodeBinaryModeEventData(byte[], CloudEvent)"/>.
+    /// This behavior can be specialized by overriding <see cref="DecodeBinaryModeEventData(ReadOnlyMemory{byte}, CloudEvent)"/>.
     /// </para>
     /// </remarks>
     public class JsonEventFormatter : CloudEventFormatter
@@ -122,8 +122,8 @@ namespace CloudNative.CloudEvents.SystemTextJson
             DecodeStructuredModeMessageImpl(body, contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
         /// <inheritdoc />
-        public override CloudEvent DecodeStructuredModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredModeMessageImpl(new MemoryStream(body), contentType, extensionAttributes, false).GetAwaiter().GetResult();
+        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessageImpl(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
         private async Task<CloudEvent> DecodeStructuredModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
         {
@@ -144,8 +144,8 @@ namespace CloudNative.CloudEvents.SystemTextJson
             DecodeBatchModeMessageImpl(body, contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
         /// <inheritdoc />
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeBatchModeMessageImpl(new MemoryStream(body), contentType, extensionAttributes, false).GetAwaiter().GetResult();
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessageImpl(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes, false).GetAwaiter().GetResult();
 
         private async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageImpl(Stream data, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
         {
@@ -366,7 +366,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 : (object) dataElement.Clone(); // Deliberately cast to object to provide the conditional operator expression type.
 
         /// <inheritdoc />
-        public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
+        public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
         {
             Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
 
@@ -388,7 +388,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
         }
 
         /// <inheritdoc />
-        public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
+        public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
             contentType = new ContentType(StructuredMediaType)
             {
@@ -475,7 +475,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
         }
 
         /// <inheritdoc />
-        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
@@ -508,9 +508,8 @@ namespace CloudNative.CloudEvents.SystemTextJson
         }
 
         /// <inheritdoc />
-        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent)
+        public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent)
         {
-            Validation.CheckNotNull(body, nameof(body));
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
 
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
@@ -523,7 +522,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 {
                     using JsonDocument document = encoding is UTF8Encoding
                         ? JsonDocument.Parse(body, DocumentOptions)
-                        : JsonDocument.Parse(encoding.GetString(body), DocumentOptions);
+                        : JsonDocument.Parse(BinaryDataUtilities.GetString(body, encoding), DocumentOptions);
                     // We have to clone the data so that we can dispose of the JsonDocument.
                     cloudEvent.Data = document.RootElement.Clone();
                 }
@@ -534,11 +533,11 @@ namespace CloudNative.CloudEvents.SystemTextJson
             }
             else if (contentType.MediaType.StartsWith("text/") == true)
             {
-                cloudEvent.Data = encoding.GetString(body);
+                cloudEvent.Data = BinaryDataUtilities.GetString(body, encoding);
             }
             else
             {
-                cloudEvent.Data = body;
+                cloudEvent.Data = body.ToArray();
             }
         }
     }
@@ -571,7 +570,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
         }
 
         /// <inheritdoc />
-        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
@@ -584,9 +583,8 @@ namespace CloudNative.CloudEvents.SystemTextJson
         }
 
         /// <inheritdoc />
-        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent)
+        public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent)
         {
-            Validation.CheckNotNull(body, nameof(body));
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
 
             if (body.Length == 0)
@@ -594,7 +592,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 cloudEvent.Data = null;
                 return;
             }
-            cloudEvent.Data = JsonSerializer.Deserialize<T>(body, SerializerOptions);
+            cloudEvent.Data = JsonSerializer.Deserialize<T>(body.Span, SerializerOptions);
         }
 
         /// <inheritdoc />

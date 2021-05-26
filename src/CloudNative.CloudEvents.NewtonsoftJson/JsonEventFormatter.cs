@@ -65,7 +65,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
     /// type is absent or has a media type of "application/json", the data is parsed as JSON, with the result as
     /// a <see cref="JToken"/> (or null if the data is empty). When the content type has a media type beginning
     /// with "text/", the data is parsed as a string. In all other cases, the data is left as a byte array.
-    /// This behavior can be specialized by overriding <see cref="DecodeBinaryModeEventData(byte[], CloudEvent)"/>.
+    /// This behavior can be specialized by overriding <see cref="DecodeBinaryModeEventData(ReadOnlyMemory{byte}, CloudEvent)"/>.
     /// </para>
     /// </remarks>
     public class JsonEventFormatter : CloudEventFormatter
@@ -140,8 +140,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override CloudEvent DecodeStructuredModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeStructuredModeMessage(new MemoryStream(body), contentType, extensionAttributes);
+        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeStructuredModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
 
         /// <inheritdoc />
         public override async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
@@ -164,8 +164,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
-            DecodeBatchModeMessage(new MemoryStream(body), contentType, extensionAttributes);
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            DecodeBatchModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
 
         private IReadOnlyList<CloudEvent> DecodeJArray(JArray jArray, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
         {
@@ -352,7 +352,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 : (object) dataToken; // Deliberately cast to object to avoid any implicit conversions
 
         /// <inheritdoc />
-        public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
+        public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
             // The cloudEvent parameter will be validated in WriteCloudEventForBatchOrStructuredMode
 
@@ -369,7 +369,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
+        public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
         {
             Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
 
@@ -462,7 +462,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
@@ -493,9 +493,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent)
+        public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent)
         {
-            Validation.CheckNotNull(body, nameof(body));
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
 
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
@@ -506,7 +505,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 if (body.Length > 0)
                 {
-                    var jsonReader = CreateJsonReader(new MemoryStream(body), encoding);
+                    var jsonReader = CreateJsonReader(BinaryDataUtilities.AsStream(body), encoding);
                     cloudEvent.Data = JToken.Load(jsonReader);
                 }
                 else
@@ -516,11 +515,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else if (contentType.MediaType.StartsWith("text/") == true)
             {
-                cloudEvent.Data = encoding.GetString(body);
+                cloudEvent.Data = BinaryDataUtilities.GetString(body, encoding);
             }
             else
             {
-                cloudEvent.Data = body;
+                cloudEvent.Data = body.ToArray();
             }
         }
 
@@ -572,7 +571,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent)
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
@@ -588,9 +587,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent)
+        public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent)
         {
-            Validation.CheckNotNull(body, nameof(body));
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
 
             if (body.Length == 0)
@@ -598,7 +596,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 cloudEvent.Data = null;
                 return;
             }
-            using var jsonReader = CreateJsonReader(new MemoryStream(body), Encoding.UTF8);
+            using var jsonReader = CreateJsonReader(BinaryDataUtilities.AsStream(body), Encoding.UTF8);
             cloudEvent.Data = Serializer.Deserialize<T>(jsonReader);
         }
 

@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.UnitTests;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -41,7 +42,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
                 Type = "event-type"
             };
 
-            byte[] encoded = new JsonEventFormatter().EncodeStructuredModeMessage(cloudEvent, out var contentType);
+            var encoded = new JsonEventFormatter().EncodeStructuredModeMessage(cloudEvent, out var contentType);
             Assert.Equal("application/cloudevents+json; charset=utf-8", contentType.ToString());
             JObject obj = ParseJson(encoded);
             var asserter = new JTokenAsserter
@@ -116,7 +117,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
                 DateFormatString = "yyyy-MM-dd"
             };
             var formatter = new JsonEventFormatter(serializer);
-            byte[] encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+            var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             JObject obj = ParseJson(encoded);
             JObject dataProperty = (JObject) obj["data"];
             var asserter = new JTokenAsserter
@@ -228,7 +229,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new { Text = "simple text" };
             cloudEvent.DataContentType = "application/json";
-            byte[] bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
             JObject data = ParseJson(bytes);
             var asserter = new JTokenAsserter
             {
@@ -249,7 +250,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
                 DateFormatString = "yyyy-MM-dd"
             };
             var formatter = new JsonEventFormatter(serializer);
-            byte[] bytes = formatter.EncodeBinaryModeEventData(cloudEvent);
+            var bytes = formatter.EncodeBinaryModeEventData(cloudEvent);
             JObject data = ParseJson(bytes);
             var asserter = new JTokenAsserter
             {
@@ -264,7 +265,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new AttributedModel { AttributedProperty = "simple text" };
             cloudEvent.DataContentType = "application/json";
-            byte[] bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
             JObject data = ParseJson(bytes);
             var asserter = new JTokenAsserter
             {
@@ -280,8 +281,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new JValue(100);
             cloudEvent.DataContentType = "application/json";
-            byte[] bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
-            Assert.Equal("100", Encoding.UTF8.GetString(bytes));
+            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            Assert.Equal("100", BinaryDataUtilities.GetString(bytes, Encoding.UTF8));
         }
 
         [Fact]
@@ -290,8 +291,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = null;
             cloudEvent.DataContentType = "application/json";
-            byte[] bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
-            Assert.Empty(bytes);
+            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            Assert.True(bytes.IsEmpty);
         }
 
         [Fact]
@@ -300,8 +301,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = "some text";
             cloudEvent.DataContentType = "text/anything";
-            byte[] bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
-            Assert.Equal("some text", Encoding.UTF8.GetString(bytes));
+            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            Assert.Equal("some text", BinaryDataUtilities.GetString(bytes, Encoding.UTF8));
         }
 
         // A text content type with bytes as data is serialized like any other bytes.
@@ -311,7 +312,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = SampleBinaryData;
             cloudEvent.DataContentType = "text/anything";
-            byte[] bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
             Assert.Equal(SampleBinaryData, bytes);
         }
 
@@ -331,7 +332,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = SampleBinaryData;
             cloudEvent.DataContentType = "not_text/or_json";
-            byte[] bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
             Assert.Equal(SampleBinaryData, bytes);
         }
 
@@ -354,7 +355,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         {
             var cloudEvents = new CloudEvent[0];
             var formatter = new JsonEventFormatter();
-            byte[] bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            var bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
             Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
             var array = ParseJsonArray(bytes);
             Assert.Empty(array);
@@ -373,7 +374,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
 
             var cloudEvents = new[] { event1, event2 };
             var formatter = new JsonEventFormatter();
-            byte[] bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            var bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
             Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
             var array = ParseJsonArray(bytes);
             Assert.Equal(2, array.Count);
@@ -776,7 +777,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         {
             byte[] bytes = { 0, 1, 2, 3 };
             var data = DecodeBinaryModeEventData(bytes, "application/binary");
-            Assert.Same(bytes, data);
+            Assert.Equal(bytes, data);
         }
 
         [Fact]
@@ -897,14 +898,16 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         /// </summary>
         internal static JObject ParseJson(byte[] data) => ParseJsonImpl<JObject>(data);
 
+        internal static JObject ParseJson(ReadOnlyMemory<byte> data) => ParseJsonImpl<JObject>(data);
+
         /// <summary>
         /// Parses JSON as a JArray with settings that prevent any additional conversions.
         /// </summary>
-        internal static JArray ParseJsonArray(byte[] data) => ParseJsonImpl<JArray>(data);
+        internal static JArray ParseJsonArray(ReadOnlyMemory<byte> data) => ParseJsonImpl<JArray>(data);
 
-        private static T ParseJsonImpl<T>(byte[] data)
+        private static T ParseJsonImpl<T>(ReadOnlyMemory<byte> data)
         {
-            string text = Encoding.UTF8.GetString(data);
+            string text = BinaryDataUtilities.GetString(data, Encoding.UTF8);
             var serializer = new JsonSerializer
             {
                 DateParseHandling = DateParseHandling.None                
@@ -920,7 +923,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         private static JObject EncodeAndParseStructured(CloudEvent cloudEvent)
         {
             var formatter = new JsonEventFormatter();
-            byte[] encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+            var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             return ParseJson(encoded);
         }
 

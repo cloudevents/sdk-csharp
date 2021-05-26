@@ -33,7 +33,7 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckNotNull(destination, nameof(destination));
             Validation.CheckNotNull(formatter, nameof(formatter));
 
-            byte[] content;
+            ReadOnlyMemory<byte> content;
             // The content type to include in the ContentType header - may be the data content type, or the formatter's content type.
             ContentType contentType;
             switch (contentMode)
@@ -72,7 +72,7 @@ namespace CloudNative.CloudEvents.Http
                     destination.Headers.Add(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);
                 }
             }
-            await destination.GetRequestStream().WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+            await BinaryDataUtilities.CopyToStreamAsync(content, destination.GetRequestStream()).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -90,9 +90,9 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckNotNull(destination, nameof(destination));
             Validation.CheckNotNull(formatter, nameof(formatter));
 
-            byte[] content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            ReadOnlyMemory<byte> content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
             destination.ContentType = contentType.ToString();
-            await destination.GetRequestStream().WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+            await BinaryDataUtilities.CopyToStreamAsync(content, destination.GetRequestStream()).ConfigureAwait(false);
         }
     }
 }

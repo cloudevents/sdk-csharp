@@ -147,7 +147,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
-            Assert.Empty(formatter.EncodeBinaryModeEventData(cloudEvent));
+            var bytes = formatter.EncodeBinaryModeEventData(cloudEvent);
+            Assert.True(bytes.IsEmpty);
         }
 
         [Fact]

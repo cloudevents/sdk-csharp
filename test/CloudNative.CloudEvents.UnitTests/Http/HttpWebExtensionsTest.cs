@@ -118,7 +118,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
             var (bytes, contentType) = await SendRequestAsync(request, async context =>
             {
-                var bytes = await BinaryDataUtilities.ToByteArrayAsync(context.Request.InputStream);
+                var bytes = await BinaryDataUtilities.ToReadOnlyMemoryAsync(context.Request.InputStream);
                 var contentType = context.Request.Headers["Content-Type"];
                 return (bytes, contentType);
             });

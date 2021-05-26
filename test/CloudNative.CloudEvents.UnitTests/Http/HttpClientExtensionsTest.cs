@@ -174,7 +174,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var formatter = new JsonEventFormatter();
             var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
             // Remove the required 'id' attribute
-            var obj = JObject.Parse(Encoding.UTF8.GetString(contentBytes));
+            var obj = JObject.Parse(BinaryDataUtilities.GetString(contentBytes, Encoding.UTF8));
             obj.Remove("id");
             contentBytes = Encoding.UTF8.GetBytes(obj.ToString());
 
@@ -438,19 +438,19 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             }
         }
 
-        private static HttpRequestMessage CreateRequestMessage(byte[] content, ContentType contentType) =>
+        private static HttpRequestMessage CreateRequestMessage(ReadOnlyMemory<byte> content, ContentType contentType) =>
             new HttpRequestMessage
             {
-                Content = new ByteArrayContent(content)
+                Content = new ByteArrayContent(content.ToArray())
                 {
                     Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
                 }
             };
 
-        private static HttpResponseMessage CreateResponseMessage(byte[] content, ContentType contentType) =>
+        private static HttpResponseMessage CreateResponseMessage(ReadOnlyMemory<byte> content, ContentType contentType) =>
             new HttpResponseMessage
             {
-                Content = new ByteArrayContent(content)
+                Content = new ByteArrayContent(content.ToArray())
                 {
                     Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
                 }

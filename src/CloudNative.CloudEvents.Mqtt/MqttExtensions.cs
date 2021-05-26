@@ -61,7 +61,7 @@ namespace CloudNative.CloudEvents.Mqtt
                     return new MqttApplicationMessage
                     {
                         Topic = topic,
-                        Payload = formatter.EncodeStructuredModeMessage(cloudEvent, out _)
+                        Payload = BinaryDataUtilities.AsArray(formatter.EncodeStructuredModeMessage(cloudEvent, out _))
                     };
                 default:
                     throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");

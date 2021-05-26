@@ -102,7 +102,7 @@ namespace CloudNative.CloudEvents.AspNetCore
                 cloudEvent.DataContentType = httpRequest.ContentType;
                 if (httpRequest.Body is Stream body)
                 {
-                    byte[] data = await BinaryDataUtilities.ToByteArrayAsync(body).ConfigureAwait(false);
+                    ReadOnlyMemory<byte> data = await BinaryDataUtilities.ToReadOnlyMemoryAsync(body).ConfigureAwait(false);
                     formatter.DecodeBinaryModeEventData(data, cloudEvent);
                 }
                 return Validation.CheckCloudEventArgument(cloudEvent, nameof(httpRequest));

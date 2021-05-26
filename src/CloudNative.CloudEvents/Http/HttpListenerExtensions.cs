@@ -32,7 +32,7 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckNotNull(destination, nameof(destination));
             Validation.CheckNotNull(formatter, nameof(formatter));
 
-            byte[] content;
+            ReadOnlyMemory<byte> content;
             ContentType contentType;
             switch (contentMode)
             {
@@ -72,7 +72,7 @@ namespace CloudNative.CloudEvents.Http
                 }
             }
 
-            await destination.OutputStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+            await BinaryDataUtilities.CopyToStreamAsync(content, destination.OutputStream).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -92,9 +92,9 @@ namespace CloudNative.CloudEvents.Http
             // TODO: Validate that all events in the batch have the same version?
             // See https://github.com/cloudevents/spec/issues/807
 
-            byte[] content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
+            ReadOnlyMemory<byte> content = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
             destination.ContentType = contentType.ToString();
-            await destination.OutputStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+            await BinaryDataUtilities.CopyToStreamAsync(content, destination.OutputStream).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -186,9 +186,9 @@ namespace CloudNative.CloudEvents.Http
                 // it's in the regular content type.
                 cloudEvent.DataContentType = httpListenerRequest.ContentType;
 
-                byte[] data = async
-                    ? await BinaryDataUtilities.ToByteArrayAsync(stream).ConfigureAwait(false)
-                    : BinaryDataUtilities.ToByteArray(stream);
+                ReadOnlyMemory<byte> data = async
+                    ? await BinaryDataUtilities.ToReadOnlyMemoryAsync(stream).ConfigureAwait(false)
+                    : BinaryDataUtilities.ToReadOnlyMemory(stream);
                 formatter.DecodeBinaryModeEventData(data, cloudEvent);
                 return Validation.CheckCloudEventArgument(cloudEvent, nameof(httpListenerRequest));
             }
