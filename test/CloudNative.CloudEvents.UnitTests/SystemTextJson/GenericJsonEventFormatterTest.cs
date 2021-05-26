@@ -148,7 +148,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
-            Assert.Empty(formatter.EncodeBinaryModeEventData(cloudEvent));
+            Assert.True(formatter.EncodeBinaryModeEventData(cloudEvent).IsEmpty);
         }
 
         [Fact]

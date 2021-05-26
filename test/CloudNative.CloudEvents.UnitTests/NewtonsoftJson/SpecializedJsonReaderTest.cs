@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.UnitTests;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -66,7 +67,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
                 Data = new { DataName = "DataValue" }
             }.PopulateRequiredAttributes();
             var bytes = new JsonEventFormatter().EncodeStructuredModeMessage(cloudEvent, out _);
-            return new MemoryStream(bytes);
+            return BinaryDataUtilities.AsStream(bytes);
         }
 
         private class CreateJsonReaderExposingFormatter : JsonEventFormatter

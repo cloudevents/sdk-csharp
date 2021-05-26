@@ -65,18 +65,17 @@ namespace CloudNative.CloudEvents
         }
 
         /// <inheritdoc />
-        public override CloudEvent DecodeStructuredModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
         {
-            Validation.CheckNotNull(body, nameof(body));
-            return DecodeStructuredModeMessage(new MemoryStream(body), contentType, extensionAttributes);
+            return DecodeStructuredModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
         }
 
         /// <inheritdoc />
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
             throw new NotSupportedException("The Avro event formatter does not support batch content mode");
 
         /// <inheritdoc />
-        public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvent, out ContentType contentType) =>
+        public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvent, out ContentType contentType) =>
             throw new NotSupportedException("The Avro event formatter does not support batch content mode");
 
         private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
@@ -136,7 +135,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <inheritdoc />
-        public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
+        public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
 
@@ -167,11 +166,11 @@ namespace CloudNative.CloudEvents
 
         // TODO: Validate that this is correct...
         /// <inheritdoc />
-        public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
 
         /// <inheritdoc />
-        public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent) =>
+        public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
     }
 }

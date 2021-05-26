@@ -161,13 +161,13 @@ namespace CloudNative.CloudEvents.Amqp
                 case ContentMode.Structured:
                     bodySection = new Data
                     {
-                        Binary = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType)
+                        Binary = BinaryDataUtilities.AsArray(formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType))
                     };
                     // TODO: What about the other parts of the content type?
                     properties = new Properties { ContentType = contentType.MediaType };
                     break;
                 case ContentMode.Binary:
-                    bodySection = new Data { Binary = formatter.EncodeBinaryModeEventData(cloudEvent) };
+                    bodySection = new Data { Binary = BinaryDataUtilities.AsArray(formatter.EncodeBinaryModeEventData(cloudEvent)) };
                     properties = new Properties { ContentType = cloudEvent.DataContentType };
                     break;
                 default:

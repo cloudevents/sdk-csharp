@@ -56,22 +56,22 @@ namespace CloudNative.CloudEvents.UnitTests
 
         public class SampleCloudEventFormatter : CloudEventFormatter
         {
-            public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
                 throw new NotImplementedException();
 
-            public override void DecodeBinaryModeEventData(byte[] body, CloudEvent cloudEvent) =>
+            public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
                 throw new NotImplementedException();
 
-            public override CloudEvent DecodeStructuredModeMessage(byte[] body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
                 throw new NotImplementedException();
 
-            public override byte[] EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType) =>
+            public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType) =>
                 throw new NotImplementedException();
 
-            public override byte[] EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
+            public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
                 throw new NotImplementedException();
 
-            public override byte[] EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
+            public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
                 throw new NotImplementedException();
         }
     }

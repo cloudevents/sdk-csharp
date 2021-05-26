@@ -131,7 +131,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         private static JObject EncodeAndParseStructured(CloudEvent cloudEvent)
         {
             var formatter = new SpecializedFormatter();
-            byte[] encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+            var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             return JsonEventFormatterTest.ParseJson(encoded);
         }
 

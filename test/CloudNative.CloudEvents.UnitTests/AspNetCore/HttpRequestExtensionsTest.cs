@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
@@ -130,11 +131,11 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
         }
 
-        private static HttpRequest CreateRequest(byte[] content, ContentType contentType) =>
+        private static HttpRequest CreateRequest(ReadOnlyMemory<byte> content, ContentType contentType) =>
             new DefaultHttpRequest(new DefaultHttpContext())
             {
                 ContentType = contentType.ToString(),
-                Body = new MemoryStream(content)
+                Body = BinaryDataUtilities.AsStream(content)
             };
 
         private static void CopyHeaders(IDictionary<string, string> source, HttpRequest target)

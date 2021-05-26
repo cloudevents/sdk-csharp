@@ -132,7 +132,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         private static JsonElement EncodeAndParseStructured(CloudEvent cloudEvent)
         {
             var formatter = new SpecializedFormatter();
-            byte[] encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+            var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             return JsonEventFormatterTest.ParseJson(encoded);
         }
 

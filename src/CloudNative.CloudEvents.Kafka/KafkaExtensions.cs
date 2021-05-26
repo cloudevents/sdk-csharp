@@ -149,12 +149,12 @@ namespace CloudNative.CloudEvents.Kafka
             switch (contentMode)
             {
                 case ContentMode.Structured:
-                    value = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
+                    value = BinaryDataUtilities.AsArray(formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType));
                     // TODO: What about the non-media type parts?
                     contentTypeHeaderValue = contentType.MediaType;
                     break;
                 case ContentMode.Binary:
-                    value = formatter.EncodeBinaryModeEventData(cloudEvent);
+                    value = BinaryDataUtilities.AsArray(formatter.EncodeBinaryModeEventData(cloudEvent));
                     contentTypeHeaderValue = cloudEvent.DataContentType;
                     break;
                 default:
