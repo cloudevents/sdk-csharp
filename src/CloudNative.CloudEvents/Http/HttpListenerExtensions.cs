@@ -98,50 +98,11 @@ namespace CloudNative.CloudEvents.Http
         }
 
         /// <summary>
-        /// Handle the request as WebHook validation request
-        /// </summary>
-        /// <param name="context">Request context</param>
-        /// <param name="validateOrigin">Callback that returns whether the given origin may push events. If 'null', all origins are acceptable.</param>
-        /// <param name="validateRate">Callback that returns the acceptable request rate. If 'null', the rate is not limited.</param>
-        /// <returns>Task</returns>
-        public static async Task HandleAsWebHookValidationRequest(this HttpListenerContext context,
-            Func<string, bool> validateOrigin, Func<string, string> validateRate)
-        {
-            if (!IsWebHookValidationRequest(context.Request))
-            {
-                context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                context.Response.Close();
-            }
-
-            var (statusCode, allowedOrigin, allowedRate) = await HttpUtilities.HandleWebHookValidationAsync(context.Request,
-                (request, headerName) => request.Headers.Get(headerName), validateOrigin, validateRate);
-
-            context.Response.StatusCode = (int)statusCode;
-            if (allowedOrigin is object)
-            {
-                context.Response.Headers.Add("Allow", "POST");
-                context.Response.Headers.Add("WebHook-Allowed-Origin", allowedOrigin);
-                if (allowedRate is object)
-                {
-                    context.Response.Headers.Add("WebHook-Allowed-Rate", allowedRate);
-                }
-            }
-            context.Response.Close();
-        }
-
-        /// <summary>
         /// Indicates whether this HttpListenerRequest holds a CloudEvent
         /// </summary>
         public static bool IsCloudEvent(this HttpListenerRequest httpListenerRequest) =>
             HasCloudEventsContentType(httpListenerRequest) ||
             httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader] is object;
-
-        /// <summary>
-        /// Indicates whether this HttpListenerRequest is a web hook validation request
-        /// </summary>
-        public static bool IsWebHookValidationRequest(this HttpListenerRequest httpRequestMessage) =>
-            httpRequestMessage.HttpMethod == "OPTIONS" &&
-            httpRequestMessage.Headers["WebHook-Request-Origin"] is object;
 
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.

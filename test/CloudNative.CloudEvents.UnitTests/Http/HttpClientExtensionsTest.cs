@@ -62,20 +62,6 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         };
 
         [Theory]
-        [InlineData("validorigin", HttpStatusCode.OK)]
-        [InlineData("notvalidorigin", HttpStatusCode.MethodNotAllowed)]
-        public async Task HandleAsWebHookValidationRequest_Simple(string origin, HttpStatusCode expectedResponseCode)
-        {
-            var request = new HttpRequestMessage
-            {
-                Method = HttpMethod.Options,
-                Headers = { { "WebHook-Request-Origin", origin } }
-            };
-            var response = await request.HandleAsWebHookValidationRequest(actualOrigin => actualOrigin == "validorigin", null);
-            Assert.Equal(expectedResponseCode, response.StatusCode);
-        }
-
-        [Theory]
         [MemberData(nameof(SingleCloudEventMessages))]
         public void IsCloudEvent_True(string description, HttpContent content, IDictionary<string, string> headers)
         {

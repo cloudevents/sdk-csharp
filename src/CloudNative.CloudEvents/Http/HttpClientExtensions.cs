@@ -24,39 +24,6 @@ namespace CloudNative.CloudEvents.Http
         // TODO: CloudEvent.ToHttpResponseMessage?
 
         /// <summary>
-        /// Handle the request as WebHook validation request
-        /// </summary>
-        /// <param name="httpRequestMessage">Request</param>
-        /// <param name="validateOrigin">Callback that returns whether the given origin may push events. If 'null', all origins are acceptable.</param>
-        /// <param name="validateRate">Callback that returns the acceptable request rate. If 'null', the rate is not limited.</param>
-        /// <returns>Response</returns>
-        public static async Task<HttpResponseMessage> HandleAsWebHookValidationRequest(
-            this HttpRequestMessage httpRequestMessage, Func<string, bool> validateOrigin,
-            Func<string, string> validateRate)
-        {
-            if (!IsWebHookValidationRequest(httpRequestMessage))
-            {
-                return new HttpResponseMessage(HttpStatusCode.MethodNotAllowed);
-            }
-            var (statusCode, allowedOrigin, allowedRate) = await HttpUtilities.HandleWebHookValidationAsync(httpRequestMessage,
-                (request, headerName) => request.Headers.TryGetValues(headerName, out var values) ? values.FirstOrDefault() : null,
-                validateOrigin, validateRate);
-
-            // Note: it's a little odd to create an empty ByteArrayContent, but the Allow header is a content header, so we need content.
-            var message = new HttpResponseMessage(statusCode) { Content = new ByteArrayContent(Array.Empty<byte>()) };
-            if (allowedOrigin is object)
-            {
-                message.Content.Headers.Add("Allow", "POST");
-                message.Headers.Add("WebHook-Allowed-Origin", allowedOrigin);
-                if (allowedRate is object)
-                {
-                    message.Headers.Add("WebHook-Allowed-Rate", allowedRate);
-                }
-            }
-            return message;
-        }
-
-        /// <summary>
         /// Indicates whether this <see cref="HttpRequestMessage"/> holds a single CloudEvent.
         /// </summary>
         /// <remarks>
@@ -104,13 +71,6 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
             return HasCloudEventsBatchContentType(httpResponseMessage.Content);
         }
-
-        /// <summary>
-        /// Indicates whether this HttpListenerRequest is a web hook validation request
-        /// </summary>
-        public static bool IsWebHookValidationRequest(this HttpRequestMessage httpRequestMessage) =>
-            httpRequestMessage.Method.Method == "OPTIONS" &&
-            httpRequestMessage.Headers.Contains("WebHook-Request-Origin");
 
         /// <summary>
         /// Converts this HTTP response message into a CloudEvent object

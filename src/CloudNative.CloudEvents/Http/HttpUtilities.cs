@@ -39,44 +39,6 @@ namespace CloudNative.CloudEvents.Http
             ? headerName.Substring(HttpHeaderPrefix.Length).ToLowerInvariant()
             : null;
 
-        internal static async Task<(HttpStatusCode statusCode, string allowedOriginHeader, string allowedRateHeader)> HandleWebHookValidationAsync<TRequest>(
-            TRequest request, Func<TRequest, string, string> headerSelector,
-            Func<string, bool> validateOrigin, Func<string, string> validateRate)
-        {
-            var origin = headerSelector(request, "WebHook-Request-Origin");
-            var rate = headerSelector(request, "WebHook-Request-Rate");
-
-            if (origin is null || validateOrigin?.Invoke(origin) == false)
-            {
-                return (HttpStatusCode.MethodNotAllowed, null, null);
-            }
-
-            if (rate is object)
-            {
-                rate = validateRate?.Invoke(rate) ?? "*";
-            }
-
-            string callbackUri = headerSelector(request, "WebHook-Request-Callback");
-
-            if (callbackUri is object)
-            {
-                try
-                {
-                    HttpClient client = new HttpClient();
-                    var response = await client.GetAsync(new Uri(callbackUri));
-                    return (response.StatusCode, null, null);
-                }
-                catch (Exception)
-                {
-                    return (HttpStatusCode.InternalServerError, null, null);
-                }
-            }
-            else
-            {
-                return (HttpStatusCode.OK, origin, rate);
-            }
-        }
-
         /// <summary>
         /// Encodes the given value so that it is suitable to use as a header encoding,
         /// using percent-encoding for all non-ASCII values, as well as space, percent and double-quote.
