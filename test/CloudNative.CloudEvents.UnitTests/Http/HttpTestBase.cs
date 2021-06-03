@@ -86,12 +86,6 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         {
             var ctxHeaderValue = requestContext.Request.Headers[TestContextHeader];
 
-            if (requestContext.Request.IsWebHookValidationRequest())
-            {
-                await requestContext.HandleAsWebHookValidationRequest(null, null);
-                return;
-            }
-
             if (PendingRequests.TryRemove(ctxHeaderValue, out var pending))
             {
                 await pending(requestContext);
