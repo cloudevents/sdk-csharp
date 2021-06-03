@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.AspNetCore;
 using CloudNative.CloudEvents.Core;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
@@ -9,7 +10,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CloudNative.CloudEvents.AspNetCore
+namespace CloudNative.CloudEvents.AspNetCoreSample
 {
     // FIXME: This doesn't get called for binary CloudEvents without content, or with a different data content type.
     // FIXME: This shouldn't really be tied to JSON. We need to work out how we actually want this to be used.
