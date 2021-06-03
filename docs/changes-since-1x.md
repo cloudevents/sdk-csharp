@@ -43,6 +43,10 @@ and extensions are encouraged to be provided using C# extension
 methods and static properties. See the [user
 guide](guide.md#extension-attributes) for more details.
 
+The distributed tracing extension attributes have been removed for
+now, while their long-term future is discussed in the broader
+CloudEvent ecosystem.
+
 ## Event formatters
 
 `CloudEventFormatter` is now an abstract base class (compared with
