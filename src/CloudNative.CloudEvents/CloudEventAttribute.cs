@@ -95,7 +95,7 @@ namespace CloudNative.CloudEvents
         /// <exception cref="ArgumentException"><paramref name="name"/> is not a valid argument name.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is null.</exception>
         /// <returns><paramref name="name"/>, for convenience.</returns>
-        internal static string ValidateName(string name)
+        private static string ValidateName(string name)
         {
             Validation.CheckNotNull(name, nameof(name));
             if (name.Length == 0)
@@ -108,7 +108,7 @@ namespace CloudNative.CloudEvents
                 bool valid = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z');
                 if (!valid)
                 {
-                    throw new ArgumentException($"Invalid character in attribute name: $'{c}'", nameof(name));
+                    throw new ArgumentException($"Invalid character '{c}' in attribute name '{name}'", nameof(name));
                 }
             }
             return name;
