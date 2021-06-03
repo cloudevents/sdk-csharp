@@ -14,8 +14,14 @@ namespace CloudNative.CloudEvents.UnitTests
         [InlineData("UPPER")]
         [InlineData("punct-uation")]
         [InlineData("under_scope")]
-        public void CreateExtension_InvalidName(string name) =>
-            Assert.Throws<ArgumentException>(() => CloudEventAttribute.CreateExtension(name, CloudEventAttributeType.String));
+        public void CreateExtension_InvalidName(string name)
+        {
+            var exception = Assert.Throws<ArgumentException>(() => CloudEventAttribute.CreateExtension(name, CloudEventAttributeType.String));
+            if (!string.IsNullOrEmpty(name))
+            {
+                Assert.Contains($"'{name}'", exception.Message);
+            }
+        }
 
         [Theory]
         [InlineData("simple")]
