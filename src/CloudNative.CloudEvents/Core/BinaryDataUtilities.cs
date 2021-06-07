@@ -29,7 +29,10 @@ namespace CloudNative.CloudEvents.Core
             // and is most likely to occur in tests, where the efficiency doesn't matter as much.
             var memory = new MemoryStream();
             await stream.CopyToAsync(memory).ConfigureAwait(false);
-            return memory.ToArray();
+            // It's safe to use memory.GetBuffer() and memory.Position here, as this is a stream
+            // we've created using the parameterless constructor.
+            var buffer = memory.GetBuffer();
+            return new ReadOnlyMemory<byte>(buffer, 0, (int) memory.Position);
         }
 
         /// <summary>
@@ -45,7 +48,10 @@ namespace CloudNative.CloudEvents.Core
             // and is most likely to occur in tests, where the efficiency doesn't matter as much.
             var memory = new MemoryStream();
             stream.CopyTo(memory);
-            return memory.ToArray();
+            // It's safe to use memory.GetBuffer() and memory.Position here, as this is a stream
+            // we've created using the parameterless constructor.
+            var buffer = memory.GetBuffer();
+            return new ReadOnlyMemory<byte>(buffer, 0, (int)memory.Position);
         }
 
         /// <summary>
