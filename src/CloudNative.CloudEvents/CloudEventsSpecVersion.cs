@@ -27,7 +27,7 @@ namespace CloudNative.CloudEvents
         private static readonly List<CloudEventsSpecVersion> allVersions = new List<CloudEventsSpecVersion>();
 
         /// <summary>
-        /// The default <see cref="CloudEventsSpecVersion"/> produced by this version of the librari.
+        /// The default <see cref="CloudEventsSpecVersion"/> produced by this version of the library.
         /// </summary>
         public static CloudEventsSpecVersion Default => V1_0;
 
