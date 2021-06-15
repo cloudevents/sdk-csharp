@@ -20,8 +20,7 @@ the [user guide](docs/guide.md) for details of the packages available.
 ## A few gotchas highlighted for the impatient who don't usually read docs
 
 1. The [CloudEvent](src/CloudNative.CloudEvents/CloudEvent.cs) class is not meant to be used with 
-   object serializers like JSON.NET and does not have a default constructor to underline this.
-   If you need to serialize or deserialize a CloudEvent directly, always use a
+   object serializers like JSON.NET. If you need to serialize or deserialize a CloudEvent directly, always use a
    [CloudEventFormatter](src/CloudNative.CloudEvents/CloudEventFormatter.cs)
    such as  [JsonEventFormatter](src/CloudNative.CloudEvents.JsonNet/JsonEventFormatter.cs).
 2. Protocol binding integration is provided in the form of extensions and the objective of those extensions
@@ -41,8 +40,10 @@ the documentation is particularly welcome.
 From version 2.0.0-beta.2, there are a number of breaking changes
 compared with the 1.x series of releases. New code is
 strongly encouraged to adopt the latest version rather than relying
-on the 1.3.80 stable release. We are hoping to provide a stable
-2.0.0 release within the summer of 2021 (May/June/July).
+on the 1.3.80 stable release.
+
+The stable 2.0.0 version was released on June 15th 2021, and all
+users are encouraged to use this (or later) versions.
 
 A [more details list of changes](docs/changes-since-1x.md) is
 provided within the documentation.
