@@ -166,6 +166,10 @@ namespace CloudNative.CloudEvents.Http
             else
             {
                 string versionId = httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader];
+                if (versionId is null)
+                {
+                    throw new ArgumentException($"Request does not represent a CloudEvent. It has neither a {HttpUtilities.SpecVersionHttpHeader} header, nor a suitable content type.", nameof(httpListenerRequest));
+                }
                 var version = CloudEventsSpecVersion.FromVersionId(versionId)
                     ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", nameof(httpListenerRequest));
 
