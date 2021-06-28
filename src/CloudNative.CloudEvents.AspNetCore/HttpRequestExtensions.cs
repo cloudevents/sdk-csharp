@@ -78,6 +78,10 @@ namespace CloudNative.CloudEvents.AspNetCore
             {
                 var headers = httpRequest.Headers;
                 headers.TryGetValue(HttpUtilities.SpecVersionHttpHeader, out var versionId);
+                if (versionId.Count == 0)
+                {
+                    throw new ArgumentException($"Request does not represent a CloudEvent. It has neither a {HttpUtilities.SpecVersionHttpHeader} header, nor a suitable content type.", nameof(httpRequest));
+                }
                 var version = CloudEventsSpecVersion.FromVersionId(versionId.FirstOrDefault())
                     ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", nameof(httpRequest));
 
