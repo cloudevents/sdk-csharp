@@ -118,9 +118,9 @@ namespace CloudNative.CloudEvents.AspNetCore
         /// </summary>
         /// <param name="httpRequest">The HTTP request to decode. Must not be null.</param>
         /// <param name="formatter">The event formatter to use to process the request body. Must not be null.</param>
-        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
-        /// <returns>The decoded CloudEvent.</returns>
-        /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
+        /// <exception cref="ArgumentException">The request does not contain a CloudEvent batch.</exception>
         public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
@@ -132,9 +132,9 @@ namespace CloudNative.CloudEvents.AspNetCore
         /// </summary>
         /// <param name="httpRequest">The HTTP request to decode. Must not be null.</param>
         /// <param name="formatter">The event formatter to use to process the request body. Must not be null.</param>
-        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
-        /// <returns>The decoded CloudEvent.</returns>
-        /// <exception cref="ArgumentException">The request does not contain a CloudEvent.</exception>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
+        /// <exception cref="ArgumentException">The request does not contain a CloudEvent batch.</exception>
         public static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
