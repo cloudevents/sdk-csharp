@@ -7,6 +7,7 @@ using CloudNative.CloudEvents.NewtonsoftJson;
 using CloudNative.CloudEvents.UnitTests;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -138,6 +139,79 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.Equal(originalCloudEvent.Source, parsedCloudEvent.Source);
             Assert.Equal(originalCloudEvent.DataContentType, parsedCloudEvent.DataContentType);
             Assert.Equal(originalCloudEvent.Data, parsedCloudEvent.Data);
+        }
+
+        [Fact]
+        public async Task CopyToHttpListenerResponseAsync_BinaryMode()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = "plain text",
+                DataContentType = "text/plain"
+            }.PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var response = await GetResponseAsync(
+                async context => await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, formatter));
+            response.EnsureSuccessStatusCode();
+            var content = response.Content;
+            Assert.Equal("text/plain", content.Headers.ContentType.MediaType);
+            Assert.Equal("plain text", await content.ReadAsStringAsync());
+            Assert.Equal("1.0", response.Headers.GetValues("ce-specversion").Single());
+            Assert.Equal(cloudEvent.Type, response.Headers.GetValues("ce-type").Single());
+            Assert.Equal(cloudEvent.Id, response.Headers.GetValues("ce-id").Single());
+            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source), response.Headers.GetValues("ce-source").Single());
+            // There's no data content type header; the content type itself is used for that.
+            Assert.False(response.Headers.Contains("ce-datacontenttype"));
+        }
+
+        [Fact]
+        public async Task CopyToListenerResponseAsync_ContentButNoContentType()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = "plain text",
+            }.PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            await GetResponseAsync(
+                async context => await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, formatter)));
+        }
+
+        [Fact]
+        public async Task CopyToListenerResponseAsync_BadContentMode()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            await GetResponseAsync(
+                async context => await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpListenerResponseAsync(context.Response, (ContentMode) 100, formatter)));
+        }
+
+        [Fact]
+        public async Task CopyToHttpListenerResponseAsync_StructuredMode()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = "plain text",
+                DataContentType = "text/plain"
+            }.PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var response = await GetResponseAsync(
+                async context => await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Structured, formatter));
+            response.EnsureSuccessStatusCode();
+            var content = response.Content;
+            Assert.Equal(MimeUtilities.MediaType + "+json", content.Headers.ContentType.MediaType);
+            var bytes = await content.ReadAsByteArrayAsync();
+
+            var parsed = new JsonEventFormatter().DecodeStructuredModeMessage(bytes, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes: null);
+            AssertCloudEventsEqual(cloudEvent, parsed);
+            Assert.Equal(cloudEvent.Data, parsed.Data);
+
+            // We populate headers even though we don't strictly need to; let's validate that.
+            Assert.Equal("1.0", response.Headers.GetValues("ce-specversion").Single());
+            Assert.Equal(cloudEvent.Type, response.Headers.GetValues("ce-type").Single());
+            Assert.Equal(cloudEvent.Id, response.Headers.GetValues("ce-id").Single());
+            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source), response.Headers.GetValues("ce-source").Single());
+            // We don't populate the data content type header
+            Assert.False(response.Headers.Contains("ce-datacontenttype"));
         }
 
         [Fact]
