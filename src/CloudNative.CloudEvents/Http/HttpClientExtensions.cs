@@ -177,12 +177,12 @@ namespace CloudNative.CloudEvents.Http
         }
 
         /// <summary>
-        /// Converts this HTTP response message into a CloudEvent object
+        /// Converts this HTTP response message into a CloudEvent batch.
         /// </summary>
         /// <param name="httpResponseMessage">The HTTP response message to convert. Must not be null.</param>
-        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
-        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
-        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvents. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
         public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpResponseMessage httpResponseMessage,
             CloudEventFormatter formatter,
@@ -190,12 +190,12 @@ namespace CloudNative.CloudEvents.Http
             ToCloudEventBatchAsync(httpResponseMessage, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
         /// <summary>
-        /// Converts this HTTP response message into a CloudEvent object
+        /// Converts this HTTP response message into a CloudEvent batch.
         /// </summary>
         /// <param name="httpResponseMessage">The HTTP response message to convert. Must not be null.</param>
-        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
-        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
-        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvents. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
         public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpResponseMessage httpResponseMessage,
             CloudEventFormatter formatter,
@@ -206,12 +206,12 @@ namespace CloudNative.CloudEvents.Http
         }
 
         /// <summary>
-        /// Converts this HTTP request message into a CloudEvent object.
+        /// Converts this HTTP request message into a CloudEvent batch.
         /// </summary>
         /// <param name="httpRequestMessage">The HTTP request message to convert. Must not be null.</param>
-        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
-        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
-        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvents. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
         public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequestMessage httpRequestMessage,
             CloudEventFormatter formatter,
@@ -219,12 +219,12 @@ namespace CloudNative.CloudEvents.Http
             ToCloudEventBatchAsync(httpRequestMessage, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
 
         /// <summary>
-        /// Converts this HTTP request message into a CloudEvent object.
+        /// Converts this HTTP request message into a CloudEvent batch.
         /// </summary>
         /// <param name="httpRequestMessage">The HTTP request message to convert. Must not be null.</param>
-        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
-        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
-        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvents. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
         public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequestMessage httpRequestMessage,
             CloudEventFormatter formatter,
