@@ -438,7 +438,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             }
         }
 
-        private static HttpRequestMessage CreateRequestMessage(ReadOnlyMemory<byte> content, ContentType contentType) =>
+        internal static HttpRequestMessage CreateRequestMessage(ReadOnlyMemory<byte> content, ContentType contentType) =>
             new HttpRequestMessage
             {
                 Content = new ByteArrayContent(content.ToArray())
@@ -447,7 +447,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 }
             };
 
-        private static HttpResponseMessage CreateResponseMessage(ReadOnlyMemory<byte> content, ContentType contentType) =>
+        internal static HttpResponseMessage CreateResponseMessage(ReadOnlyMemory<byte> content, ContentType contentType) =>
             new HttpResponseMessage
             {
                 Content = new ByteArrayContent(content.ToArray())
