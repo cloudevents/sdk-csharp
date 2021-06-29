@@ -212,6 +212,77 @@ namespace CloudNative.CloudEvents.Http
             }
         }
 
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent batch.
+        /// </summary>
+        /// <param name="httpListenerRequest">The HTTP request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvents. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
+        public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter,
+            params CloudEventAttribute[] extensionAttributes) =>
+            ToCloudEventBatchAsync(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>)extensionAttributes);
+
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent batch.
+        /// </summary>
+        /// <param name="httpListenerRequest">The HTTP request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
+        public static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
+            this HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter,
+            IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            await ToCloudEventBatchInternalAsync(httpListenerRequest, formatter, extensionAttributes, async: true).ConfigureAwait(false);
+
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent batch.
+        /// </summary>
+        /// <param name="httpListenerRequest">The HTTP request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvents. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
+        public static IReadOnlyList<CloudEvent> ToCloudEventBatch(
+            this HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter,
+            params CloudEventAttribute[] extensionAttributes) =>
+            ToCloudEventBatch(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+
+        /// <summary>
+        /// Converts this HTTP request message into a CloudEvent batch.
+        /// </summary>
+        /// <param name="httpListenerRequest">The HTTP request to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvents. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvents. May be null.</param>
+        /// <returns>The decoded batch of CloudEvents.</returns>
+        public static IReadOnlyList<CloudEvent> ToCloudEventBatch(
+            this HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter,
+            IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            ToCloudEventBatchInternalAsync(httpListenerRequest, formatter, extensionAttributes, async: false).GetAwaiter().GetResult();
+        
+        private async static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpListenerRequest httpListenerRequest,
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes, bool async)
+        {
+            Validation.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
+            Validation.CheckNotNull(formatter, nameof(formatter));
+
+            if (HasCloudEventsBatchContentType(httpListenerRequest))
+            {
+                var contentType = MimeUtilities.CreateContentTypeOrNull(httpListenerRequest.ContentType);
+                return async
+                    ? await formatter.DecodeBatchModeMessageAsync(httpListenerRequest.InputStream, contentType, extensionAttributes).ConfigureAwait(false)
+                    : formatter.DecodeBatchModeMessage(httpListenerRequest.InputStream, contentType, extensionAttributes);
+            }
+            else
+            {
+                throw new ArgumentException("HTTP message does not represent a CloudEvents batch.", nameof(httpListenerRequest));
+            }
+        }
+
         private static bool HasCloudEventsContentType(HttpListenerRequest request) =>
             MimeUtilities.IsCloudEventsContentType(request.ContentType);
 

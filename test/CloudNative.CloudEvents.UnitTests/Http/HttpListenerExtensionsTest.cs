@@ -142,6 +142,48 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         }
 
         [Fact]
+        public async Task ToCloudEventBatch_Valid()
+        {
+            var batch = CreateSampleBatch();
+
+            var formatter = new JsonEventFormatter();
+            var contentBytes = formatter.EncodeBatchModeMessage(batch, out var contentType);
+
+            AssertBatchesEqual(batch, await GetBatchAsync(context => context.Request.ToCloudEventBatchAsync(formatter, EmptyExtensionArray)));
+            AssertBatchesEqual(batch, await GetBatchAsync(context => context.Request.ToCloudEventBatchAsync(formatter, EmptyExtensionSequence)));
+            AssertBatchesEqual(batch, await GetBatchAsync(context => Task.FromResult(context.Request.ToCloudEventBatch(formatter, EmptyExtensionArray))));
+            AssertBatchesEqual(batch, await GetBatchAsync(context => Task.FromResult(context.Request.ToCloudEventBatch(formatter, EmptyExtensionSequence))));
+
+            Task<IReadOnlyList<CloudEvent>> GetBatchAsync(Func<HttpListenerContext, Task<IReadOnlyList<CloudEvent>>> handler)
+            {
+                var request = HttpClientExtensionsTest.CreateRequestMessage(contentBytes, contentType);
+                request.RequestUri = new Uri(ListenerAddress);
+                return SendRequestAsync(request, handler);
+            }
+        }
+
+        [Fact]
+        public async Task ToCloudEventBatchAsync_Invalid()
+        {
+            // Most likely accident: calling ToCloudEventBatchAsync with a single event in structured mode.
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
+
+            await ExpectFailure(context => context.Request.ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+            await ExpectFailure(context => context.Request.ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+            await ExpectFailure(context => Task.FromResult(context.Request.ToCloudEventBatch(formatter, EmptyExtensionArray)));
+            await ExpectFailure(context => Task.FromResult(context.Request.ToCloudEventBatch(formatter, EmptyExtensionSequence)));
+
+            async Task ExpectFailure(Func<HttpListenerContext, Task<IReadOnlyList<CloudEvent>>> handler)
+            {
+                var request = HttpClientExtensionsTest.CreateRequestMessage(contentBytes, contentType);
+                request.RequestUri = new Uri(ListenerAddress);
+                await SendRequestAsync(request, context => Assert.ThrowsAsync<ArgumentException>(() => handler(context)));
+            }
+        }
+
+        [Fact]
         public async Task CopyToHttpListenerResponseAsync_BinaryMode()
         {
             var cloudEvent = new CloudEvent
