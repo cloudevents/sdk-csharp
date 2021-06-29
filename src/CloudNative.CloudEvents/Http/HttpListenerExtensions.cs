@@ -98,11 +98,26 @@ namespace CloudNative.CloudEvents.Http
         }
 
         /// <summary>
-        /// Indicates whether this HttpListenerRequest holds a CloudEvent
+        /// Indicates whether this HttpListenerRequest holds a single CloudEvent.
         /// </summary>
-        public static bool IsCloudEvent(this HttpListenerRequest httpListenerRequest) =>
-            HasCloudEventsContentType(httpListenerRequest) ||
-            httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader] is object;
+        /// <param name="httpListenerRequest">The request to check for the presence of a single CloudEvent. Must not be null.</param>
+        public static bool IsCloudEvent(this HttpListenerRequest httpListenerRequest)
+        {
+            Validation.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
+            return HasCloudEventsContentType(httpListenerRequest) ||
+                httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader] is object;
+        }
+
+        /// <summary>
+        /// Indicates whether this <see cref="HttpListenerRequest"/> holds a batch of CloudEvents.
+        /// </summary>
+        /// <param name="httpListenerRequest">The message to check for the presence of a CloudEvent batch. Must not be null.</param>
+        /// <returns>true, if the request is a CloudEvent batch</returns>
+        public static bool IsCloudEventBatch(this HttpListenerRequest httpListenerRequest)
+        {
+            Validation.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
+            return HasCloudEventsBatchContentType(httpListenerRequest);
+        }
 
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.

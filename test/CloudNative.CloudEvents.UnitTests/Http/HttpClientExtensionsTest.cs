@@ -23,7 +23,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 {
     public class HttpClientExtensionsTest : HttpTestBase
     {
-        public static TheoryData<string, HttpContent, IDictionary<string, string>> SingleCloudEventMessages = new TheoryData<string, HttpContent, IDictionary<string, string>>
+        public static TheoryData<string, HttpContent, IDictionary<string, string>> SingleCloudEventMessages => new TheoryData<string, HttpContent, IDictionary<string, string>>
         {
             {
                 "Binary",
@@ -43,7 +43,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             }
         };
 
-        public static TheoryData<string, HttpContent, IDictionary<string, string>> BatchMessages = new TheoryData<string, HttpContent, IDictionary<string, string>>
+        public static TheoryData<string, HttpContent, IDictionary<string, string>> BatchMessages => new TheoryData<string, HttpContent, IDictionary<string, string>>
         {
             {
                 "Batch",
@@ -52,7 +52,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             }
         };
 
-        public static TheoryData<string, HttpContent, IDictionary<string, string>> NonCloudEventMessages = new TheoryData<string, HttpContent, IDictionary<string, string>>
+        public static TheoryData<string, HttpContent, IDictionary<string, string>> NonCloudEventMessages => new TheoryData<string, HttpContent, IDictionary<string, string>>
         {
             {
                 "Plain text",
@@ -69,7 +69,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.NotNull(description);
 
             var request = new HttpRequestMessage { Content = content };
-            CopyHeaders(headers, request.Headers);            
+            CopyHeaders(headers, request.Headers);
             Assert.True(request.IsCloudEvent());
 
             var response = new HttpResponseMessage { Content = content };
@@ -328,7 +328,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         public async Task HttpStructuredClientSendTest()
         {
             var cloudEvent = new CloudEvent
-            {                
+            {
                 Type = "com.github.pull.create",
                 Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
                 Id = "A234-1234-1234",
@@ -426,7 +426,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             AssertBatchesEqual(batch, parsedBatch);
         }
 
-        private static void CopyHeaders(IDictionary<string, string> source, HttpHeaders target)
+        internal static void CopyHeaders(IDictionary<string, string> source, HttpHeaders target)
         {
             if (source is null)
             {

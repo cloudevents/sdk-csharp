@@ -6,7 +6,7 @@ using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using CloudNative.CloudEvents.UnitTests;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -18,6 +18,60 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 {
     public class HttpListenerExtensionsTest : HttpTestBase
     {
+        [Theory]
+        [MemberData(nameof(HttpClientExtensionsTest.SingleCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
+        public async Task IsCloudEvent_True(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+            HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
+            var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEvent()));
+            Assert.True(result);
+        }
+
+        [Theory]
+        [MemberData(nameof(HttpClientExtensionsTest.BatchMessages), MemberType = typeof(HttpClientExtensionsTest))]
+        [MemberData(nameof(HttpClientExtensionsTest.NonCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
+        public async Task IsCloudEvent_False(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+            HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
+            var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEvent()));
+            Assert.False(result);
+        }
+
+        [Theory]
+        [MemberData(nameof(HttpClientExtensionsTest.BatchMessages), MemberType = typeof(HttpClientExtensionsTest))]
+        public async Task IsCloudEventBatch_True(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+            HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
+            var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEventBatch()));
+            Assert.True(result);
+        }
+
+        [Theory]
+        [MemberData(nameof(HttpClientExtensionsTest.SingleCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
+        [MemberData(nameof(HttpClientExtensionsTest.NonCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
+        public async Task IsCloudEventBatch_False(string description, HttpContent content, IDictionary<string, string> headers)
+        {
+            // Really only present for display purposes.
+            Assert.NotNull(description);
+
+            var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+            HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
+            var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEventBatch()));
+            Assert.False(result);
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -32,7 +86,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                     { "ce-type", "test-type" },
                     { "ce-id", "test-id" },
                     { "ce-source", TestHelpers.SampleUriReferenceText },
-                },                
+                },
                 Content = new ByteArrayContent(Encoding.UTF8.GetBytes("test content"))
                 {
                     Headers = { { "content-type", "text/plain" } }
@@ -60,7 +114,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var originalCloudEvent = new CloudEvent
             {
                 Data = "sample text",
-                DataContentType = "text/plain" 
+                DataContentType = "text/plain"
             }.PopulateRequiredAttributes();
 
             var bytes = new JsonEventFormatter().EncodeStructuredModeMessage(originalCloudEvent, out var contentType);
@@ -121,7 +175,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             {
                 executed = true;
                 result = await handler(context);
-                context.Response.StatusCode = (int) HttpStatusCode.NoContent;
+                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
             };
 
             var httpClient = new HttpClient();
