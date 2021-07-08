@@ -44,8 +44,8 @@ namespace CloudNative.CloudEvents.Amqp
         public static CloudEvent ToCloudEvent(
             this Message message,
             CloudEventFormatter formatter,
-            params CloudEventAttribute[] extensionAttributes) =>
-            ToCloudEvent(message, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+            params CloudEventAttribute[]? extensionAttributes) =>
+            ToCloudEvent(message, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
 
         /// <summary>
         /// Converts this AMQP message into a CloudEvent object.
@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.Amqp
         public static CloudEvent ToCloudEvent(
             this Message message,
             CloudEventFormatter formatter,
-            IEnumerable<CloudEventAttribute> extensionAttributes)
+            IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(message, nameof(message));
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -135,7 +135,7 @@ namespace CloudNative.CloudEvents.Amqp
             }
         }
 
-        private static bool HasCloudEventsContentType(Message message, out string contentType)
+        private static bool HasCloudEventsContentType(Message message, out string? contentType)
         {
             contentType = message.Properties.ContentType?.ToString();
             return MimeUtilities.IsCloudEventsContentType(contentType);
