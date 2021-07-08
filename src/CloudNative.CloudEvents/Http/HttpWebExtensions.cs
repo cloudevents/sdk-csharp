@@ -35,7 +35,7 @@ namespace CloudNative.CloudEvents.Http
 
             ReadOnlyMemory<byte> content;
             // The content type to include in the ContentType header - may be the data content type, or the formatter's content type.
-            ContentType contentType;
+            ContentType? contentType;
             switch (contentMode)
             {
                 case ContentMode.Structured:

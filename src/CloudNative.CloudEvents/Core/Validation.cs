@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace CloudNative.CloudEvents.Core
@@ -22,7 +23,7 @@ namespace CloudNative.CloudEvents.Core
         /// <param name="paramName">The parameter name to use in the exception if <paramref name="value"/> is null.
         /// May be null.</param>
         /// <returns>The value of <paramref name="value"/>, for convenient method chaining or assignment.</returns>
-        public static T CheckNotNull<T>(T value, string paramName) where T : class =>
+        public static T CheckNotNull<T>(T value, string? paramName) where T : class =>
             value ?? throw new ArgumentNullException(paramName);
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace CloudNative.CloudEvents.Core
         /// <param name="condition">The condition to validate; this method will throw an <see cref="ArgumentException"/> if this is false.</param>
         /// <param name="paramName">The name of the parameter being validated. May be null.</param>
         /// <param name="message">The message to use in the exception, if one is thrown.</param>
-        public static void CheckArgument(bool condition, string paramName, string message)
+        public static void CheckArgument([DoesNotReturnIf(false)] bool condition, string paramName, string message)
         {
             if (!condition)
             {
@@ -46,8 +47,8 @@ namespace CloudNative.CloudEvents.Core
         /// <param name="paramName">The name of the parameter being validated. May be null.</param>
         /// <param name="messageFormat">The string format to use in the exception message, if one is thrown.</param>
         /// <param name="arg1">The first argument in the string format.</param>
-        public static void CheckArgument(bool condition, string paramName, string messageFormat,
-            object arg1)
+        public static void CheckArgument([DoesNotReturnIf(false)] bool condition, string paramName, string messageFormat,
+            object? arg1)
         {
             if (!condition)
             {
@@ -62,9 +63,9 @@ namespace CloudNative.CloudEvents.Core
         /// <param name="paramName">The name of the parameter being validated. May be null.</param>
         /// <param name="messageFormat">The string format to use in the exception message, if one is thrown.</param>
         /// <param name="arg1">The first argument in the string format.</param>
-        /// <param name="arg2">The first argument in the string format.</param>
+        /// <param name="arg2">The second argument in the string format.</param>
         public static void CheckArgument(bool condition, string paramName, string messageFormat,
-            object arg1, object arg2)
+            object? arg1, object? arg2)
         {
             if (!condition)
             {
@@ -84,7 +85,7 @@ namespace CloudNative.CloudEvents.Core
         /// <exception cref="ArgumentNullException"><paramref name="cloudEvent"/> is null.</exception>
         /// <exception cref="ArgumentException">The event is invalid.</exception>
         /// <returns>A reference to the same object, for simplicity of method chaining.</returns>
-        public static CloudEvent CheckCloudEventArgument(CloudEvent cloudEvent, string paramName)
+        public static CloudEvent CheckCloudEventArgument(CloudEvent cloudEvent, string? paramName)
         {
             CheckNotNull(cloudEvent, paramName);
             if (cloudEvent.IsValid)
@@ -103,7 +104,7 @@ namespace CloudNative.CloudEvents.Core
         /// <param name="cloudEvents">The event batch to validate.</param>
         /// <param name="paramName">The parameter name to use in the exception if <paramref name="cloudEvents"/> is null or invalid.
         /// May be null.</param>
-        public static void CheckCloudEventBatchArgument(IReadOnlyList<CloudEvent> cloudEvents, string paramName)
+        public static void CheckCloudEventBatchArgument(IReadOnlyList<CloudEvent> cloudEvents, string? paramName)
         {
             CheckNotNull(cloudEvents, paramName);
             foreach (var cloudEvent in cloudEvents)

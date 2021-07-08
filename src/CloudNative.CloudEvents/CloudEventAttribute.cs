@@ -37,17 +37,17 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public bool IsExtension { get; }
 
-        private Action<object> validator;
+        private Action<object>? validator;
 
         // TODO: Have a "mode" of Required/Optional/Extension?
 
-        private CloudEventAttribute(string name, CloudEventAttributeType type, bool required, bool extension, Action<object> validator) =>
+        private CloudEventAttribute(string name, CloudEventAttributeType type, bool required, bool extension, Action<object>? validator) =>
             (Name, Type, IsRequired, IsExtension, this.validator) = (ValidateName(name), Validation.CheckNotNull(type, nameof(type)), required, extension, validator);
 
-        internal static CloudEventAttribute CreateRequired(string name, CloudEventAttributeType type, Action<object> validator) =>
+        internal static CloudEventAttribute CreateRequired(string name, CloudEventAttributeType type, Action<object>? validator) =>
             new CloudEventAttribute(name, type, required: true, extension: false, validator: validator);
 
-        internal static CloudEventAttribute CreateOptional(string name, CloudEventAttributeType type, Action<object> validator) =>
+        internal static CloudEventAttribute CreateOptional(string name, CloudEventAttributeType type, Action<object>? validator) =>
             new CloudEventAttribute(name, type, required: false, extension: false, validator: validator);
 
         /// <summary>
@@ -72,12 +72,12 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="name">The extension attribute name. Must not be null, and must not be 'specversion'.</param>
         /// <param name="type">The extension attribute type. Must not be null.</param>
-        /// <param name="validator">Validator to use when parsing or formatting values.
-        /// This is only ever called with a non-null value which can be cast to the attribute type's corresponding
+        /// <param name="validator">Validator to use when parsing or formatting values. May be null.
+        /// This delegate is only ever called with a non-null value which can be cast to the attribute type's corresponding
         /// CLR type. If the validator throws any exception, it is wrapped in an ArgumentException containing the
         /// attribute details.</param>
         /// <returns>The extension attribute represented as a <see cref="CloudEventAttribute"/>.</returns>
-        public static CloudEventAttribute CreateExtension(string name, CloudEventAttributeType type, Action<object> validator) =>
+        public static CloudEventAttribute CreateExtension(string name, CloudEventAttributeType type, Action<object>? validator) =>
             new CloudEventAttribute(name, type, required: false, extension: true, validator: validator);
 
         /// <summary>

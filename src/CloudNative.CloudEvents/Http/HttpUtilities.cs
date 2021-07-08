@@ -34,7 +34,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="headerName">The name of the header to check. Must not be null.</param>
         /// <returns>The corresponding attribute name if the header name matches the CloudEvents header prefix;
         /// null otherwise.</returns>
-        public static string GetAttributeNameFromHeaderName(string headerName) =>
+        public static string? GetAttributeNameFromHeaderName(string headerName) =>
             Validation.CheckNotNull(headerName, nameof(headerName)).StartsWith(HttpHeaderPrefix, StringComparison.InvariantCultureIgnoreCase)
             ? headerName.Substring(HttpHeaderPrefix.Length).ToLowerInvariant()
             : null;
