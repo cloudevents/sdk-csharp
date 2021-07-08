@@ -31,7 +31,7 @@ namespace CloudNative.CloudEvents.Kafka
         /// </remarks>
         /// <param name="message">The message to check for the presence of a CloudEvent. Must not be null.</param>
         /// <returns>true, if the request is a CloudEvent</returns>
-        public static bool IsCloudEvent(this Message<string, byte[]> message) =>
+        public static bool IsCloudEvent(this Message<string?, byte[]> message) =>
             GetHeaderValue(message, SpecVersionKafkaHeader) is object ||
             MimeUtilities.IsCloudEventsContentType(GetHeaderValue(message, KafkaContentTypeAttributeName));
 
@@ -42,9 +42,9 @@ namespace CloudNative.CloudEvents.Kafka
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
-        public static CloudEvent ToCloudEvent(this Message<string, byte[]> message,
-            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
-            ToCloudEvent(message, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+        public static CloudEvent ToCloudEvent(this Message<string?, byte[]> message,
+            CloudEventFormatter formatter, params CloudEventAttribute[]? extensionAttributes) =>
+            ToCloudEvent(message, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
 
         /// <summary>
         /// Converts this Kafka message into a CloudEvent object.
@@ -53,8 +53,8 @@ namespace CloudNative.CloudEvents.Kafka
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
-        public static CloudEvent ToCloudEvent(this Message<string, byte[]> message,
-            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public static CloudEvent ToCloudEvent(this Message<string?, byte[]> message,
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(message, nameof(message));
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -112,7 +112,7 @@ namespace CloudNative.CloudEvents.Kafka
             return Validation.CheckCloudEventArgument(cloudEvent, nameof(message));
         }
 
-        private static void InitPartitioningKey(Message<string, byte[]> message, CloudEvent cloudEvent)
+        private static void InitPartitioningKey(Message<string?, byte[]> message, CloudEvent cloudEvent)
         {
             if (!string.IsNullOrEmpty(message.Key))
             {
@@ -123,7 +123,7 @@ namespace CloudNative.CloudEvents.Kafka
         /// <summary>
         /// Returns the last header value with the given name, decoded using UTF-8, or null if there is no such header.
         /// </summary>
-        private static string GetHeaderValue(MessageMetadata message, string headerName) =>
+        private static string? GetHeaderValue(MessageMetadata message, string headerName) =>
             Validation.CheckNotNull(message, nameof(message)).Headers is null
             ? null
             : message.Headers.TryGetLastBytes(headerName, out var bytes) ? Encoding.UTF8.GetString(bytes) : null;
@@ -134,7 +134,7 @@ namespace CloudNative.CloudEvents.Kafka
         /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="contentMode">Content mode. Structured or binary.</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
-        public static Message<string, byte[]> ToKafkaMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
+        public static Message<string?, byte[]> ToKafkaMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -142,9 +142,9 @@ namespace CloudNative.CloudEvents.Kafka
             // TODO: Is this appropriate? Why can't we transport a CloudEvent without data in Kafka?
             Validation.CheckArgument(cloudEvent.Data is object, nameof(cloudEvent), "Only CloudEvents with data can be converted to Kafka messages");
             var headers = MapHeaders(cloudEvent);
-            string key = (string) cloudEvent[Partitioning.PartitionKeyAttribute];
+            string? key = (string?) cloudEvent[Partitioning.PartitionKeyAttribute];
             byte[] value;
-            string contentTypeHeaderValue;
+            string? contentTypeHeaderValue;
 
             switch (contentMode)
             {
@@ -164,7 +164,7 @@ namespace CloudNative.CloudEvents.Kafka
             {
                 headers.Add(KafkaContentTypeAttributeName, Encoding.UTF8.GetBytes(contentTypeHeaderValue));
             }
-            return new Message<string, byte[]>
+            return new Message<string?, byte[]>
             {
                 Headers = headers,
                 Value = value,
