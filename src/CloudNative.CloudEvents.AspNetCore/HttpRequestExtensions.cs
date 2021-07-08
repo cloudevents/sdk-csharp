@@ -51,8 +51,8 @@ namespace CloudNative.CloudEvents.AspNetCore
         public static Task<CloudEvent> ToCloudEventAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
-            params CloudEventAttribute[] extensionAttributes) =>
-            ToCloudEventAsync(httpRequest, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+            params CloudEventAttribute[]? extensionAttributes) =>
+            ToCloudEventAsync(httpRequest, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
 
         /// <summary>
         /// Converts this HTTP request into a CloudEvent object.
@@ -65,7 +65,7 @@ namespace CloudNative.CloudEvents.AspNetCore
         public static async Task<CloudEvent> ToCloudEventAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
-            IEnumerable<CloudEventAttribute> extensionAttributes)
+            IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(httpRequest, nameof(httpRequest));
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -93,7 +93,7 @@ namespace CloudNative.CloudEvents.AspNetCore
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
                 foreach (var header in headers)
                 {
-                    string attributeName = HttpUtilities.GetAttributeNameFromHeaderName(header.Key);
+                    string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(header.Key);
                     if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
                     {
                         continue;
@@ -124,8 +124,8 @@ namespace CloudNative.CloudEvents.AspNetCore
         public static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
-            params CloudEventAttribute[] extensionAttributes) =>
-            ToCloudEventBatchAsync(httpRequest, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+            params CloudEventAttribute[]? extensionAttributes) =>
+            ToCloudEventBatchAsync(httpRequest, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
 
         /// <summary>
         /// Converts this HTTP request into a batch of CloudEvents.
@@ -138,7 +138,7 @@ namespace CloudNative.CloudEvents.AspNetCore
         public static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchAsync(
             this HttpRequest httpRequest,
             CloudEventFormatter formatter,
-            IEnumerable<CloudEventAttribute> extensionAttributes)
+            IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(httpRequest, nameof(httpRequest));
             Validation.CheckNotNull(formatter, nameof(formatter));

@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Description>ASP.Net Core extensions for CloudNative.CloudEvents</Description>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
     <PackageTags>cncf;cloudnative;cloudevents;events;aspnetcore;aspnet</PackageTags>
   </PropertyGroup>
 

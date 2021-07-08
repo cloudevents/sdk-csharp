@@ -33,7 +33,7 @@ namespace CloudNative.CloudEvents.AspNetCore
             Validation.CheckNotNull(formatter, nameof(formatter));
 
             ReadOnlyMemory<byte> content;
-            ContentType contentType;
+            ContentType? contentType;
             switch (contentMode)
             {
                 case ContentMode.Structured:
