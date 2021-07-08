@@ -22,8 +22,8 @@ namespace CloudNative.CloudEvents.Mqtt
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
         public static CloudEvent ToCloudEvent(this MqttApplicationMessage message,
-            CloudEventFormatter formatter, params CloudEventAttribute[] extensionAttributes) =>
-            ToCloudEvent(message, formatter, (IEnumerable<CloudEventAttribute>) extensionAttributes);
+            CloudEventFormatter formatter, params CloudEventAttribute[]? extensionAttributes) =>
+            ToCloudEvent(message, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
 
         /// <summary>
         /// Converts this MQTT message into a CloudEvent object.
@@ -33,7 +33,7 @@ namespace CloudNative.CloudEvents.Mqtt
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
         public static CloudEvent ToCloudEvent(this MqttApplicationMessage message,
-            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute> extensionAttributes)
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(formatter, nameof(formatter));
             Validation.CheckNotNull(message, nameof(message));
@@ -50,7 +50,7 @@ namespace CloudNative.CloudEvents.Mqtt
         /// <param name="contentMode">Content mode. Currently only structured mode is supported.</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         /// <param name="topic">The MQTT topic for the message. May be null.</param>
-        public static MqttApplicationMessage ToMqttApplicationMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter, string topic)
+        public static MqttApplicationMessage ToMqttApplicationMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter, string? topic)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
             Validation.CheckNotNull(formatter, nameof(formatter));

@@ -4,6 +4,8 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Description>MQTT extensions for CloudNative.CloudEvents</Description>
     <PackageTags>cncf;cloudnative;cloudevents;events;mqtt</PackageTags>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
