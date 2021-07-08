@@ -150,7 +150,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             using var response = (HttpWebResponse) await request.GetResponseAsync();
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
             Assert.True(executed);
-            return result;
+            return result!;
         }
     }
 }

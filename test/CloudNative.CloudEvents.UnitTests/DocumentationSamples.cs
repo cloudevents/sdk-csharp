@@ -94,10 +94,10 @@ namespace CloudNative.CloudEvents.UnitTests
         public class GameResult
         {
             [JsonProperty("playerId")]
-            public string PlayerId { get; set; }
+            public string? PlayerId { get; set; }
 
             [JsonProperty("gameId")]
-            public string GameId { get; set; }
+            public string? GameId { get; set; }
 
             [JsonProperty("score")]
             public int Score { get; set; }
@@ -137,8 +137,8 @@ namespace CloudNative.CloudEvents.UnitTests
             // Sample: guide.md#DeserializeGameResult1
             CloudEventFormatter formatter = new JsonEventFormatter();
             CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
-            JObject dataAsJObject = (JObject) cloudEvent.Data;
-            GameResult result = dataAsJObject.ToObject<GameResult>();
+            JObject dataAsJObject = (JObject) cloudEvent.Data!;
+            GameResult result = dataAsJObject.ToObject<GameResult>()!;
             // End sample
             return result;
         }
@@ -148,7 +148,7 @@ namespace CloudNative.CloudEvents.UnitTests
             // Sample: guide.md#DeserializeGameResult2
             CloudEventFormatter formatter = new JsonEventFormatter<GameResult>();
             CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
-            GameResult result = (GameResult) cloudEvent.Data;
+            GameResult result = (GameResult) cloudEvent.Data!;
             // End sample
             return result;
         }

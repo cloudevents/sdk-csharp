@@ -45,11 +45,11 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull"), receivedCloudEvent.Source);
             Assert.Equal("123", receivedCloudEvent.Subject);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -82,11 +82,11 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -109,7 +109,7 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
             var message1 = Message.Decode(encodedAmqpMessage);
             var receivedCloudEvent = message1.ToCloudEvent(new JsonEventFormatter());
 
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
         }
 
         [Fact]

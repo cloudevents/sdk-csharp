@@ -67,11 +67,11 @@ namespace CloudNative.CloudEvents.UnitTests
 
         [Fact]
         public void CreateExtension_NullName() =>
-            Assert.Throws<ArgumentNullException>(() => CloudEventAttribute.CreateExtension(null, CloudEventAttributeType.String));
+            Assert.Throws<ArgumentNullException>(() => CloudEventAttribute.CreateExtension(null!, CloudEventAttributeType.String));
 
         [Fact]
         public void CreateExtension_NullType() =>
-            Assert.Throws<ArgumentNullException>(() => CloudEventAttribute.CreateExtension("name", null));
+            Assert.Throws<ArgumentNullException>(() => CloudEventAttribute.CreateExtension("name", null!));
 
         [Fact]
         public void CreateExtension_SpecVersionName() =>

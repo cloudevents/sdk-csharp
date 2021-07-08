@@ -38,7 +38,7 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             Assert.Equal(cloudEvent2.Type, cloudEvent.Type);
             Assert.Equal(cloudEvent2.Source, cloudEvent.Source);
             Assert.Equal(cloudEvent2.Id, cloudEvent.Id);
-            AssertTimestampsEqual(cloudEvent2.Time.Value, cloudEvent.Time.Value);
+            AssertTimestampsEqual(cloudEvent2.Time!.Value, cloudEvent.Time!.Value);
             Assert.Equal(cloudEvent2.DataContentType, cloudEvent.DataContentType);
             Assert.Equal(cloudEvent2.Data, cloudEvent.Data);
         }
@@ -56,11 +56,11 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
-            Assert.Equal("value", (string)cloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?)cloudEvent["comexampleextension1"]);
         }
         
         [Fact]
@@ -77,7 +77,7 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             Assert.Equal("com.github.pull.create", cloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), cloudEvent.Source);
             Assert.Equal("A234-1234-1234", cloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time.Value);
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", cloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 

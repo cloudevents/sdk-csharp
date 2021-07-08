@@ -170,7 +170,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             {
                 if (cloudEvent.DataContentType == GuidContentType && dataElement.ValueKind == JsonValueKind.String)
                 {
-                    string text = dataElement.GetString();
+                    string text = dataElement.GetString()!;
                     if (!text.StartsWith(GuidPrefix))
                     {
                         throw new ArgumentException("Invalid GUID text data");

@@ -13,7 +13,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
 {
     internal class JsonElementAsserter : IEnumerable
     {
-        private readonly List<(string name, JsonValueKind type, object value)> expectations = new List<(string, JsonValueKind, object)>();
+        private readonly List<(string name, JsonValueKind type, object? value)> expectations = new List<(string, JsonValueKind, object?)>();
 
         // Just for collection initializers
         public IEnumerator GetEnumerator() => throw new NotImplementedException();
@@ -38,7 +38,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                         JsonValueKind.False => false,
                         JsonValueKind.String => property.GetString(),
                         JsonValueKind.Number => property.GetInt32(),
-                        JsonValueKind.Null => (object) null,
+                        JsonValueKind.Null => (object?) null,
                         _ => throw new Exception($"Unhandled value kind: {property.ValueKind}")
                     };
 

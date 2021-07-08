@@ -36,7 +36,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             Assert.Equal("1.0", response.Headers["ce-specversion"]);
             Assert.Equal(cloudEvent.Type, response.Headers["ce-type"]);
             Assert.Equal(cloudEvent.Id, response.Headers["ce-id"]);
-            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source), response.Headers["ce-source"]);
+            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers["ce-source"]);
             // There's no data content type header; the content type itself is used for that.
             Assert.False(response.Headers.ContainsKey("ce-datacontenttype"));
         }
@@ -84,7 +84,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             Assert.Equal("1.0", response.Headers["ce-specversion"]);
             Assert.Equal(cloudEvent.Type, response.Headers["ce-type"]);
             Assert.Equal(cloudEvent.Id, response.Headers["ce-id"]);
-            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source), response.Headers["ce-source"]);
+            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers["ce-source"]);
             // We don't populate the data content type header
             Assert.False(response.Headers.ContainsKey("ce-datacontenttype"));
         }

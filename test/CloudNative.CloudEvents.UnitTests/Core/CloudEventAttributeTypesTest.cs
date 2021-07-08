@@ -22,7 +22,7 @@ namespace CloudNative.CloudEvents.Core.UnitTests
 
         [Fact]
         public void GetOrdinal_NullInput() =>
-            Assert.Throws<ArgumentNullException>(() => CloudEventAttributeTypes.GetOrdinal(null));
+            Assert.Throws<ArgumentNullException>(() => CloudEventAttributeTypes.GetOrdinal(null!));
 
         [Theory]
         [MemberData(nameof(AllTypes))]

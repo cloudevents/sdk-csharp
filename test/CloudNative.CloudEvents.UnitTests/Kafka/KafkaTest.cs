@@ -25,7 +25,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
         [InlineData("CE_SPECVERSION", "1.0", false)]
         public void IsCloudEvent(string headerName, string headerValue, bool expectedResult)
         {
-            var message = new Message<string, byte[]>
+            var message = new Message<string?, byte[]>
             {
                 Headers = new Headers { { headerName, Encoding.UTF8.GetBytes(headerValue) } }
             };
@@ -34,7 +34,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
 
         [Fact]
         public void IsCloudEvent_NoHeaders() =>
-            Assert.False(new Message<string, byte[]>().IsCloudEvent());
+            Assert.False(new Message<string?, byte[]>().IsCloudEvent());
 
         [Fact]
         public void KafkaStructuredMessageTest()
@@ -64,7 +64,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             // using serialization to create fully independent copy thus simulating message transport
             // real transport will work in a similar way
             var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
-            var messageCopy = JsonConvert.DeserializeObject<Message<string, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter());
+            var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter())!;
 
             Assert.True(messageCopy.IsCloudEvent());
             var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter);
@@ -74,11 +74,11 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull"), receivedCloudEvent.Source);
             Assert.Equal("123", receivedCloudEvent.Subject);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -111,7 +111,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             {
                 Converters = { new HeadersConverter(), new HeaderConverter() }
             };
-            var messageCopy = JsonConvert.DeserializeObject<Message<string, byte[]>>(serialized, settings);
+            var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, settings)!;
 
             Assert.True(messageCopy.IsCloudEvent());
             var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, Partitioning.AllAttributes);
@@ -120,12 +120,12 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time.Value);
+            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", (string) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
+            Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
-            Assert.Equal("value", (string)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
         private class HeadersConverter : JsonConverter
@@ -135,7 +135,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 return objectType == typeof(Headers);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
             {
                 if (reader.TokenType == JsonToken.Null)
                 {
@@ -143,7 +143,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 }
                 else 
                 {
-                    var surrogate = serializer.Deserialize<List<Header>>(reader);
+                    var surrogate = serializer.Deserialize<List<Header>>(reader)!;
                     var headers = new Headers();
 
                     foreach(var header in surrogate)
@@ -154,7 +154,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 }
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -164,8 +164,8 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
         {
             private class HeaderContainer
             {
-                public string Key { get; set; }
-                public byte[] Value { get; set; }
+                public string? Key { get; set; }
+                public byte[]? Value { get; set; }
             }
 
             public override bool CanConvert(Type objectType)
@@ -173,15 +173,15 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 return objectType == typeof(Header) || objectType == typeof(IHeader);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
             {
-                var headerContainer = serializer.Deserialize<HeaderContainer>(reader);
+                var headerContainer = serializer.Deserialize<HeaderContainer>(reader)!;
                 return new Header(headerContainer.Key, headerContainer.Value);
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
             {
-                var header = (IHeader)value;
+                var header = (IHeader)value!;
                 var container = new HeaderContainer { Key = header.Key, Value = header.GetValueBytes() };
                 serializer.Serialize(writer, container);
             }

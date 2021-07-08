@@ -18,7 +18,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
 {
     public class HttpRequestExtensionsTest
     {
-        public static TheoryData<string, string, IDictionary<string, string>> SingleCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>>
+        public static TheoryData<string, string, IDictionary<string, string>?> SingleCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>?>
         {
             {
                 "Binary",
@@ -38,7 +38,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             }
         };
 
-        public static TheoryData<string, string, IDictionary<string, string>> BatchMessages = new TheoryData<string, string, IDictionary<string, string>>
+        public static TheoryData<string, string, IDictionary<string, string>?> BatchMessages = new TheoryData<string, string, IDictionary<string, string>?>
         {
             {
                 "Batch",
@@ -47,7 +47,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             }
         };
 
-        public static TheoryData<string, string, IDictionary<string, string>> NonCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>>
+        public static TheoryData<string, string, IDictionary<string, string>?> NonCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>?>
         {
             {
                 "Plain text",
@@ -58,7 +58,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
 
         [Theory]
         [MemberData(nameof(SingleCloudEventMessages))]
-        public void IsCloudEvent_True(string description, string contentType, IDictionary<string, string> headers)
+        public void IsCloudEvent_True(string description, string contentType, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -71,7 +71,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
         [Theory]
         [MemberData(nameof(BatchMessages))]
         [MemberData(nameof(NonCloudEventMessages))]
-        public void IsCloudEvent_False(string description, string contentType, IDictionary<string, string> headers)
+        public void IsCloudEvent_False(string description, string contentType, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -83,7 +83,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
 
         [Theory]
         [MemberData(nameof(BatchMessages))]
-        public void IsCloudEventBatch_True(string description, string contentType, IDictionary<string, string> headers)
+        public void IsCloudEventBatch_True(string description, string contentType, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -96,7 +96,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
         [Theory]
         [MemberData(nameof(SingleCloudEventMessages))]
         [MemberData(nameof(NonCloudEventMessages))]
-        public void IsCloudEventBatch_False(string description, string contentType, IDictionary<string, string> headers)
+        public void IsCloudEventBatch_False(string description, string contentType, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -138,7 +138,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
                 Body = BinaryDataUtilities.AsStream(content)
             };
 
-        private static void CopyHeaders(IDictionary<string, string> source, HttpRequest target)
+        private static void CopyHeaders(IDictionary<string, string>? source, HttpRequest target)
         {
             if (source is null)
             {

@@ -150,7 +150,7 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 Assert.True(false, "Expected both values to be null, or neither to be null");
             }
-            AssertTimestampsEqual(expected.Value, actual.Value);
+            AssertTimestampsEqual(expected!.Value, actual!.Value);
         }
 
         // TODO: Use this more widely

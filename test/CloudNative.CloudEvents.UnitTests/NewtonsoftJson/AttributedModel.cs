@@ -12,6 +12,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
         public const string JsonPropertyName = "customattribute";
 
         [JsonProperty(JsonPropertyName)]
-        public string AttributedProperty { get; set; }
+        public string? AttributedProperty { get; set; }
     }
 }
