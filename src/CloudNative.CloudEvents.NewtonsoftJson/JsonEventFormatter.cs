@@ -120,7 +120,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(body, nameof(body));
 
@@ -130,7 +130,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override CloudEvent DecodeStructuredModeMessage(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override CloudEvent DecodeStructuredModeMessage(Stream body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(body, nameof(body));
 
@@ -140,11 +140,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             DecodeStructuredModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
 
         /// <inheritdoc />
-        public override async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageAsync(Stream body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(body, nameof(body));
 
@@ -154,7 +154,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Stream body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(body, nameof(body));
 
@@ -164,10 +164,10 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <inheritdoc />
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             DecodeBatchModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
 
-        private IReadOnlyList<CloudEvent> DecodeJArray(JArray jArray, IEnumerable<CloudEventAttribute> extensionAttributes, string paramName)
+        private IReadOnlyList<CloudEvent> DecodeJArray(JArray jArray, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
         {
             List<CloudEvent> events = new List<CloudEvent>(jArray.Count);
             foreach (var token in jArray)
@@ -184,15 +184,15 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             return events;
         }
 
-        private CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute> extensionAttributes = null)
+        private CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             if (!jObject.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionToken)
                 || specVersionToken.Type != JTokenType.String)
             {
                 throw new ArgumentException($"Structured mode content does not represent a CloudEvent");
             }
-            var specVersion = CloudEventsSpecVersion.FromVersionId((string) specVersionToken)
-                ?? throw new ArgumentException($"Unsupported CloudEvents spec version '{(string)specVersionToken}'");
+            var specVersion = CloudEventsSpecVersion.FromVersionId((string?) specVersionToken)
+                ?? throw new ArgumentException($"Unsupported CloudEvents spec version '{(string?)specVersionToken}'");
 
             var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
             PopulateAttributesFromStructuredEvent(cloudEvent, jObject);
@@ -207,7 +207,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             foreach (var keyValuePair in jObject)
             {
                 var key = keyValuePair.Key;
-                var value = keyValuePair.Value;
+                JToken value = keyValuePair.Value!;
 
                 // Skip the spec version attribute, which we've already taken account of.
                 // Data is handled later, when everything else (importantly, the data content type)
@@ -228,9 +228,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 // TODO: This currently performs more conversions than it really should, in the cause of simplicity.
                 // We basically need a matrix of "attribute type vs token type" but that's rather complicated.
 
-                string attributeValue = value.Type switch
+                string? attributeValue = value.Type switch
                 {
-                    JTokenType.String => (string)value,
+                    JTokenType.String => (string?)value,
                     JTokenType.Boolean => CloudEventAttributeType.Boolean.Format((bool)value),
                     JTokenType.Null => null,
                     JTokenType.Integer => CloudEventAttributeType.Integer.Format((int)value),
@@ -247,7 +247,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
         }
 
-        private void ValidateTokenTypeForAttribute(CloudEventAttribute attribute, JTokenType tokenType)
+        private void ValidateTokenTypeForAttribute(CloudEventAttribute? attribute, JTokenType tokenType)
         {
             // We can't validate unknown attributes, don't check for extension attributes,
             // and null values will be ignored anyway.
@@ -296,7 +296,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else
             {
-                DecodeStructuredModeDataProperty(dataToken, cloudEvent);
+                // We know that dataToken must be non-null here, due to the above conditions.
+                DecodeStructuredModeDataProperty(dataToken!, cloudEvent);
             }
         }
 
@@ -324,7 +325,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 throw new ArgumentException($"Structured mode property '{DataBase64PropertyName}' must be a string, when present.");
             }
-            cloudEvent.Data = Convert.FromBase64String((string)dataBase64Token);
+            cloudEvent.Data = Convert.FromBase64String((string?)dataBase64Token);
         }
 
         /// <summary>
@@ -348,7 +349,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// <returns>The data to populate in the <see cref="CloudEvent.Data"/> property.</returns>
         protected virtual void DecodeStructuredModeDataProperty(JToken dataToken, CloudEvent cloudEvent) =>
             cloudEvent.Data = dataToken.Type == JTokenType.String && cloudEvent.DataContentType?.StartsWith("text/") == true
-                ? (string) dataToken
+                ? (string?) dataToken
                 : (object) dataToken; // Deliberately cast to object to avoid any implicit conversions
 
         /// <inheritdoc />
@@ -457,7 +458,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else
             {
-                throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type '{cloudEvent.DataContentType}'");
+                // We assume CloudEvent.Data is not null due to the way this is called.
+                throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
             }
         }
 
@@ -540,7 +542,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// <param name="stream">The stream to read from. Will not be null.</param>
         /// <param name="encoding">The expected text encoding. May be null, in which case UTF-8 should be assumed.</param>
         /// <returns>A JsonReader suitable for reading the </returns>
-        protected virtual JsonReader CreateJsonReader(Stream stream, Encoding encoding) =>
+        protected virtual JsonReader CreateJsonReader(Stream stream, Encoding? encoding) =>
             new JsonTextReader(new StreamReader(stream, encoding ?? Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8192, leaveOpen: true))
             {
                 DateParseHandling = DateParseHandling.None
