@@ -5,6 +5,7 @@
     <Description>JSON support for the CNCF CloudEvents SDK, based on System.Text.Json.</Description>
     <LangVersion>8.0</LangVersion>
     <PackageTags>cncf;cloudnative;cloudevents;events;json;systemtextjson</PackageTags>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
