@@ -51,12 +51,12 @@ namespace CloudNative.CloudEvents.UnitTests
         [Theory]
         [MemberData(nameof(AllTypes))]
         public void ParseNull(CloudEventAttributeType type) =>
-            Assert.Throws<ArgumentNullException>(() => type.Parse(null));
+            Assert.Throws<ArgumentNullException>(() => type.Parse(null!));
 
         [Theory]
         [MemberData(nameof(AllTypes))]
         public void FormatNull(CloudEventAttributeType type) =>
-            Assert.Throws<ArgumentNullException>(() => type.Format(null));
+            Assert.Throws<ArgumentNullException>(() => type.Format(null!));
 
         // None of our types can be constructed with a StringBuilder.
         [Theory]

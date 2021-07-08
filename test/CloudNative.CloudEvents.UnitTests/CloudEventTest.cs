@@ -37,7 +37,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(MediaTypeNames.Text.Xml, cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
-            Assert.Equal("value", (string)cloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?)cloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -143,7 +143,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
         [Fact]
         public void Constructor_NullVersion() =>
-            Assert.Throws<ArgumentNullException>(() => new CloudEvent(specVersion: null));
+            Assert.Throws<ArgumentNullException>(() => new CloudEvent(specVersion: null!));
 
         [Fact]
         public void Constructor_SpecVersionAndExtensionAttributes()
@@ -167,7 +167,7 @@ namespace CloudNative.CloudEvents.UnitTests
         [Fact]
         public void Constructor_ExtensionAttributes_NullValue()
         {
-            var extensions = new CloudEventAttribute[] { null };
+            var extensions = new CloudEventAttribute[] { null! };
             Assert.Throws<ArgumentException>(() => new CloudEvent(extensions));
         }
 
@@ -236,8 +236,8 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal("text", cloudEvent["string"]);
             Assert.Equal(10, cloudEvent["integer"]);
             Assert.Equal(new byte[] { 77 }, cloudEvent["binary"]);
-            Assert.True((bool) cloudEvent["boolean"]);
-            AssertTimestampsEqual("2021-02-09T11:58:12.242Z", (DateTimeOffset) cloudEvent["timestamp"]);
+            Assert.True((bool) cloudEvent["boolean"]!);
+            AssertTimestampsEqual("2021-02-09T11:58:12.242Z", (DateTimeOffset) cloudEvent["timestamp"]!);
             Assert.Equal(new Uri("https://cloudevents.io"), cloudEvent["uri"]);
             Assert.Equal(new Uri("//auth", UriKind.RelativeOrAbsolute), cloudEvent["urireference"]);
         }
@@ -256,17 +256,17 @@ namespace CloudNative.CloudEvents.UnitTests
             var cloudEvent = new CloudEvent();
             cloudEvent.SetAttributeFromString("ext", "text");
             Assert.Equal("text", cloudEvent["ext"]);
-            Assert.Equal(CloudEventAttributeType.String, cloudEvent.GetAttribute("ext").Type);
+            Assert.Equal(CloudEventAttributeType.String, cloudEvent.GetAttribute("ext")!.Type);
         }
 
         [Fact]
         public void Indexer_NullKey_Throws()
         {
             var cloudEvent = new CloudEvent();
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string)null]);
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute)null]);
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string)null] = "text");
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute)null] = "text");
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string)null!]);
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute)null!]);
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string)null!] = "text");
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute)null!] = "text");
         }
 
         [Fact]
@@ -326,7 +326,7 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 var cloudEvent = new CloudEvent();
                 cloudEvent["ext"] = "10";
-                Assert.Equal(CloudEventAttributeType.String, cloudEvent.GetAttribute("ext").Type);
+                Assert.Equal(CloudEventAttributeType.String, cloudEvent.GetAttribute("ext")?.Type);
 
                 var attr = CloudEventAttribute.CreateExtension("ext", CloudEventAttributeType.Integer);
                 // Setting the event with the attribute updates the extension registry...

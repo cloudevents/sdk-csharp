@@ -12,6 +12,6 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         public const string JsonPropertyName = "customattribute";
 
         [JsonPropertyName(JsonPropertyName)]
-        public string AttributedProperty { get; set; }
+        public string? AttributedProperty { get; set; }
     }
 }

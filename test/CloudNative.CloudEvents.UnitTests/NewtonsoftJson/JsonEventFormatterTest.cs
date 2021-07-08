@@ -97,7 +97,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             cloudEvent.Data = new { Text = "simple text" };
             cloudEvent.DataContentType = "application/json";
             JObject obj = EncodeAndParseStructured(cloudEvent);
-            JObject dataProperty = (JObject) obj["data"];
+            JObject dataProperty = (JObject) obj["data"]!;
             var asserter = new JTokenAsserter
             {
                 { "Text", JTokenType.String, "simple text" }
@@ -119,7 +119,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var formatter = new JsonEventFormatter(serializer);
             var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             JObject obj = ParseJson(encoded);
-            JObject dataProperty = (JObject) obj["data"];
+            JObject dataProperty = (JObject) obj["data"]!;
             var asserter = new JTokenAsserter
             {
                 { "DateValue", JTokenType.String, "2021-02-19" }
@@ -134,7 +134,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             cloudEvent.Data = new AttributedModel { AttributedProperty = "simple text" };
             cloudEvent.DataContentType = "application/json";
             JObject obj = EncodeAndParseStructured(cloudEvent);
-            JObject dataProperty = (JObject) obj["data"];
+            JObject dataProperty = (JObject) obj["data"]!;
             var asserter = new JTokenAsserter
             {
                 { AttributedModel.JsonPropertyName, JTokenType.String, "simple text" }
@@ -149,7 +149,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             cloudEvent.Data = new JValue(100);
             cloudEvent.DataContentType = "application/json";
             JObject obj = EncodeAndParseStructured(cloudEvent);
-            JToken data = obj["data"];
+            JToken data = obj["data"]!;
             Assert.Equal(JTokenType.Integer, data.Type);
             Assert.Equal(100, (int) data);
         }
@@ -171,9 +171,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             cloudEvent.Data = "some text";
             cloudEvent.DataContentType = "text/anything";
             JObject obj = EncodeAndParseStructured(cloudEvent);
-            var dataProperty = obj["data"];
+            var dataProperty = obj["data"]!;
             Assert.Equal(JTokenType.String, dataProperty.Type);
-            Assert.Equal("some text", (string) dataProperty);
+            Assert.Equal("some text", (string?) dataProperty);
         }
 
         // A text content type with bytes as data is serialized like any other bytes.
@@ -185,9 +185,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             cloudEvent.DataContentType = "text/anything";
             JObject obj = EncodeAndParseStructured(cloudEvent);
             Assert.False(obj.ContainsKey("data"));
-            var dataBase64 = obj["data_base64"];
+            var dataBase64 = obj["data_base64"]!;
             Assert.Equal(JTokenType.String, dataBase64.Type);
-            Assert.Equal(SampleBinaryDataBase64, (string) dataBase64);
+            Assert.Equal(SampleBinaryDataBase64, (string?) dataBase64);
         }
 
         [Fact]
@@ -208,9 +208,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             cloudEvent.DataContentType = "not_text/or_json";
             JObject obj = EncodeAndParseStructured(cloudEvent);
             Assert.False(obj.ContainsKey("data"));
-            var dataBase64 = obj["data_base64"];
+            var dataBase64 = obj["data_base64"]!;
             Assert.Equal(JTokenType.String, dataBase64.Type);
-            Assert.Equal(SampleBinaryDataBase64, (string) dataBase64);
+            Assert.Equal(SampleBinaryDataBase64, (string?) dataBase64);
         }
 
         [Fact]
@@ -407,7 +407,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             // Invalid CloudEvent
             Assert.Throws<ArgumentException>(() => formatter.EncodeBatchModeMessage(new[] { new CloudEvent() }, out _));
             // Null argument
-            Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(null, out _));
+            Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(null!, out _));
             // Null value within the argument. Arguably this should throw ArgumentException instead of
             // ArgumentNullException, but it's unlikely to cause confusion.
             Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(new CloudEvent[1], out _));
@@ -570,10 +570,10 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var formatter = new JsonEventFormatter();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, AllTypesExtensions);
             Assert.Equal(SampleBinaryData, cloudEvent["binary"]);
-            Assert.True((bool) cloudEvent["boolean"]);
+            Assert.True((bool) cloudEvent["boolean"]!);
             Assert.Equal(10, cloudEvent["integer"]);
             Assert.Equal("text", cloudEvent["string"]);
-            AssertTimestampsEqual(SampleTimestamp, (DateTimeOffset) cloudEvent["timestamp"]);
+            AssertTimestampsEqual(SampleTimestamp, (DateTimeOffset) cloudEvent["timestamp"]!);
             Assert.Equal(SampleUri, cloudEvent["uri"]);
             Assert.Equal(SampleUriReference, cloudEvent["urireference"]);
         }
@@ -694,8 +694,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             }
             obj["data"] = 10;
             var cloudEvent = DecodeStructuredModeMessage(obj);
-            var token = (JToken) cloudEvent.Data;
-            Assert.Equal(JTokenType.Integer, token.Type);
+            var token = (JToken) cloudEvent.Data!;
+            Assert.Equal(JTokenType.Integer, token!.Type);
             Assert.Equal(10, (int) token);
         }
 
@@ -876,7 +876,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             Assert.Null(event2.DataContentType);
         }
 
-        private static object DecodeBinaryModeEventData(byte[] bytes, string contentType)
+        private static object? DecodeBinaryModeEventData(byte[] bytes, string contentType)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.DataContentType = contentType;
@@ -912,7 +912,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             {
                 DateParseHandling = DateParseHandling.None                
             };
-            return serializer.Deserialize<T>(new JsonTextReader(new StringReader(text)));                
+            return serializer.Deserialize<T>(new JsonTextReader(new StringReader(text)))!;
         }
 
 

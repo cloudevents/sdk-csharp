@@ -24,7 +24,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var version = CloudEventsSpecVersion.FromVersionId(versionId);
             Assert.NotNull(version);
-            Assert.Equal(versionId, version.VersionId);
+            Assert.Equal(versionId, version!.VersionId);
         }
     }
 }

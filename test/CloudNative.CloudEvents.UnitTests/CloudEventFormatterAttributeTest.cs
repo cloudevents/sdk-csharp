@@ -35,7 +35,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
         }
 
-        [CloudEventFormatter(null)]
+        [CloudEventFormatter(null!)]
         public class NullFormatterAttribute
         {
         }
@@ -56,13 +56,13 @@ namespace CloudNative.CloudEvents.UnitTests
 
         public class SampleCloudEventFormatter : CloudEventFormatter
         {
-            public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
                 throw new NotImplementedException();
 
             public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
                 throw new NotImplementedException();
 
-            public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+            public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
                 throw new NotImplementedException();
 
             public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType) =>

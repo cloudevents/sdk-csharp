@@ -23,7 +23,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 {
     public class HttpClientExtensionsTest : HttpTestBase
     {
-        public static TheoryData<string, HttpContent, IDictionary<string, string>> SingleCloudEventMessages => new TheoryData<string, HttpContent, IDictionary<string, string>>
+        public static TheoryData<string, HttpContent, IDictionary<string, string>?> SingleCloudEventMessages => new TheoryData<string, HttpContent, IDictionary<string, string>?>
         {
             {
                 "Binary",
@@ -43,7 +43,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             }
         };
 
-        public static TheoryData<string, HttpContent, IDictionary<string, string>> BatchMessages => new TheoryData<string, HttpContent, IDictionary<string, string>>
+        public static TheoryData<string, HttpContent, IDictionary<string, string>?> BatchMessages => new TheoryData<string, HttpContent, IDictionary<string, string>?>
         {
             {
                 "Batch",
@@ -52,7 +52,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             }
         };
 
-        public static TheoryData<string, HttpContent, IDictionary<string, string>> NonCloudEventMessages => new TheoryData<string, HttpContent, IDictionary<string, string>>
+        public static TheoryData<string, HttpContent, IDictionary<string, string>?> NonCloudEventMessages => new TheoryData<string, HttpContent, IDictionary<string, string>?>
         {
             {
                 "Plain text",
@@ -63,7 +63,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
         [Theory]
         [MemberData(nameof(SingleCloudEventMessages))]
-        public void IsCloudEvent_True(string description, HttpContent content, IDictionary<string, string> headers)
+        public void IsCloudEvent_True(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -80,7 +80,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         [Theory]
         [MemberData(nameof(BatchMessages))]
         [MemberData(nameof(NonCloudEventMessages))]
-        public void IsCloudEvent_False(string description, HttpContent content, IDictionary<string, string> headers)
+        public void IsCloudEvent_False(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -96,7 +96,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
         [Theory]
         [MemberData(nameof(BatchMessages))]
-        public void IsCloudEventBatch_True(string description, HttpContent content, IDictionary<string, string> headers)
+        public void IsCloudEventBatch_True(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -113,7 +113,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         [Theory]
         [MemberData(nameof(SingleCloudEventMessages))]
         [MemberData(nameof(NonCloudEventMessages))]
-        public void IsCloudEventBatch_False(string description, HttpContent content, IDictionary<string, string> headers)
+        public void IsCloudEventBatch_False(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -222,7 +222,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual(SampleTimestamp, receivedCloudEvent.Time.Value);
+            AssertTimestampsEqual(SampleTimestamp, receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
@@ -316,7 +316,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual(SampleTimestamp, receivedCloudEvent.Time.Value);
+            AssertTimestampsEqual(SampleTimestamp, receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
@@ -426,7 +426,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             AssertBatchesEqual(batch, parsedBatch);
         }
 
-        internal static void CopyHeaders(IDictionary<string, string> source, HttpHeaders target)
+        internal static void CopyHeaders(IDictionary<string, string>? source, HttpHeaders target)
         {
             if (source is null)
             {

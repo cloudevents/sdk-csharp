@@ -118,9 +118,10 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             Assert.Equal("some text", cloudEvent.Data);
         }
 
-        private static void AssertToken(JTokenType expectedType, object expectedValue, JToken token)
+        private static void AssertToken(JTokenType expectedType, object expectedValue, JToken? token)
         {
-            Assert.Equal(expectedType, token.Type);
+            Assert.NotNull(token);
+            Assert.Equal(expectedType, token!.Type);
             Assert.Equal(expectedValue, token.ToObject(expectedValue.GetType()));
         }
 
@@ -157,7 +158,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             {
                 if (cloudEvent.DataContentType == TextBinaryContentType && dataBase64Token.Type == JTokenType.String)
                 {
-                    cloudEvent.Data = Encoding.UTF8.GetString(Convert.FromBase64String((string)dataBase64Token));
+                    cloudEvent.Data = Encoding.UTF8.GetString(Convert.FromBase64String((string)dataBase64Token!));
                 }
                 else
                 {
@@ -169,7 +170,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             {
                 if (cloudEvent.DataContentType == GuidContentType && dataToken.Type == JTokenType.String)
                 {
-                    string text = (string)dataToken;
+                    string text = (string)dataToken!;
                     if (!text.StartsWith(GuidPrefix))
                     {
                         throw new ArgumentException("Invalid GUID text data");

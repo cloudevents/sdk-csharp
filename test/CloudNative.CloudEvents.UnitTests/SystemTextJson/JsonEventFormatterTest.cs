@@ -417,7 +417,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             // Invalid CloudEvent
             Assert.Throws<ArgumentException>(() => formatter.EncodeBatchModeMessage(new[] { new CloudEvent() }, out _));
             // Null argument
-            Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(null, out _));
+            Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(null!, out _));
             // Null value within the argument. Arguably this should throw ArgumentException instead of
             // ArgumentNullException, but it's unlikely to cause confusion.
             Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(new CloudEvent[1], out _));
@@ -591,10 +591,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var formatter = new JsonEventFormatter();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, AllTypesExtensions);
             Assert.Equal(SampleBinaryData, cloudEvent["binary"]);
-            Assert.True((bool)cloudEvent["boolean"]);
+            Assert.True((bool)cloudEvent["boolean"]!);
             Assert.Equal(10, cloudEvent["integer"]);
             Assert.Equal("text", cloudEvent["string"]);
-            AssertTimestampsEqual(SampleTimestamp, (DateTimeOffset)cloudEvent["timestamp"]);
+            AssertTimestampsEqual(SampleTimestamp, (DateTimeOffset)cloudEvent["timestamp"]!);
             Assert.Equal(SampleUri, cloudEvent["uri"]);
             Assert.Equal(SampleUriReference, cloudEvent["urireference"]);
         }
@@ -715,7 +715,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             }
             obj["data"] = 10;
             var cloudEvent = DecodeStructuredModeMessage(obj);
-            var element = (JsonElement) cloudEvent.Data;
+            var element = (JsonElement) cloudEvent.Data!;
             Assert.Equal(JsonValueKind.Number, element.ValueKind);
             Assert.Equal(10, element.GetInt32());
         }
@@ -915,7 +915,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.DataContentType = contentType;
             new JsonEventFormatter().DecodeBinaryModeEventData(bytes, cloudEvent);
-            return cloudEvent.Data;
+            return cloudEvent.Data!;
         }
 
         internal static JObject CreateMinimalValidJObject() =>

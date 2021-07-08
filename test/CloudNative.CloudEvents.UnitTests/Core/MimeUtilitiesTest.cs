@@ -22,9 +22,9 @@ namespace CloudNative.CloudEvents.Core.UnitTests
         {
             var originalContentType = new ContentType(text);
             var header = MimeUtilities.ToMediaTypeHeaderValue(originalContentType);
-            AssertEqualParts(text, header.ToString());
+            AssertEqualParts(text, header!.ToString());
             var convertedContentType = MimeUtilities.ToContentType(header);
-            AssertEqualParts(originalContentType.ToString(), convertedContentType.ToString());
+            AssertEqualParts(originalContentType.ToString(), convertedContentType!.ToString());
 
             // Conversions can end up reordering the parameters. In reality we're only
             // likely to end up with a media type and charset, but our tests use more parameters.
@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.Core.UnitTests
         [Fact]
         public void ContentTypeGetEncoding_NoContentType()
         {
-            ContentType contentType = null;
+            ContentType? contentType = null;
             Encoding encoding = MimeUtilities.GetEncoding(contentType);
             Assert.Equal(Encoding.UTF8, encoding);
         }
@@ -75,7 +75,7 @@ namespace CloudNative.CloudEvents.Core.UnitTests
         [InlineData("text/plain")]
         public void CreateContentTypeOrNull_WithContentType(string text)
         {
-            ContentType ct = MimeUtilities.CreateContentTypeOrNull(text);
+            ContentType? ct = MimeUtilities.CreateContentTypeOrNull(text);
             Assert.Equal(text, ct?.ToString());
         }
 

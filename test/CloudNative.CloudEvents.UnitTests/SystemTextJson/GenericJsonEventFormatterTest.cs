@@ -24,10 +24,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             obj["data"] = new JObject { [AttributedModel.JsonPropertyName] = "test" };
             byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
 
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, null, null);
 
-            var model = (AttributedModel)cloudEvent.Data;
+            var model = (AttributedModel)cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
@@ -38,10 +38,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             obj["data"] = new JObject { [AttributedModel.JsonPropertyName] = "test" };
             byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
 
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, new ContentType("text/plain"), null);
 
-            var model = (AttributedModel)cloudEvent.Data;
+            var model = (AttributedModel)cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
@@ -51,7 +51,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var obj = JsonEventFormatterTest.CreateMinimalValidJObject();
             byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
 
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, null, null);
             Assert.Null(cloudEvent.Data);
         }
@@ -63,7 +63,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             obj["data_base64"] = Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"));
             byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
 
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             Assert.Throws<ArgumentException>(() => formatter.DecodeStructuredModeMessage(bytes, null, null));
         }
 
@@ -73,18 +73,18 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var obj = new JObject { [AttributedModel.JsonPropertyName] = "test" };
             byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
 
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = new CloudEvent();
             formatter.DecodeBinaryModeEventData(bytes, cloudEvent);
 
-            var model = (AttributedModel)cloudEvent.Data;
+            var model = (AttributedModel)cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
         [Fact]
         public void DecodeBinaryEventModeData_NoData()
         {
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = new CloudEvent { Data = "original" };
             formatter.DecodeBinaryModeEventData(new byte[0], cloudEvent);
             Assert.Null(cloudEvent.Data);
@@ -95,7 +95,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new AttributedModel { AttributedProperty = "test" };
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var body = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             var element = JsonEventFormatterTest.ParseJson(body);
             Assert.False(element.TryGetProperty("data_base64", out _));
@@ -112,7 +112,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
 
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var body = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             var element = JsonEventFormatterTest.ParseJson(body);
             Assert.False(element.TryGetProperty("data", out _));
@@ -124,7 +124,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new OtherModelClass { Text = "Wrong type" };
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             Assert.Throws<InvalidCastException>(() => formatter.EncodeStructuredModeMessage(cloudEvent, out _));
         }
 
@@ -133,7 +133,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new AttributedModel { AttributedProperty = "test" };
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             var body = formatter.EncodeBinaryModeEventData(cloudEvent);
             var jobject = JsonEventFormatterTest.ParseJson(body);
 
@@ -147,7 +147,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         public void EncodeBinaryModeEventData_NoData()
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             Assert.True(formatter.EncodeBinaryModeEventData(cloudEvent).IsEmpty);
         }
 
@@ -156,13 +156,20 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new OtherModelClass { Text = "Wrong type" };
-            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(AttributedModel));
+            var formatter = CreateFormatter<AttributedModel>();
             Assert.Throws<InvalidCastException>(() => formatter.EncodeBinaryModeEventData(cloudEvent));
+        }
+
+        private static CloudEventFormatter CreateFormatter<T>()
+        {
+            var formatter = CloudEventFormatterAttribute.CreateFormatter(typeof(T));
+            Assert.NotNull(formatter);
+            return formatter!;
         }
 
         private class OtherModelClass
         {
-            public string Text { get; set; }
+            public string? Text { get; set; }
         }
     }
 }

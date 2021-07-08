@@ -35,8 +35,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var event1 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
             var event2 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
 
-            JObject data1 = (JObject)event1.Data;
-            JObject data2 = (JObject)event2.Data;
+            JObject data1 = (JObject)event1.Data!;
+            JObject data2 = (JObject)event2.Data!;
 
             var property1 = data1.Properties().Single();
             var property2 = data2.Properties().Single();
@@ -51,8 +51,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var event1 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
             var event2 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
 
-            JObject data1 = (JObject)event1.Data;
-            JObject data2 = (JObject)event2.Data;
+            JObject data1 = (JObject)event1.Data!;
+            JObject data2 = (JObject)event2.Data!;
 
             var property1 = data1.Properties().Single();
             var property2 = data2.Properties().Single();
@@ -72,7 +72,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
 
         private class CreateJsonReaderExposingFormatter : JsonEventFormatter
         {
-            public JsonReader CreateJsonReaderPublic(Stream stream, Encoding encoding) =>
+            public JsonReader CreateJsonReaderPublic(Stream stream, Encoding? encoding) =>
                 base.CreateJsonReader(stream, encoding);
         }
 
@@ -87,7 +87,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
                 table.Add("DataName");
             }
 
-            protected override JsonReader CreateJsonReader(Stream stream, Encoding encoding)
+            protected override JsonReader CreateJsonReader(Stream stream, Encoding? encoding)
             {
                 var reader = (JsonTextReader) base.CreateJsonReader(stream, encoding);
                 reader.PropertyNameTable = table;

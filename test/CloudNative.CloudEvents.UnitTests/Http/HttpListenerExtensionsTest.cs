@@ -21,7 +21,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
     {
         [Theory]
         [MemberData(nameof(HttpClientExtensionsTest.SingleCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
-        public async Task IsCloudEvent_True(string description, HttpContent content, IDictionary<string, string> headers)
+        public async Task IsCloudEvent_True(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -35,7 +35,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         [Theory]
         [MemberData(nameof(HttpClientExtensionsTest.BatchMessages), MemberType = typeof(HttpClientExtensionsTest))]
         [MemberData(nameof(HttpClientExtensionsTest.NonCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
-        public async Task IsCloudEvent_False(string description, HttpContent content, IDictionary<string, string> headers)
+        public async Task IsCloudEvent_False(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -48,7 +48,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
         [Theory]
         [MemberData(nameof(HttpClientExtensionsTest.BatchMessages), MemberType = typeof(HttpClientExtensionsTest))]
-        public async Task IsCloudEventBatch_True(string description, HttpContent content, IDictionary<string, string> headers)
+        public async Task IsCloudEventBatch_True(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -62,7 +62,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         [Theory]
         [MemberData(nameof(HttpClientExtensionsTest.SingleCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
         [MemberData(nameof(HttpClientExtensionsTest.NonCloudEventMessages), MemberType = typeof(HttpClientExtensionsTest))]
-        public async Task IsCloudEventBatch_False(string description, HttpContent content, IDictionary<string, string> headers)
+        public async Task IsCloudEventBatch_False(string description, HttpContent content, IDictionary<string, string>? headers)
         {
             // Really only present for display purposes.
             Assert.NotNull(description);
@@ -201,7 +201,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.Equal("1.0", response.Headers.GetValues("ce-specversion").Single());
             Assert.Equal(cloudEvent.Type, response.Headers.GetValues("ce-type").Single());
             Assert.Equal(cloudEvent.Id, response.Headers.GetValues("ce-id").Single());
-            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source), response.Headers.GetValues("ce-source").Single());
+            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers.GetValues("ce-source").Single());
             // There's no data content type header; the content type itself is used for that.
             Assert.False(response.Headers.Contains("ce-datacontenttype"));
         }
@@ -251,7 +251,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             Assert.Equal("1.0", response.Headers.GetValues("ce-specversion").Single());
             Assert.Equal(cloudEvent.Type, response.Headers.GetValues("ce-type").Single());
             Assert.Equal(cloudEvent.Id, response.Headers.GetValues("ce-id").Single());
-            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source), response.Headers.GetValues("ce-source").Single());
+            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers.GetValues("ce-source").Single());
             // We don't populate the data content type header
             Assert.False(response.Headers.Contains("ce-datacontenttype"));
         }
@@ -299,7 +299,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var content = await response.Content.ReadAsStringAsync();
             Assert.True(response.IsSuccessStatusCode, content);
             Assert.True(executed);
-            return result;
+            return result!;
         }
 
         /// <summary>
