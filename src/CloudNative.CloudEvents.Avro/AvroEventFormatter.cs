@@ -55,30 +55,31 @@ namespace CloudNative.CloudEvents
         }
 
         /// <inheritdoc />
-        public override CloudEvent DecodeStructuredModeMessage(Stream body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override CloudEvent DecodeStructuredModeMessage(Stream body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             Validation.CheckNotNull(body, nameof(body));
 
             var decoder = new BinaryDecoder(body);
-            var rawEvent = avroReader.Read<GenericRecord>(null, decoder);
+            // The reuse parameter *is* allowed to be null...
+            var rawEvent = avroReader.Read<GenericRecord>(reuse: null!, decoder);
             return DecodeGenericRecord(rawEvent, extensionAttributes);
         }
 
         /// <inheritdoc />
-        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             return DecodeStructuredModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
         }
 
         /// <inheritdoc />
-        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType contentType, IEnumerable<CloudEventAttribute> extensionAttributes) =>
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             throw new NotSupportedException("The Avro event formatter does not support batch content mode");
 
         /// <inheritdoc />
         public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvent, out ContentType contentType) =>
             throw new NotSupportedException("The Avro event formatter does not support batch content mode");
 
-        private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute> extensionAttributes)
+        private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             if (!record.TryGetValue(AttributeName, out var attrObj))
             {
@@ -91,7 +92,7 @@ namespace CloudNative.CloudEvents
             {
                 throw new ArgumentException("Specification version attribute is missing");
             }
-            CloudEventsSpecVersion version = CloudEventsSpecVersion.FromVersionId(versionIdString);
+            CloudEventsSpecVersion? version = CloudEventsSpecVersion.FromVersionId(versionIdString);
             if (version is null)
             {
                 throw new ArgumentException($"Unsupported CloudEvents spec version '{versionIdString}'");
