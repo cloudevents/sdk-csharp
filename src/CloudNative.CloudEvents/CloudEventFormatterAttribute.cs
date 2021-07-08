@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using System;
 using System.Reflection;
 
@@ -34,12 +35,13 @@ namespace CloudNative.CloudEvents
         /// the specified target type (or an ancestor) has the attribute applied to it. This method does not
         /// perform any caching; callers may wish to cache the results themselves.
         /// </summary>
-        /// <param name="targetType">The type for which to create a formatter if possible.</param>
+        /// <param name="targetType">The type for which to create a formatter if possible. Must not be null</param>
         /// <exception cref="InvalidOperationException">The target type is decorated with this attribute, but the
         /// type cannot be instantiated or does not derive from <see cref="CloudEventFormatter"/>.</exception>
         /// <returns>A new instance of the specified formatter, or null if the type is not decorated with this attribute.</returns>
-        public static CloudEventFormatter CreateFormatter(Type targetType)
+        public static CloudEventFormatter? CreateFormatter(Type targetType)
         {
+            Validation.CheckNotNull(targetType, nameof(targetType));
             var attribute = targetType.GetCustomAttribute<CloudEventFormatterAttribute>(inherit: true);
             if (attribute is null)
             {

@@ -129,6 +129,7 @@ namespace CloudNative.CloudEvents
             int totalMinutes = hours * 60 + minutes;
             if (minutes >= 60 || totalMinutes > MaxOffsetMinutes)
             {
+                offset = default;
                 return false;
             }
 

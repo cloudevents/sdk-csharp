@@ -47,7 +47,7 @@ namespace CloudNative.CloudEvents.Extensions
         /// <paramref name="cloudEvent"/>.</param>
         /// <exception cref="ArgumentException"><paramref name="value"/> is a non-null value for an unsupported sequence type.</exception>
         /// <returns><paramref name="cloudEvent"/>, for convenient method chaining.</returns>
-        public static CloudEvent SetSequence(this CloudEvent cloudEvent, object value)
+        public static CloudEvent SetSequence(this CloudEvent cloudEvent, object? value)
         {
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
             if (value is null)
@@ -76,8 +76,8 @@ namespace CloudNative.CloudEvents.Extensions
         /// </summary>
         /// <param name="cloudEvent">The CloudEvent from which to retrieve the attribute. Must not be null.</param>
         /// <returns>The <see cref="SequenceAttribute"/> value, as a string, or null if the attribute is not set.</returns>
-        public static string GetSequenceString(this CloudEvent cloudEvent) =>
-            (string) Validation.CheckNotNull(cloudEvent, nameof(cloudEvent))[SequenceAttribute];
+        public static string? GetSequenceString(this CloudEvent cloudEvent) =>
+            (string?) Validation.CheckNotNull(cloudEvent, nameof(cloudEvent))[SequenceAttribute];
 
         /// <summary>
         /// Retrieves the <see cref="SequenceTypeAttribute"/> value from the event, without any
@@ -85,8 +85,8 @@ namespace CloudNative.CloudEvents.Extensions
         /// </summary>
         /// <param name="cloudEvent">The CloudEvent from which to retrieve the attribute. Must not be null.</param>
         /// <returns>The <see cref="SequenceTypeAttribute"/> value, as a string, or null if the attribute is not set.</returns>
-        public static string GetSequenceType(this CloudEvent cloudEvent) =>
-            (string)Validation.CheckNotNull(cloudEvent, nameof(cloudEvent))[SequenceTypeAttribute];
+        public static string? GetSequenceType(this CloudEvent cloudEvent) =>
+            (string?)Validation.CheckNotNull(cloudEvent, nameof(cloudEvent))[SequenceTypeAttribute];
 
         /// <summary>
         /// Retrieves the <see cref="SequenceAttribute"/> value from the event,
@@ -96,9 +96,9 @@ namespace CloudNative.CloudEvents.Extensions
         /// </summary>
         /// <param name="cloudEvent"></param>
         /// <returns>The value of <see cref="SequenceAttribute"/> from <paramref name="cloudEvent"/>, transformed
-        /// based on the value of <see cref="SequenceTypeAttribute"/>.</returns>
+        /// based on the value of <see cref="SequenceTypeAttribute"/>, or null if the attribute is not set.</returns>
         /// <exception cref="InvalidOperationException">The <see cref="SequenceTypeAttribute"/> is present, but unknown to this library.</exception>
-        public static object GetSequenceValue(this CloudEvent cloudEvent)
+        public static object? GetSequenceValue(this CloudEvent cloudEvent)
         {
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
             var sequence = GetSequenceString(cloudEvent);

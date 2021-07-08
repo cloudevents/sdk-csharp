@@ -99,7 +99,7 @@ namespace CloudNative.CloudEvents
             ClrType = clrType;
         }
 
-        private abstract class GenericCloudEventsAttributeType<T> : CloudEventAttributeType
+        private abstract class GenericCloudEventsAttributeType<T> : CloudEventAttributeType where T : notnull
         {
             protected GenericCloudEventsAttributeType(string name, CloudEventAttributeTypeOrdinal ordinal) : base(name, ordinal, typeof(T))
             {

@@ -12,7 +12,9 @@ namespace CloudNative.CloudEvents
     /// </summary>
     internal static class CollectionExtensions
     {
-        internal static TValue GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue)) =>
-            dictionary.TryGetValue(key, out var value) ? value : defaultValue;
+        // Note: this is a bit more specialized than the versoin in the framework, to make defaulting simpler to handle.
+        internal static TValue? GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, TKey key)
+            where TValue : class =>
+            dictionary.TryGetValue(key, out var value) ? value : default(TValue?);
     }
 }

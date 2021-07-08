@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Mime;
 using static CloudNative.CloudEvents.CloudEventAttribute;
@@ -50,6 +51,9 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public string VersionId { get; }
 
+        // TODO: Should any of these properties be nullable? What if CloudEvents 2.0 removes the Subject attribute, for example? We'd need a breaking change...
+        // (On the other hand, that's unlikely, and keeping them non-nullable is really convenient...)
+
         /// <summary>
         /// The attribute for the <see cref="CloudEvent.Id"/> property.
         /// </summary>
@@ -94,7 +98,8 @@ namespace CloudNative.CloudEvents
         /// or null if no such version is known.
         /// </summary>
         /// <param name="versionId">The version ID to check. May be null, in which case the result will be null.</param>
-        public static CloudEventsSpecVersion FromVersionId(string versionId) =>
+        [return:NotNullIfNotNull(nameof(VersionId))]
+        public static CloudEventsSpecVersion? FromVersionId(string? versionId) =>
             allVersions.FirstOrDefault(version => version.VersionId == versionId);
 
         private CloudEventsSpecVersion(
@@ -134,7 +139,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="name">The name of the attribute to find.</param>
         /// <returns>The attribute with the given name, or null if this spec version does not contain any such attribute.</returns>
-        internal CloudEventAttribute GetAttributeByName(string name) => attributesByName.GetValueOrDefault(name);
+        internal CloudEventAttribute? GetAttributeByName(string name) => attributesByName.GetValueOrDefault(name);
 
         /// <summary>
         /// Returns all required attributes in this version of the CloudEvents specification.

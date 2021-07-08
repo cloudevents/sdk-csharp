@@ -33,7 +33,7 @@ namespace CloudNative.CloudEvents.Extensions
         /// <param name="partitionKey">The partition key to set. May be null, in which case the attribute is
         /// removed from <paramref name="cloudEvent"/>.</param>
         /// <returns><paramref name="cloudEvent"/>, for convenient method chaining.</returns>
-        public static CloudEvent SetPartitionKey(this CloudEvent cloudEvent, string partitionKey)
+        public static CloudEvent SetPartitionKey(this CloudEvent cloudEvent, string? partitionKey)
         {
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
             cloudEvent[PartitionKeyAttribute] = partitionKey;
@@ -45,7 +45,7 @@ namespace CloudNative.CloudEvents.Extensions
         /// </summary>
         /// <param name="cloudEvent">The CloudEvent from which to retrieve the attribute. Must not be null.</param>
         /// <returns>The partition key, or null if <paramref name="cloudEvent"/> does not have a partition key set.</returns>
-        public static string GetPartitionKey(this CloudEvent cloudEvent) =>
-            (string) Validation.CheckNotNull(cloudEvent, nameof(cloudEvent))[PartitionKeyAttribute];
+        public static string? GetPartitionKey(this CloudEvent cloudEvent) =>
+            (string?) Validation.CheckNotNull(cloudEvent, nameof(cloudEvent))[PartitionKeyAttribute];
     }
 }

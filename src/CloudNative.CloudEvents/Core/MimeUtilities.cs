@@ -32,7 +32,7 @@ namespace CloudNative.CloudEvents.Core
         /// <param name="contentType">The content type, or null if no content type is known.</param>
         /// <returns>An encoding suitable for the charset specified in <paramref name="contentType"/>,
         /// or UTF-8 if no charset has been specified.</returns>
-        public static Encoding GetEncoding(ContentType contentType) =>
+        public static Encoding GetEncoding(ContentType? contentType) =>
             contentType?.CharSet is string charSet ? Encoding.GetEncoding(charSet) : Encoding.UTF8;
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="headerValue">The header value to convert. May be null.</param>
         /// <returns>The converted content type, or null if <paramref name="headerValue"/> is null.</returns>
-        public static ContentType ToContentType(MediaTypeHeaderValue headerValue) =>
+        public static ContentType? ToContentType(MediaTypeHeaderValue? headerValue) =>
             headerValue is null ? null : new ContentType(headerValue.ToString());
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="contentType">The content type to convert. May be null.</param>
         /// <returns>The converted media type header value, or null if <paramref name="contentType"/> is null.</returns>
-        public static MediaTypeHeaderValue ToMediaTypeHeaderValue(ContentType contentType)
+        public static MediaTypeHeaderValue? ToMediaTypeHeaderValue(ContentType? contentType)
         {
             if (contentType is null)
             {
@@ -68,7 +68,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="contentType">The content type textual value. May be null.</param>
         /// <returns>The converted content type, or null if <paramref name="contentType"/> is null.</returns>
-        public static ContentType CreateContentTypeOrNull(string contentType) =>
+        public static ContentType? CreateContentTypeOrNull(string? contentType) =>
             contentType is null ? null : new ContentType(contentType);
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="contentType">The content type to check. May be null, in which case the result is false.</param>
         /// <returns>true if the given content type denotes a (non-batch) CloudEvent; false otherwise</returns>
-        public static bool IsCloudEventsContentType(string contentType) =>
+        public static bool IsCloudEventsContentType(string? contentType) =>
             contentType is string &&
             contentType.StartsWith(MediaType, StringComparison.InvariantCultureIgnoreCase) &&
             !contentType.StartsWith(BatchMediaType, StringComparison.InvariantCultureIgnoreCase);
@@ -86,7 +86,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="contentType">The content type to check. May be null, in which case the result is false.</param>
         /// <returns>true if the given content type represents a CloudEvent batch; false otherwise</returns>
-        public static bool IsCloudEventsBatchContentType(string contentType) =>
+        public static bool IsCloudEventsBatchContentType(string? contentType) =>
             contentType is string && contentType.StartsWith(BatchMediaType, StringComparison.InvariantCultureIgnoreCase);
     }
 }

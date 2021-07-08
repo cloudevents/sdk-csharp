@@ -44,7 +44,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         /// <param name="extensionAttributes">Initial extension attributes. May be null, which is equivalent
         /// to an empty sequence.</param>
-        public CloudEvent(IEnumerable<CloudEventAttribute> extensionAttributes) : this(CloudEventsSpecVersion.Default, extensionAttributes)
+        public CloudEvent(IEnumerable<CloudEventAttribute>? extensionAttributes) : this(CloudEventsSpecVersion.Default, extensionAttributes)
         {
         }
 
@@ -55,7 +55,7 @@ namespace CloudNative.CloudEvents
         /// <param name="specVersion">CloudEvents Specification version for this instance. Must not be null.</param>
         /// <param name="extensionAttributes">Initial extension attributes. May be null, which is equivalent
         /// to an empty sequence.</param>
-        public CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<CloudEventAttribute> extensionAttributes)
+        public CloudEvent(CloudEventsSpecVersion specVersion, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
             // TODO: Work out how to be more efficient, e.g. not creating a dictionary at all if there are no
             // extension attributes.
@@ -117,7 +117,7 @@ namespace CloudNative.CloudEvents
         /// </remarks>
         /// <param name="attribute">The attribute whose value should be set or fetched.</param>
         /// <returns>The fetched attribute value, or null if the attribute has no value in this event.</returns>
-        public object this[CloudEventAttribute attribute]
+        public object? this[CloudEventAttribute attribute]
         {
             get
             {
@@ -175,7 +175,7 @@ namespace CloudNative.CloudEvents
         /// The indexer cannot be used to access the 'specversion' attribute. Use <see cref="SpecVersion"/>
         /// for that purpose.
         /// </remarks>
-        public object this[string attributeName]
+        public object? this[string attributeName]
         {
             get
             {
@@ -197,7 +197,7 @@ namespace CloudNative.CloudEvents
                 {
                     Validation.CheckArgument(value is null || value is string,
                         nameof(value), "Cannot assign value of type {0} to unknown attribute '{1}'",
-                        value.GetType(), attributeName);
+                        value?.GetType(), attributeName);
                     knownAttribute = CloudEventAttribute.CreateExtension(attributeName, CloudEventAttributeType.String);
                     extensionAttributes[attributeName] = knownAttribute;
                 }
@@ -218,7 +218,7 @@ namespace CloudNative.CloudEvents
         /// 'contenttype' attribute (e.g. application/json).
         /// </summary>
         /// <see href="https://github.com/cloudevents/spec/blob/master/spec.md#data-1"/>
-        public object Data { get; set; }
+        public object? Data { get; set; }
 
         /// <summary>
         /// CloudEvent <see href="https://github.com/cloudevents/spec/blob/master/spec.md#id">'datacontenttype'</see> attribute.
@@ -227,10 +227,10 @@ namespace CloudNative.CloudEvents
         /// format and encoding might differ from that of the chosen event format.
         /// </summary>
         /// <see href="https://github.com/cloudevents/spec/blob/master/spec.md#contenttype"/>
-        public string DataContentType
+        public string? DataContentType
         {
             // TODO: Guard against a version that doesn't have this attribute?
-            get => (string)this[SpecVersion.DataContentTypeAttribute];
+            get => (string?)this[SpecVersion.DataContentTypeAttribute];
             set => this[SpecVersion.DataContentTypeAttribute] = value;
         }
 
@@ -238,9 +238,9 @@ namespace CloudNative.CloudEvents
         /// CloudEvent <see href="https://github.com/cloudevents/spec/blob/master/spec.md#id">'id'</see> attribute,
         /// This is the ID of the event. When combined with <see cref="Source"/>, this enables deduplication.
         /// </summary>
-        public string Id
+        public string? Id
         {
-            get => (string)this[SpecVersion.IdAttribute];
+            get => (string?)this[SpecVersion.IdAttribute];
             set => this[SpecVersion.IdAttribute] = value;
         }
 
@@ -249,9 +249,9 @@ namespace CloudNative.CloudEvents
         /// A link to the schema that the data attribute adheres to.
         /// Incompatible changes to the schema SHOULD be reflected by a different URI.
         /// </summary>
-        public Uri DataSchema
+        public Uri? DataSchema
         {
-            get => (Uri)this[SpecVersion.DataSchemaAttribute];
+            get => (Uri?)this[SpecVersion.DataSchemaAttribute];
             set => this[SpecVersion.DataSchemaAttribute] = value;
         }
 
@@ -261,9 +261,9 @@ namespace CloudNative.CloudEvents
         /// organization publishing the event, the process that produced the event, and some unique identifiers.
         /// When combined with <see cref="Id"/>, this enables deduplication.
         /// </summary>
-        public Uri Source
+        public Uri? Source
         {
-            get => (Uri)this[SpecVersion.SourceAttribute];
+            get => (Uri?)this[SpecVersion.SourceAttribute];
             set => this[SpecVersion.SourceAttribute] = value;
         }
 
@@ -279,9 +279,9 @@ namespace CloudNative.CloudEvents
         /// but the source identifier alone might not be sufficient as a qualifier for any specific event if the source context has
         /// internal sub-structure.
         /// </summary>
-        public string Subject
+        public string? Subject
         {
-            get => (string)this[SpecVersion.SubjectAttribute];
+            get => (string?)this[SpecVersion.SubjectAttribute];
             set => this[SpecVersion.SubjectAttribute] = value;
         }
 
@@ -300,9 +300,9 @@ namespace CloudNative.CloudEvents
         /// Type of occurrence which has happened.
         /// Often this attribute is used for routing, observability, policy enforcement, etc.
         /// </summary>
-        public string Type
+        public string? Type
         {
-            get => (string)this[SpecVersion.TypeAttribute];
+            get => (string?)this[SpecVersion.TypeAttribute];
             set => this[SpecVersion.TypeAttribute] = value;
         }
 
@@ -314,7 +314,7 @@ namespace CloudNative.CloudEvents
         /// <param name="name">The attribute name to look up.</param>
         /// <returns>The attribute with the given name, or null if no this event
         /// does not know of such an attribute.</returns>
-        public CloudEventAttribute GetAttribute(string name) =>
+        public CloudEventAttribute? GetAttribute(string name) =>
             SpecVersion.GetAttributeByName(name) ?? extensionAttributes.GetValueOrDefault(name);
 
         /// <summary>
@@ -332,7 +332,7 @@ namespace CloudNative.CloudEvents
         {
             foreach (var pair in attributeValues)
             {
-                yield return new KeyValuePair<CloudEventAttribute, object>(GetAttribute(pair.Key), pair.Value);
+                yield return new KeyValuePair<CloudEventAttribute, object>(GetAttribute(pair.Key)!, pair.Value);
             }
         }
 
