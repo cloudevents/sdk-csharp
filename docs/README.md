@@ -6,6 +6,7 @@ This directory contains documentation on:
 
 - [Usage guide](guide.md) (this is the most appropriate starting point for most
   developers if they simply plan on *using* the CloudEvents SDK)
+- [Version history](history.md) from 2.0 onwards
 - [Changes since version 1.x of the CloudNative.CloudEvents packages](changes-since-1x.md)
 - Implementing new [event formats](formatters.md) and [protocol bindings](bindings.md)
 

@@ -1,6 +1,6 @@
 # Release processes
 
-(This file aims to document the release process from 2.0 beta releases onwards.)
+(This file aims to document the release process from 2.0 releases onwards.)
 
 ## General
 
@@ -20,22 +20,24 @@ The normal steps are expected to be:
 - All contributors make code changes and get them approved and merged as normal
 - The maintainers agree on the need for a new release (either on GitHub or externally)
 - A PR is created and merged by a maintainer (with normal approval) that contains documentation changes
-  (e.g. version history) and the version number change.
+  (e.g. [version history](docs/history.md)) and the version number change.
 - The maintainer who creates and merges this change is also (by default) responsible for manually creating
   the GitHub release and (automatically) a corresponding tag. See below for the format of these.
 - NuGet packages are automatically created and pushed when the release is created.
 
-## Beta period
+## Stable package versioning
 
-During the 2.0 beta period, it's helpful to use project references
-between the "satellite" packages (e.g.
-CloudNative.CloudEvents.AspNetCore) and the central SDK package
-(CloudNative.CloudEvents). This requires that all packages are
-released together, to avoid (for example) a satellite package being
-released with a dependency on an unreleased feature in the SDK
-package.
+It's helpful to use project references between the "satellite"
+packages (e.g. CloudNative.CloudEvents.AspNetCore) and the central
+SDK package (CloudNative.CloudEvents). This requires that all
+packages are released together, to avoid (for example) a satellite
+package being released with a dependency on an unreleased feature in
+the SDK package. While this may mean some packages are re-released
+without any actual changes other than their dependency on the core
+package, it makes versioning problems much less likely, and also
+acts as encouragement to use the latest version of the core package.
 
-To facilitate this:
+Within this repository, this is achieved by the following mechanisms:
 
 - Individual csproj files do not specify a version
 - The [Directory.Build.props](src/Directory.Build.props) file has a `<Version>` element
@@ -43,33 +45,32 @@ To facilitate this:
 
 A single GitHub release (and tag) will be created for each beta release, to cover all packages.
 
-- Example tag name: "CloudNative.CloudEvents.All-2.0.0-beta.1"
-- Example release title: "All packages pre-release version 2.0.0-beta.1"
+- Example tag name: "CloudNative.CloudEvents.All-2.0.0"
+- Example release title: "All packages version 2.0.0"
 
-We are expecting to make breaking changes during the beta period. These will be listed in [HISTORY.md](HISTORY.md).
+## New / unstable package versioning
 
-## 2.0.0 GA
+New packages are introduced with alpha and beta versions as would
+normally be expected. To avoid "chasing" the current stable release
+version, these will be labeled using 1.0.0 as the notional stable
+version, before synchronizing with the current "umbrella" stable
+version when it becomes stable. (This requires a new release for all
+packages, for the same reasons given above. This is not expected to
+be a frequent occurence, however.)
 
-Before any 2.0.0 packages are released, project references will be
-converted into versioned package references, to avoid the "unreleased
-dependency" problem mentioned earlier. At that point, the version
-number will be removed from Directory.Build.props
+For example, a new package might have the following version sequence:
 
-From there onwards, each package needs a separate GitHub release.
-The GitHub action to push the NuGet packages will use the tag name
-to determine the package to push, so the format must exactly match
-the example below. (The release title doesn't need to match exactly,
-although it's better if it does.)
+- 1.0.0-alpha.1
+- 1.0.0-beta.1
+- 1.0.0-beta.2
+- 2.1.0
 
-- Example tag name: "CloudNative.CloudEvents.AspNetCore-2.1.0"
-- Example release title: "Release CloudNative.CloudEvents.AspNetCore version 2.1.0"
+While a package is in pre-release, it should specify the Version
+element in its project file, which will effectively override the
+"default" stable version.
 
-One corollary of this is that if (say)
-CloudNative.CloudEvents.AspNetCore needs a new feature in
-CloudNative.CloudEvents in order to expose a new feature itself,
-four commits would be required:
-
-- Code change in CloudNative.CloudEvents
-- Release commit for CloudNative.CloudEvents (and then release)
-- Code change and dependency update in CloudNative.CloudEvents.AspNetCore
-- Release commit for CloudNative.CloudEvents.AspNetCore (and then release)
+<!-- TODO: work out how to do multiple pre-releases of a new package
+without worrying about the issue of depending on unreleased parts of
+core. It may well not come up, or we can just handle it really
+carefully. That's probably easier than trying to generalize through
+infrastructure. -->
