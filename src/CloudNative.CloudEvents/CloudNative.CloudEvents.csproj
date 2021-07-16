@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.4" />
     <!-- Source-only package with nullable reference annotations. -->
-    <PackageReference Include="Nullable" Version="1.3.0" />
+    <PackageReference Include="Nullable" Version="1.3.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
