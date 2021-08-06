@@ -117,7 +117,7 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 Id = "result-1",
                 Type = "game.played.v1",
-                Source = new Uri("https://cloudevents.io/"),
+                Source = new Uri("/game", UriKind.Relative),
                 Time = DateTimeOffset.UtcNow,
                 DataContentType = "application/json",
                 Data = result
