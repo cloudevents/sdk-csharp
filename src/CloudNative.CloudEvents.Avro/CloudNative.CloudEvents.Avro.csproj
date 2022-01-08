@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Apache.Avro" Version="1.10.2" />
+    <PackageReference Include="Apache.Avro" Version="1.11.0" />
     <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 
