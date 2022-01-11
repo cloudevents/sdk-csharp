@@ -66,7 +66,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var cloudEvent = new CloudEvent();
             var exception = Assert.Throws<ArgumentException>(() => cloudEvent.DataContentType = "text/html; charset:");
-            Assert.StartsWith(Strings.ErrorContentTypeIsNotRFC2046, exception.InnerException.Message);
+            Assert.StartsWith(Strings.ErrorContentTypeIsNotRFC2046, exception.InnerException!.Message);
         }
 
         [Fact]

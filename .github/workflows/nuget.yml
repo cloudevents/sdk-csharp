@@ -15,22 +15,17 @@ jobs:
     - name: Check out our repo
       uses: actions/checkout@v2
 
-    # We need the .NET Core 2.1 and .NET Core 3.1 runtimes for testing
-    - name: Setup .NET Core 2.1
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 2.1.x
-
+    # We need the .NET Core 3.1 runtime for testing
     - name: Setup .NET Core 3.1
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.x
 
-    # Build with .NET Core 5.0 SDK
-    - name: Setup .NET Core 5.0
+    # Build with .NET 6.0 SDK
+    - name: Setup .NET 6.0
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
 
     - name: Build
       run: |
