@@ -114,7 +114,7 @@ namespace CloudNative.CloudEvents.UnitTests
             var exception = Assert.Throws<ArgumentException>(() => attr.Validate(-5));
             Assert.Contains("Custom validation message", exception.Message);
             Assert.IsType<Exception>(exception.InnerException);
-            Assert.Equal("Custom validation message", exception.InnerException.Message);
+            Assert.Equal("Custom validation message", exception.InnerException!.Message);
         }
 
         [Fact]

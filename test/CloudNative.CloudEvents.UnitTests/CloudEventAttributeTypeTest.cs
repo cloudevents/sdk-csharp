@@ -43,8 +43,8 @@ namespace CloudNative.CloudEvents.UnitTests
                 .Where(prop => prop.PropertyType == typeof(CloudEventAttributeType));
             foreach (var property in properties)
             {
-                var type = (CloudEventAttributeType) property.GetValue(null);
-                Assert.Equal(property.Name, type.Ordinal.ToString());
+                var type = (CloudEventAttributeType) property.GetValue(null)!;
+                Assert.Equal(property.Name, type!.Ordinal.ToString());
             }
         }
 
