@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Aws\Sqs\" />
+    <Folder Include="Aws\NewFolder\" />
   </ItemGroup>
 
 </Project>

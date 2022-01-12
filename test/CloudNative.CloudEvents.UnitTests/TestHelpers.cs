@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace CloudNative.CloudEvents.UnitTests
@@ -178,6 +179,16 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 AssertCloudEventsEqual(pair.x, pair.y);
             }
+        }
+
+        /// <summary>
+        /// Deep copy object instance by serializing and deserializing it.
+        /// </summary>
+        /// <param name="object">The object to copy.</param>
+        internal static T DeepCopy<T>(T @object)
+        {
+            var serialized = JsonConvert.SerializeObject(@object);
+            return JsonConvert.DeserializeObject<T>(serialized)!;
         }
     }
 }

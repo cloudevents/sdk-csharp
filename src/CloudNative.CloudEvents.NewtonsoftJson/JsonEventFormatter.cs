@@ -466,13 +466,31 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// <inheritdoc />
         public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
+            return EncodeBinaryModeEventData(cloudEvent, out var contentType);
+        }
+
+        /// <inheritdoc />
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent, out ContentType contentType)
+        {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+
+            if (cloudEvent.DataContentType is null)
+            {
+                contentType = new ContentType(JsonMediaType)
+                {
+                    CharSet = Encoding.UTF8.WebName
+                };
+            }
+            else
+            {
+                contentType = new ContentType(cloudEvent.DataContentType);
+            }
 
             if (cloudEvent.Data is null)
             {
                 return Array.Empty<byte>();
             }
-            ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+
             if (contentType.MediaType == JsonMediaType)
             {
                 // TODO: Make this more efficient. We could write to a StreamWriter with a MemoryStream,

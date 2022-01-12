@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+		<Description>AWS SNS extensions for CloudNative.CloudEvents</Description>
+		<PackageTags>cncf;cloudnative;cloudevents;events;aws;sqs</PackageTags>
+		<LangVersion>8.0</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AWSSDK.SQS" Version="3.7.2.7" />
+		<ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
+	</ItemGroup>
+
+</Project>

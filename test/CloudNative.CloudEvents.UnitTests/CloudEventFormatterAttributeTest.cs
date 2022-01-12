@@ -71,6 +71,9 @@ namespace CloudNative.CloudEvents.UnitTests
             public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
                 throw new NotImplementedException();
 
+            public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent, out ContentType contentType) =>
+                throw new NotImplementedException();
+
             public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
                 throw new NotImplementedException();
         }

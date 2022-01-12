@@ -171,6 +171,10 @@ namespace CloudNative.CloudEvents
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
 
         /// <inheritdoc />
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent, out ContentType contentType) =>
+            throw new NotSupportedException("The Avro event formatter does not support binary content mode");
+
+        /// <inheritdoc />
         public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
             throw new NotSupportedException("The Avro event formatter does not support binary content mode");
     }

@@ -478,28 +478,47 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// <inheritdoc />
         public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
+            return EncodeBinaryModeEventData(cloudEvent, out var contentType);
+        }
+
+        /// <inheritdoc />
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent, out ContentType contentType)
+        {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+
+            if (cloudEvent.DataContentType is null)
+            {
+                contentType = new ContentType(JsonMediaType)
+                {
+                    CharSet = Encoding.UTF8.WebName
+                };
+            }
+            else
+            {
+                contentType = new ContentType(cloudEvent.DataContentType);
+            }
 
             if (cloudEvent.Data is null)
             {
                 return Array.Empty<byte>();
             }
-            ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+
+            var encoding = MimeUtilities.GetEncoding(contentType);
+
             if (contentType.MediaType == JsonMediaType)
             {
-                var encoding = MimeUtilities.GetEncoding(contentType);
                 if (encoding is UTF8Encoding)
                 {
                     return JsonSerializer.SerializeToUtf8Bytes(cloudEvent.Data, SerializerOptions);
                 }
                 else
                 {
-                    return MimeUtilities.GetEncoding(contentType).GetBytes(JsonSerializer.Serialize(cloudEvent.Data, SerializerOptions));
+                    return encoding.GetBytes(JsonSerializer.Serialize(cloudEvent.Data, SerializerOptions));
                 }
             }
             if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
             {
-                return MimeUtilities.GetEncoding(contentType).GetBytes(text);
+                return encoding.GetBytes(text);
             }
             if (cloudEvent.Data is byte[] bytes)
             {

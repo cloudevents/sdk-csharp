@@ -106,6 +106,17 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// Encodes the data from <paramref name="cloudEvent"/> in a manner suitable for a binary mode message.
         /// </summary>
+        /// <param name="cloudEvent">The CloudEvents to encode. Must not be null.</param>
+        /// <param name="contentType">On successful return, the content type of the encoded CloudEvent Data.
+        /// Must not be null (on return).</param>
+        /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be encoded by this
+        /// event formatter.</exception>
+        /// <returns>The binary-mode representation of the CloudEvent.</returns>
+        public abstract ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent, out ContentType contentType);
+
+        /// <summary>
+        /// Encodes the data from <paramref name="cloudEvent"/> in a manner suitable for a binary mode message.
+        /// </summary>
         /// <exception cref="ArgumentException">The data in the given CloudEvent cannot be encoded by this
         /// event formatter.</exception>
         /// <returns>The binary-mode representation of the CloudEvent.</returns>
