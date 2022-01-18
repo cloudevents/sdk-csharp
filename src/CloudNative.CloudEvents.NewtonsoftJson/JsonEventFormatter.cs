@@ -30,7 +30,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
     /// nor "data_base64" property is populated in a structured mode message.
     /// </description></item>
     /// <item><description>
-    /// If the data content type is absent or has a media type of "application/json", the data is encoded as JSON.
+    /// If the data value is a byte array, it is serialized either directly as binary data
+    /// (for binary mode messages) or as base64 data (for structured mode messages).
+    /// </description></item>
+    /// <item><description>
+    /// Otherwise, if the data content type is absent or has a media type indicating JSON, the data is encoded as JSON.
     /// If the data is already a <see cref="JToken"/>, that is serialized directly as JSON. Otherwise, the data
     /// is converted using the <see cref="JsonSerializer"/> passed into the constructor, or a
     /// default serializer.
@@ -40,29 +44,35 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
     /// the data is serialized as a string.
     /// </description></item>
     /// <item><description>
-    /// Otherwise, if the data value is a byte array, it is serialized either directly as binary data
-    /// (for binary mode messages) or as base64 data (for structured mode messages).
-    /// </description></item>
-    /// <item><description>
     /// Otherwise, the encoding operation fails.
     /// </description></item>
     /// </list>
     /// <para>
-    /// When decoding CloudEvent data, this implementation uses the following rules:
+    /// When decoding structured mode CloudEvent data, this implementation uses the following rules,
+    /// which can be modified by overriding <see cref="DecodeStructuredModeDataBase64Property(JToken, CloudEvent)"/>
+    /// and <see cref="DecodeStructuredModeDataProperty(JToken, CloudEvent)"/>.
     /// </para>
-    /// <para>
-    /// In a structured mode message, any data is either binary data within the "data_base64" property value,
-    /// or is a JSON token as the "data" property value. Binary data is represented as a byte array.
-    /// A JSON token is decoded as a string if is just a string value and the data content type is specified
-    /// and has a media type beginning with "text/". A JSON token representing the null value always
-    /// leads to a null data result. In any other situation, the JSON token is preserved as a <see cref="JToken"/>
-    /// that can be used for further deserialization (e.g. to a specific CLR type). This behavior can be modified
-    /// by overriding <see cref="DecodeStructuredModeDataBase64Property(JToken, CloudEvent)"/> and
-    /// <see cref="DecodeStructuredModeDataProperty(JToken, CloudEvent)"/>.
-    /// </para>
+    /// <list type="bullet">
+    /// <item><description>
+    /// If the "data_base64" property is present, its value is decoded as a byte array.
+    /// </description></item>
+    /// <item><description>
+    /// If the "data" property is present (and non-null) and the content type is absent or indicates a JSON media type,
+    /// the JSON token present in the property is preserved as a <see cref="JToken"/> that can be used for further
+    /// deserialization (e.g. to a specific CLR type).
+    /// </description></item>
+    /// <item><description>
+    /// If the "data" property has a string value and a non-JSON content type has been specified, the data is
+    /// deserialized as a string.
+    /// </description></item>
+    /// <item><description>
+    /// If the "data" property has a non-null, non-string value and a non-JSON content type has been specified,
+    /// the deserialization operation fails.
+    /// </description></item>
+    /// </list>
     /// <para>
     /// In a binary mode message, the data is parsed based on the content type of the message. When the content
-    /// type is absent or has a media type of "application/json", the data is parsed as JSON, with the result as
+    /// type is absent or has a JSON media type, the data is parsed as JSON, with the result as
     /// a <see cref="JToken"/> (or null if the data is empty). When the content type has a media type beginning
     /// with "text/", the data is parsed as a string. In all other cases, the data is left as a byte array.
     /// This behavior can be specialized by overriding <see cref="DecodeBinaryModeEventData(ReadOnlyMemory{byte}, CloudEvent)"/>.
@@ -296,6 +306,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else
             {
+                // If no content type has been specified, default to application/json
+                cloudEvent.DataContentType ??= JsonMediaType;
+
                 // We know that dataToken must be non-null here, due to the above conditions.
                 DecodeStructuredModeDataProperty(dataToken!, cloudEvent);
             }
@@ -334,8 +347,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This implementation converts JSON string tokens to strings when the content type suggests
-        /// that's appropriate, but otherwise returns the token directly.
+        /// This implementation will populate the Data property with the verbatim <see cref="JToken"/> if
+        /// the content type is deemed to be JSON according to <see cref="IsJsonMediaType(string)"/>. Otherwise,
+        /// it validates that the token is a string, and the Data property is populated with that string.
         /// </para>
         /// <para>
         /// Override this method to provide more specialized conversions.
@@ -345,12 +359,24 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// not have a null token type.</param>
         /// <param name="cloudEvent">The event being decoded. This should not be modified except to
         /// populate the <see cref="CloudEvent.Data"/> property, but may be used to provide extra
-        /// information such as the data content type. Will not be null.</param>
+        /// information such as the data content type. Will not be null, and the <see cref="CloudEvent.DataContentType"/>
+        /// property will be non-null.</param>
         /// <returns>The data to populate in the <see cref="CloudEvent.Data"/> property.</returns>
-        protected virtual void DecodeStructuredModeDataProperty(JToken dataToken, CloudEvent cloudEvent) =>
-            cloudEvent.Data = dataToken.Type == JTokenType.String && cloudEvent.DataContentType?.StartsWith("text/") == true
-                ? (string?) dataToken
-                : (object) dataToken; // Deliberately cast to object to avoid any implicit conversions
+        protected virtual void DecodeStructuredModeDataProperty(JToken dataToken, CloudEvent cloudEvent)
+        {
+            if (IsJsonMediaType(cloudEvent.DataContentType!))
+            {
+                cloudEvent.Data = dataToken;
+            }
+            else
+            {
+                if (dataToken.Type != JTokenType.String)
+                {
+                    throw new ArgumentException("CloudEvents with a non-JSON datacontenttype can only have string data values.");
+                }
+                cloudEvent.Data = (string?) dataToken;
+            }
+        }
 
         /// <inheritdoc />
         public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
@@ -420,6 +446,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
             if (cloudEvent.Data is object)
             {
+                if (cloudEvent.DataContentType is null)
+                {
+                    writer.WritePropertyName(cloudEvent.SpecVersion.DataContentTypeAttribute.Name);
+                    writer.WriteValue(JsonMediaType);
+                }
                 EncodeStructuredModeData(cloudEvent, writer);
             }
             writer.WriteEndObject();
@@ -440,26 +471,31 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// <param name="writer"/>The writer to serialize the data to. Will not be null.</param>
         protected virtual void EncodeStructuredModeData(CloudEvent cloudEvent, JsonWriter writer)
         {
-            ContentType dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
-            if (dataContentType.MediaType == JsonMediaType)
-            {
-                writer.WritePropertyName(DataPropertyName);
-                Serializer.Serialize(writer, cloudEvent.Data);
-            }
-            else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
-            {
-                writer.WritePropertyName(DataPropertyName);
-                writer.WriteValue(text);
-            }
-            else if (cloudEvent.Data is byte[] binary)
+            // Binary data is encoded using the data_base64 property, regardless of content type.
+            // TODO: Support other forms of binary data, e.g. ReadOnlyMemory<byte>
+            if (cloudEvent.Data is byte[] binary)
             {
                 writer.WritePropertyName(DataBase64PropertyName);
                 writer.WriteValue(Convert.ToBase64String(binary));
             }
             else
             {
-                // We assume CloudEvent.Data is not null due to the way this is called.
-                throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
+                ContentType dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+                if (IsJsonMediaType(dataContentType.MediaType))
+                {
+                    writer.WritePropertyName(DataPropertyName);
+                    Serializer.Serialize(writer, cloudEvent.Data);
+                }
+                else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
+                {
+                    writer.WritePropertyName(DataPropertyName);
+                    writer.WriteValue(text);
+                }
+                else
+                {
+                    // We assume CloudEvent.Data is not null due to the way this is called.
+                    throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
+                }
             }
         }
 
@@ -472,8 +508,14 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 return Array.Empty<byte>();
             }
+            // Binary data is left alone, regardless of the content type.
+            // TODO: Support other forms of binary data, e.g. ReadOnlyMemory<byte>
+            if (cloudEvent.Data is byte[] bytes)
+            {
+                return bytes;
+            }
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
-            if (contentType.MediaType == JsonMediaType)
+            if (IsJsonMediaType(contentType.MediaType))
             {
                 // TODO: Make this more efficient. We could write to a StreamWriter with a MemoryStream,
                 // but then we end up with a BOM in most cases, which I suspect we don't want.
@@ -487,10 +529,6 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 return MimeUtilities.GetEncoding(contentType).GetBytes(text);
             }
-            if (cloudEvent.Data is byte[] bytes)
-            {
-                return bytes;
-            }
             throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data.GetType()} with content type '{cloudEvent.DataContentType}'");
         }
 
@@ -503,7 +541,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
             Encoding encoding = MimeUtilities.GetEncoding(contentType);
 
-            if (contentType.MediaType == JsonMediaType)
+            if (IsJsonMediaType(contentType.MediaType))
             {
                 if (body.Length > 0)
                 {
@@ -547,6 +585,15 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 DateParseHandling = DateParseHandling.None
             };
+
+        /// <summary>
+        /// Determines whether the given media type should be handled as JSON.
+        /// The default implementation treats anything ending with "/json" or "+json"
+        /// as JSON.
+        /// </summary>
+        /// <param name="mediaType">The media type to check for JSON. Will not be null.</param>
+        /// <returns>Whether or not <paramref name="mediaType"/> indicates JSON data.</returns>
+        protected virtual bool IsJsonMediaType(string mediaType) => mediaType.EndsWith("/json") || mediaType.EndsWith("+json");
     }
 
     /// <summary>
