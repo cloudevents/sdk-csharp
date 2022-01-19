@@ -39,6 +39,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                         JsonValueKind.String => property.GetString(),
                         JsonValueKind.Number => property.GetInt32(),
                         JsonValueKind.Null => (object?) null,
+                        JsonValueKind.Object => JsonSerializer.Deserialize(property.GetRawText(), expectation.value.GetType()),
                         _ => throw new Exception($"Unhandled value kind: {property.ValueKind}")
                     };
 
