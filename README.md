@@ -1,4 +1,4 @@
-![Build](https://ci.appveyor.com/api/projects/status/github/cloudevents/sdk-csharp?svg=true)
+![Build](https://github.com/cloudevents/sdk-csharp/actions/workflows/build.yml/badge.svg)
 
 ## Status
 
