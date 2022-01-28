@@ -33,7 +33,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Avr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.NewtonsoftJson", "src\CloudNative.CloudEvents.NewtonsoftJson\CloudNative.CloudEvents.NewtonsoftJson.csproj", "{9DC17081-21D8-4123-8650-D97C2153DB8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudNative.CloudEvents.SystemTextJson", "src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj", "{FACB3EF2-F078-479A-A91C-719894CB66BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.SystemTextJson", "src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj", "{FACB3EF2-F078-479A-A91C-719894CB66BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudNative.CloudEvents.Protobuf", "src\CloudNative.CloudEvents.Protobuf\CloudNative.CloudEvents.Protobuf.csproj", "{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -189,6 +191,18 @@ Global
 		{FACB3EF2-F078-479A-A91C-719894CB66BF}.Release|x64.Build.0 = Release|Any CPU
 		{FACB3EF2-F078-479A-A91C-719894CB66BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{FACB3EF2-F078-479A-A91C-719894CB66BF}.Release|x86.Build.0 = Release|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Debug|x64.Build.0 = Debug|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Debug|x86.Build.0 = Debug|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|x64.ActiveCfg = Release|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|x64.Build.0 = Release|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|x86.ActiveCfg = Release|Any CPU
+		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
