@@ -26,5 +26,13 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.NotNull(version);
             Assert.Equal(versionId, version!.VersionId);
         }
+
+        [Fact]
+        public void V1Source_MustBeNonEmpty()
+        {
+            var attribute = CloudEventsSpecVersion.V1_0.SourceAttribute;
+            var uri = new Uri("", UriKind.RelativeOrAbsolute);
+            Assert.Throws<ArgumentException>(() => attribute.Validate(uri));
+        }
     }
 }

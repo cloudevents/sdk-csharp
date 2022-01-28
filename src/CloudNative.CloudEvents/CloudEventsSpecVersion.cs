@@ -38,10 +38,10 @@ namespace CloudNative.CloudEvents
         public static CloudEventsSpecVersion V1_0 { get; } = new CloudEventsSpecVersion(
             "1.0",
             CreateRequired("id", CloudEventAttributeType.String, NonEmptyString),
-            CreateRequired("source", CloudEventAttributeType.UriReference, NonEmptyUri),
+            CreateRequired("source", CloudEventAttributeType.UriReference, NonEmptyUriReference),
             CreateRequired("type", CloudEventAttributeType.String, NonEmptyString),
-            CreateOptional("datacontenttype", CloudEventAttributeType.String, Rfc2046String), // TODO: Do we want some way of adding validation that this is per RFC 2046?
-            CreateOptional("dataschema", CloudEventAttributeType.Uri, NonEmptyUri),
+            CreateOptional("datacontenttype", CloudEventAttributeType.String, Rfc2046String),
+            CreateOptional("dataschema", CloudEventAttributeType.Uri, NonEmptyUriReference),
             CreateOptional("subject", CloudEventAttributeType.String, NonEmptyString),
             CreateOptional("time", CloudEventAttributeType.Timestamp, null));
 
@@ -166,9 +166,13 @@ namespace CloudNative.CloudEvents
             }
         }
 
-        private static void NonEmptyUri(object value)
+        private static void NonEmptyUriReference(object value)
         {
-            // TODO: is this actually useful?
+            Uri uri = (Uri) value;
+            if (uri.OriginalString.Length == 0)
+            {
+                throw new ArgumentException("URI reference must be non-empty");
+            }
         }
 
         private static void Rfc2046String(object value)
