@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Kafka\CloudNative.CloudEvents.Kafka.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Mqtt\CloudNative.CloudEvents.Mqtt.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.NewtonsoftJson\CloudNative.CloudEvents.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\..\src\CloudNative.CloudEvents.Protobuf\CloudNative.CloudEvents.Protobuf.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>

@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+
+package io.cloudevents.v1.tests;
+
+option csharp_namespace = "CloudNative.CloudEvents.Protobuf.UnitTests";
+
+message PayloadData1 {
+  string name = 1;
+}
