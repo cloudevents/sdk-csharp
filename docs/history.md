@@ -1,5 +1,12 @@
 # Version history (from 2.0)
 
+## 2.2.0 (2022-02-02)
+
+- Bug fix: the "source" attribute is now validated to be non-empty
+- Bug fix: the JSON event formatters comply with the clarified JSON event format spec
+- Dependency: Apache.Avro dependency updated to 1.11.0
+- Feature: New package CloudNative.CloudEvents.Protobuf, released as 2.0.0-beta.1
+
 ## 2.1.1 (2021-07-21)
 
 Bug fix ([#77](https://github.com/cloudevents/sdk-csharp/pull/177)): dependency on the
