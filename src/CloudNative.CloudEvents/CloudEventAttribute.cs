@@ -4,6 +4,7 @@
 
 using CloudNative.CloudEvents.Core;
 using System;
+using System.Collections.Generic;
 
 namespace CloudNative.CloudEvents
 {
@@ -15,6 +16,12 @@ namespace CloudNative.CloudEvents
     /// </summary>
     public class CloudEventAttribute
     {
+        private static readonly IList<string> ReservedNames = new List<string>
+        {
+            CloudEventsSpecVersion.SpecVersionAttributeName,
+            "data"
+        };
+
         /// <summary>
         /// The type of the attribute. All values provided must be compatible with this.
         /// </summary>
@@ -60,7 +67,7 @@ namespace CloudNative.CloudEvents
         {
             Validation.CheckNotNull(name, nameof(name));
             Validation.CheckNotNull(type, nameof(type));
-            if (name == CloudEventsSpecVersion.SpecVersionAttributeName)
+            if (ReservedNames.Contains(name))
             {
                 throw new ArgumentException($"The attribute name '{name}' is reserved and cannot be used for an extension attribute.");
             }
