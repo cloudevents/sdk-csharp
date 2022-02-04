@@ -79,6 +79,11 @@ namespace CloudNative.CloudEvents.UnitTests
                 CloudEventAttribute.CreateExtension(CloudEventsSpecVersion.SpecVersionAttributeName, CloudEventAttributeType.String));
 
         [Fact]
+        public void CreateExtension_DataName() =>
+            Assert.Throws<ArgumentException>(() =>
+                CloudEventAttribute.CreateExtension("data", CloudEventAttributeType.String));
+
+        [Fact]
         public void Validate_NoValidator_Valid()
         {
             var attr = CloudEventAttribute.CreateExtension("ext", CloudEventAttributeType.Integer, validator: null);
