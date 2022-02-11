@@ -397,7 +397,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         // It should be okay to not set a DataContentType if there's no data...
         // but what if there's a data value which is an empty string, empty byte array or empty stream?
         [Fact]
-        public void NoContentType_NoContent()
+        public void NoDataContentType_NoData()
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             var content = cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter());
@@ -405,10 +405,22 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         }
 
         [Fact]
-        public void NoContentType_WithContent()
+        public void NoDataContentType_ContentTypeInferredFromFormatter()
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
-            cloudEvent.Data = "Some text";
+            // The JSON event format infers application/json for non-binary data
+            cloudEvent.Data = new { Name = "xyz" };
+            var content = cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter());
+            var expectedContentType = new MediaTypeHeaderValue("application/json");
+            Assert.Equal(expectedContentType, content.Headers.ContentType);
+        }
+
+        [Fact]
+        public void NoDataContentType_NoContentTypeInferredFromFormatter()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            // The JSON event format does not infer a data content type for binary data
+            cloudEvent.Data = new byte[10];
             var exception = Assert.Throws<ArgumentException>(() => cloudEvent.ToHttpContent(ContentMode.Binary, new JsonEventFormatter()));
             Assert.StartsWith(Strings.ErrorContentTypeUnspecified, exception.Message);
         }

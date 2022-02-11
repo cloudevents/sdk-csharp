@@ -1043,23 +1043,22 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         }
 
         [Fact]
-        public void EncodeStructured_BinaryData_DefaultContentTypeToApplicationJson()
+        public void EncodeStructured_BinaryData_DefaultContentTypeIsNotImplied()
         {
             var cloudEvent = new CloudEvent
             {
                 Data = SampleBinaryData
             }.PopulateRequiredAttributes();
 
-            // While it's odd for a CloudEvent to have binary data but no data content type,
-            // the spec says the data should be placed in data_base64, and the content type should
-            // default to application/json. (Checking in https://github.com/cloudevents/spec/issues/933)
+            // If a CloudEvent to have binary data but no data content type,
+            // the spec says the data should be placed in data_base64, but the content type
+            // should *not* be defaulted to application/json, as clarified in https://github.com/cloudevents/spec/issues/933
             var encoded = new JsonEventFormatter().EncodeStructuredModeMessage(cloudEvent, out var contentType);
             Assert.Equal("application/cloudevents+json; charset=utf-8", contentType.ToString());
             JsonElement obj = ParseJson(encoded);
             var asserter = new JsonElementAsserter
             {
                 { "data_base64", JsonValueKind.String, SampleBinaryDataBase64 },
-                { "datacontenttype", JsonValueKind.String, "application/json" },
                 { "id", JsonValueKind.String, "test-id" },
                 { "source", JsonValueKind.String, "//test" },
                 { "specversion", JsonValueKind.String, "1.0" },

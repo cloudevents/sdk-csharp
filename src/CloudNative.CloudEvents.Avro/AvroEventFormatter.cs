@@ -30,6 +30,9 @@ namespace CloudNative.CloudEvents
     /// Avro record, so the value will have the natural Avro deserialization type for that data (which may
     /// not be exactly the same as the type that was serialized).
     /// </para>
+    /// <para>
+    /// This event formatter does not infer any data content type.
+    /// </para>
     /// </remarks>
     public class AvroEventFormatter : CloudEventFormatter
     {

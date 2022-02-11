@@ -207,15 +207,30 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         }
 
         [Fact]
-        public async Task CopyToListenerResponseAsync_ContentButNoContentType()
+        public async Task CopyToListenerResponseAsync_BinaryDataButNoDataContentType()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = new byte[10],
+            }.PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            await GetResponseAsync(
+                async context => await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, formatter)));
+        }
+
+        [Fact]
+        public async Task CopyToListenerResponseAsync_NonBinaryDataButNoDataContentType_ContentTypeIsInferred()
         {
             var cloudEvent = new CloudEvent
             {
                 Data = "plain text",
             }.PopulateRequiredAttributes();
             var formatter = new JsonEventFormatter();
-            await GetResponseAsync(
-                async context => await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, formatter)));
+            var response = await GetResponseAsync(
+                async context => await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, formatter));
+            var content = response.Content;
+            Assert.Equal("application/json", content.Headers.ContentType.MediaType);
+            Assert.Equal("\"plain text\"", await content.ReadAsStringAsync());
         }
 
         [Fact]

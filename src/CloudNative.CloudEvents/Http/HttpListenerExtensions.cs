@@ -41,7 +41,7 @@ namespace CloudNative.CloudEvents.Http
                     break;
                 case ContentMode.Binary:
                     content = formatter.EncodeBinaryModeEventData(cloudEvent);
-                    contentType = MimeUtilities.CreateContentTypeOrNull(cloudEvent.DataContentType);
+                    contentType = MimeUtilities.CreateContentTypeOrNull(formatter.GetOrInferDataContentType(cloudEvent));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");

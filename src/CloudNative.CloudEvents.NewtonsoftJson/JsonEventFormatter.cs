@@ -446,10 +446,11 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
             if (cloudEvent.Data is object)
             {
-                if (cloudEvent.DataContentType is null)
+                if (cloudEvent.DataContentType is null && GetOrInferDataContentType(cloudEvent) is string inferredDataContentType)
                 {
+                    cloudEvent.SpecVersion.DataContentTypeAttribute.Validate(inferredDataContentType);
                     writer.WritePropertyName(cloudEvent.SpecVersion.DataContentTypeAttribute.Name);
-                    writer.WriteValue(JsonMediaType);
+                    writer.WriteValue(inferredDataContentType);
                 }
                 EncodeStructuredModeData(cloudEvent, writer);
             }
@@ -457,12 +458,21 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         }
 
         /// <summary>
+        /// Infers the data content type of a CloudEvent based on its data. This implementation
+        /// infers a data content type of "application/json" for any non-binary data, and performs
+        /// no inference for binary data.
+        /// </summary>
+        /// <param name="data">The CloudEvent to infer the data content from. Must not be null.</param>
+        /// <returns>The inferred data content type, or null if no inference is performed.</returns>
+        protected override string? InferDataContentType(object data) => data is byte[]? null : JsonMediaType;
+
+        /// <summary>
         /// Encodes structured mode data within a CloudEvent, writing it to the specified <see cref="JsonWriter"/>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// This implementation follows the rules listed in the class remarks. Override this method
-        /// to provide more specialized behavior, writing only <see cref="DataPropertyName"/> or
+        /// to provide more specialized behavior, usually writing only <see cref="DataPropertyName"/> or
         /// <see cref="DataBase64PropertyName"/> properties.
         /// </para>
         /// </remarks>
@@ -480,7 +490,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else
             {
-                ContentType dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+                ContentType dataContentType = new ContentType(GetOrInferDataContentType(cloudEvent));
                 if (IsJsonMediaType(dataContentType.MediaType))
                 {
                     writer.WritePropertyName(DataPropertyName);

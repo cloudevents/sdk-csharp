@@ -164,5 +164,41 @@ namespace CloudNative.CloudEvents
         /// Must not be null (on return).</param>
         /// <returns>The batch representation of the CloudEvent.</returns>
         public abstract ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType);
+
+        /// <summary>
+        /// Determines the effective data content type of the given CloudEvent.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This implementation validates that <paramref name="cloudEvent"/> is not null,
+        /// returns the existing <see cref="CloudEvent.DataContentType"/> if that's not null,
+        /// and otherwise returns null if <see cref="CloudEvent.Data"/> is null or
+        /// delegates to <see cref="InferDataContentType(object)"/> to infer the data content type
+        /// from the actual data.
+        /// </para>
+        /// <para>
+        /// Derived classes may override this if additional information is needed from the CloudEvent
+        /// in order to determine the effective data content type, but most cases can be handled by
+        /// simply overriding <see cref="InferDataContentType(object)"/>.
+        /// </para>
+        /// </remarks>
+        /// <param name="cloudEvent">The CloudEvent to get or infer the data content type from. Must not be null.</param>
+        /// <returns>The data content type of the CloudEvent, or null for no data content type.</returns>
+        public virtual string? GetOrInferDataContentType(CloudEvent cloudEvent)
+        {                     
+            Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
+            return cloudEvent.DataContentType is string dataContentType ? dataContentType
+                : cloudEvent.Data is not object data ? null
+                : InferDataContentType(data);
+        }
+
+        /// <summary>
+        /// Infers the effective data content type based on the actual data. This base implementation
+        /// always returns null, but derived classes may override this method to effectively provide
+        /// a default data content type based on the in-memory data type.
+        /// </summary>
+        /// <param name="data">The data within a CloudEvent. Should not be null.</param>
+        /// <returns>The inferred content type, or null if no content type is inferred.</returns>
+        protected virtual string? InferDataContentType(object data) => null;
     }
 }
