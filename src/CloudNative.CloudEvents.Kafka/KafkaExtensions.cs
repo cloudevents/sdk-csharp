@@ -20,7 +20,8 @@ namespace CloudNative.CloudEvents.Kafka
     {
         private const string KafkaHeaderPrefix = "ce_";
 
-        private const string KafkaContentTypeAttributeName = "content-type";
+        // Visible for testing
+        internal const string KafkaContentTypeAttributeName = "content-type";
         private const string SpecVersionKafkaHeader = KafkaHeaderPrefix + "specversion";
 
         /// <summary>
@@ -155,7 +156,7 @@ namespace CloudNative.CloudEvents.Kafka
                     break;
                 case ContentMode.Binary:
                     value = BinaryDataUtilities.AsArray(formatter.EncodeBinaryModeEventData(cloudEvent));
-                    contentTypeHeaderValue = cloudEvent.DataContentType;
+                    contentTypeHeaderValue = formatter.GetOrInferDataContentType(cloudEvent);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");

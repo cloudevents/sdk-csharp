@@ -8,6 +8,7 @@ using Confluent.Kafka;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mime;
 using System.Text;
 using Xunit;
@@ -61,8 +62,8 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
 
             Assert.True(message.IsCloudEvent());
 
-            // using serialization to create fully independent copy thus simulating message transport
-            // real transport will work in a similar way
+            // Using serialization to create fully independent copy thus simulating message transport.
+            // The real transport will work in a similar way.
             var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
             var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter())!;
 
@@ -104,8 +105,8 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
 
-            // using serialization to create fully independent copy thus simulating message transport
-            // real transport will work in a similar way
+            // Using serialization to create fully independent copy thus simulating message transport.
+            // The real transport will work in a similar way.
             var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
             var settings = new JsonSerializerSettings
             {
@@ -126,6 +127,20 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
+        }
+
+        [Fact]
+        public void ContentTypeCanBeInferredByFormatter()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = "plain text"
+            }.PopulateRequiredAttributes();
+
+            var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
+            var contentTypeHeader = message.Headers.Single(h => h.Key == KafkaExtensions.KafkaContentTypeAttributeName);
+            var contentTypeValue = Encoding.UTF8.GetString(contentTypeHeader.GetValueBytes());
+            Assert.Equal("application/json", contentTypeValue);
         }
 
         private class HeadersConverter : JsonConverter

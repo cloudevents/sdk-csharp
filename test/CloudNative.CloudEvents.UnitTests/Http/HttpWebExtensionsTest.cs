@@ -109,6 +109,32 @@ namespace CloudNative.CloudEvents.Http.UnitTests
         }
 
         [Fact]
+        public async Task CopyToHttpWebRequestAsync_BinaryDataButNoDataContentType()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = new byte[10],
+            }.PopulateRequiredAttributes();
+            HttpWebRequest httpWebRequest = WebRequest.CreateHttp(ListenerAddress + "ep");
+            httpWebRequest.Method = "POST";
+            await Assert.ThrowsAsync<ArgumentException>(
+                async () => await cloudEvent.CopyToHttpWebRequestAsync(httpWebRequest, ContentMode.Binary, new JsonEventFormatter()));
+        }
+
+        [Fact]
+        public async Task CopyToHttpWebRequestAsync_NonBinaryDataButNoDataContentType_ContentTypeIsInferred()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = "plain text",
+            }.PopulateRequiredAttributes();
+            HttpWebRequest httpWebRequest = WebRequest.CreateHttp(ListenerAddress + "ep");
+            httpWebRequest.Method = "POST";
+            await cloudEvent.CopyToHttpWebRequestAsync(httpWebRequest, ContentMode.Binary, new JsonEventFormatter());
+            Assert.Equal("application/json", httpWebRequest.ContentType);
+        }
+
+        [Fact]
         public async Task CopyToHttpWebRequestAsync_Batch()
         {
             var batch = CreateSampleBatch();

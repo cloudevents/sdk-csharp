@@ -105,3 +105,18 @@ The formatter should *not* perform validation on the `CloudEvent`
 accepted in `DecodeBinaryModeEventData`, beyond asserting that the
 argument is not null. This is typically called by a protocol binding
 which should perform validation itself later.
+
+## Data content type inference
+
+Some event formats (e.g. JSON) infer the data content type from the
+actual data provided. In the C# SDK, this is implemented via the
+`CloudEventFormatter` methods `GetOrInferDataContentType` and
+`InferDataContentType`. The first of these is primarily a
+convenience method to be called by bindings; the second may be
+overridden by any formatter implementation that wishes to infer
+a data content type when one is not specified. Implementations *can*
+override `GetOrInferDataContentType` if they have unusual
+requirements, but the default implementation is usually sufficient.
+
+The base implementation of `InferDataContentType` always returns
+null; this means that no content type is inferred by default.

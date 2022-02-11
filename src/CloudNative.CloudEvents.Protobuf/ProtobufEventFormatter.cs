@@ -59,6 +59,9 @@ namespace CloudNative.CloudEvents.Protobuf
     /// a string, otherwise it is left as a byte array. Derived classes can specialize this behavior by overriding
     /// <see cref="DecodeBinaryModeEventData(ReadOnlyMemory{byte}, CloudEvent)"/>.
     /// </para>
+    /// <para>
+    /// This event formatter does not infer any data content type.
+    /// </para>
     /// </remarks>
     public class ProtobufEventFormatter : CloudEventFormatter
     {

@@ -168,7 +168,7 @@ namespace CloudNative.CloudEvents.Amqp
                     break;
                 case ContentMode.Binary:
                     bodySection = new Data { Binary = BinaryDataUtilities.AsArray(formatter.EncodeBinaryModeEventData(cloudEvent)) };
-                    properties = new Properties { ContentType = cloudEvent.DataContentType };
+                    properties = new Properties { ContentType = formatter.GetOrInferDataContentType(cloudEvent) };
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");

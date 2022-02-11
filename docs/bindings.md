@@ -169,8 +169,11 @@ The conversion should follow the following steps of pseudo-code:
 - For binary mode encoding:
   - Call `formatter.EncodeBinaryModeEventData` to encode
     the data within the CloudEvent
+  - Call `formatter.GetOrInferDataContentType` to obtain the
+    appropriate content type, which may be inferred from the
+    data if the CloudEvent itself does not specify the data content type.
   - Populate metadata in the message from the attributes in the
-    CloudEvent.
+    CloudEvent and the content type.
 - For `To...` methods, return the resulting protocol message.
   This must not be null. (`CopyTo...` messages do not return
   anything.)

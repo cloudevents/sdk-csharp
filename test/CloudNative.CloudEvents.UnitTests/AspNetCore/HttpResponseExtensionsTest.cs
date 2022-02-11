@@ -40,9 +40,22 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             // There's no data content type header; the content type itself is used for that.
             Assert.False(response.Headers.ContainsKey("ce-datacontenttype"));
         }
-        
+
         [Fact]
-        public async Task CopyToHttpResponseAsync_ContentButNoContentType()
+        public async Task CopyToHttpResponseAsync_BinaryDataButNoDataContentType()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = new byte[10],
+            }.PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var response = CreateResponse();
+            // The formatter doesn't infer the data content type for binary data.
+            await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter));
+        }
+
+        [Fact]
+        public async Task CopyToHttpResponseAsync_NonBinaryDataButNoDataContentType_ContentTypeIsInferred()
         {
             var cloudEvent = new CloudEvent
             {
@@ -50,7 +63,11 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             }.PopulateRequiredAttributes();
             var formatter = new JsonEventFormatter();
             var response = CreateResponse();
-            await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter));
+            await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter);
+            var content = GetContent(response);
+            // The formatter infers that it should encode the string as a JSON value (so it includes the double quotes)
+            Assert.Equal("application/json", response.ContentType);
+            Assert.Equal("\"plain text\"", Encoding.UTF8.GetString(content.Span));
         }
 
         [Fact]

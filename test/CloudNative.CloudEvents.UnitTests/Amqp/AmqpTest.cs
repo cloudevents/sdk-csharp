@@ -5,6 +5,7 @@
 using Amqp;
 using Amqp.Framing;
 using CloudNative.CloudEvents.NewtonsoftJson;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Mime;
 using System.Text;
@@ -18,8 +19,7 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
         [Fact]
         public void AmqpStructuredMessageTest()
         {
-            // the AMQPNetLite library is factored such
-            // that we don't need to do a wire test here
+            // The AMQPNetLite library is factored such that we don't need to do a wire test here.
             var cloudEvent = new CloudEvent
             {
                 Type = "com.github.pull.create",
@@ -55,9 +55,7 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
         [Fact]
         public void AmqpBinaryMessageTest()
         {
-            // the AMQPNetLite library is factored such
-            // that we don't need to do a wire test here
-
+            // The AMQPNetLite library is factored such that we don't need to do a wire test here.
             var cloudEvent = new CloudEvent
             {
                 Type = "com.github.pull.create",
@@ -87,6 +85,18 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
+        }
+
+        [Fact]
+        public void BinaryMode_ContentTypeCanBeInferredByFormatter()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = "plain text"
+            }.PopulateRequiredAttributes();
+
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, new JsonEventFormatter());
+            Assert.Equal("application/json", message.Properties.ContentType);
         }
 
         [Fact]
