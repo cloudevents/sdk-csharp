@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29001.49
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents", "src\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj", "{C5DC9F44-7C03-4A70-80EF-7A29696455EB}"
 EndProject
@@ -35,7 +35,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.New
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.SystemTextJson", "src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj", "{FACB3EF2-F078-479A-A91C-719894CB66BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloudNative.CloudEvents.Protobuf", "src\CloudNative.CloudEvents.Protobuf\CloudNative.CloudEvents.Protobuf.csproj", "{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CloudNative.CloudEvents.Protobuf", "src\CloudNative.CloudEvents.Protobuf\CloudNative.CloudEvents.Protobuf.csproj", "{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

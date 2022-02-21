@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<tests xmlns:ce="http://cloudevents.io/xmlformat/V1"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<test name="Minimal">
+		<ce:event specversion="1.0" >
+			<ce:id>test-id</ce:id>
+			<ce:type>test-type</ce:type>
+			<ce:source>//test</ce:source>
+		</ce:event>
+	</test>
+</tests>

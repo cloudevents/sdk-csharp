@@ -28,4 +28,8 @@
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<EmbeddedResource Include="Xml\*.xml" />
+	</ItemGroup>
+
 </Project>

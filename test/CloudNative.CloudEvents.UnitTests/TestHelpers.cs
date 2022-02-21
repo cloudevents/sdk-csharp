@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -187,6 +188,23 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 AssertCloudEventsEqual(pair.x, pair.y, dataComparer);
             }
+        }
+
+        /// <summary>
+        /// Loads the resource with the given name, copying it into a MemoryStream.
+        /// (That's often easier to work with when debugging.)
+        /// </summary>
+        internal static MemoryStream LoadResource(string resource)
+        {
+            using var stream = typeof(TestHelpers).Assembly.GetManifestResourceStream(resource);
+            if (stream is null)
+            {
+                throw new ArgumentException($"Resource {resource} is missing. Known resources: {string.Join(", ", typeof(TestHelpers).Assembly.GetManifestResourceNames())}");
+            }
+            var output = new MemoryStream();
+            stream.CopyTo(output);
+            output.Position = 0;
+            return output;
         }
     }
 }
