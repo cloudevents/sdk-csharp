@@ -154,7 +154,7 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
         // TODO: Use this more widely
-        internal static void AssertCloudEventsEqual(CloudEvent expected, CloudEvent actual)
+        internal static void AssertCloudEventsEqual(CloudEvent expected, CloudEvent actual, IEqualityComparer<object?>? dataComparer = null)
         {
             Assert.Equal(expected.SpecVersion, actual.SpecVersion);
             var expectedAttributes = expected.GetPopulatedAttributes().ToList();
@@ -166,17 +166,26 @@ namespace CloudNative.CloudEvents.UnitTests
                 var actualAttribute = actualAttributes.FirstOrDefault(actual => actual.Key.Name == expectedAttribute.Key.Name);
                 Assert.NotNull(actualAttribute.Key);
 
-                Assert.Equal(actualAttribute.Key.Type, expectedAttribute.Key.Type);
-                Assert.Equal(actualAttribute.Value, expectedAttribute.Value);
+                Assert.Equal(expectedAttribute.Key.Type, actualAttribute.Key.Type);
+                if (expectedAttribute.Value is DateTimeOffset expectedDto &&
+                    actualAttribute.Value is DateTimeOffset actualDto)
+                {
+                    AssertTimestampsEqual(expectedDto, actualDto);
+                }
+                else
+                {
+                    Assert.Equal(expectedAttribute.Value, actualAttribute.Value);
+                }
             }
+            Assert.Equal(expected.Data, actual.Data, dataComparer ?? EqualityComparer<object?>.Default);
         }
 
-        internal static void AssertBatchesEqual(IReadOnlyList<CloudEvent> expectedBatch, IReadOnlyList<CloudEvent> actualBatch)
+        internal static void AssertBatchesEqual(IReadOnlyList<CloudEvent> expectedBatch, IReadOnlyList<CloudEvent> actualBatch, IEqualityComparer<object?>? dataComparer = null)
         {
             Assert.Equal(expectedBatch.Count, actualBatch.Count);
             foreach (var pair in expectedBatch.Zip(actualBatch, (x, y) => (x, y)))
             {
-                AssertCloudEventsEqual(pair.x, pair.y);
+                AssertCloudEventsEqual(pair.x, pair.y, dataComparer);
             }
         }
     }
