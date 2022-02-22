@@ -45,7 +45,7 @@ namespace CloudNative.CloudEvents.UnitTests
         /// <summary>
         /// The base64 representation of <see cref="SampleBinaryData"/>.
         /// </summary>
-        internal static string SampleBinaryDataBase64 { get; } = Convert.ToBase64String(SampleBinaryData);
+        internal static string SampleBinaryDataBase64 { get; } = Convert.ToBase64String(SampleBinaryData); // AQID
 
         /// <summary>
         /// Arbitrary timestamp to be used for testing.

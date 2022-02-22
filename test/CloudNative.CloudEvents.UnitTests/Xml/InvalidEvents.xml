@@ -1,354 +1,354 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <tests xmlns:ce="http://cloudevents.io/xmlformat/V1"
-	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<!-- 
-	  - The last element in any test element is the one we try to decode
-	  - as an XML element. All previous elements should be <extension> elements.
-	  -->
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- 
+    - The last element in any test element is the one we try to decode
+    - as an XML element. All previous elements should be <extension> elements.
+    -->
 
-	<!-- Tests for the ce:event element itself-->
-	<test name="WrongElementName">
-		<ce:Event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:Event>
-	</test>
-	
-	<test name="WrongElementNamespace">
-		<ce2:event specversion="1.0" xmlns:ce2="http://cloudevents.io/xmlformat/V2">
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce2:event>
-	</test>
-	
-	<test name="MissingElementNamespace">
-		<event specversion="1.0">
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</event>
-	</test>
-	
-	<test name="MissingSpecversion">
-		<ce:event>
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="UnknownSpecversion">
-		<ce:event specversion="1.1">
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="SpecversionInNamespace">
-		<ce:event ce:specversion="1.0">
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="AdditionalAttributeInEventElement">
-		<ce:event specversion="1.0" test="invalid">
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
+  <!-- Tests for the ce:event element itself-->
+  <test name="WrongElementName">
+    <ce:Event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:Event>
+  </test>
+  
+  <test name="WrongElementNamespace">
+    <ce2:event specversion="1.0" xmlns:ce2="http://cloudevents.io/xmlformat/V2">
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce2:event>
+  </test>
+  
+  <test name="MissingElementNamespace">
+    <event specversion="1.0">
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </event>
+  </test>
+  
+  <test name="MissingSpecversion">
+    <ce:event>
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="UnknownSpecversion">
+    <ce:event specversion="1.1">
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="SpecversionInNamespace">
+    <ce:event ce:specversion="1.0">
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="AdditionalAttributeInEventElement">
+    <ce:event specversion="1.0" test="invalid">
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
 
-	<!-- Required context attributes -->
-	<test name="MissingId">
-		<ce:event specversion="1.0">
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="MissingType">
-		<ce:event specversion="1.0">
-			<ce:id>test-id</ce:id>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="MissingSource">
-		<ce:event specversion="1.0">
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-		</ce:event>
-	</test>
+  <!-- Required context attributes -->
+  <test name="MissingId">
+    <ce:event specversion="1.0">
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="MissingType">
+    <ce:event specversion="1.0">
+      <ce:id>test-id</ce:id>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="MissingSource">
+    <ce:event specversion="1.0">
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+    </ce:event>
+  </test>
 
-	<!-- Invalid values (including empty) for known context attributes -->
-	<test name="EmptyId">
-		<ce:event specversion="1.0" >
-			<ce:id></ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="EmptyType">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type></ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="EmptySource">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source></ce:source>
-		</ce:event>
-	</test>
+  <!-- Invalid values (including empty) for known context attributes -->
+  <test name="EmptyId">
+    <ce:event specversion="1.0" >
+      <ce:id></ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="EmptyType">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type></ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="EmptySource">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source></ce:source>
+    </ce:event>
+  </test>
 
-	<!-- Note: ideally we'd have a test for an invalid URI reference for the source too, but the .NET Uri parser doesn't reject anything :( -->
-	<test name="InvalidDataContentType">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:datacontenttype>invalid</ce:datacontenttype>
-		</ce:event>
-	</test>
-	
-	<test name="InvalidDataSchema">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:dataschema>//cloudevents.io?query=value</ce:dataschema>
-		</ce:event>
-	</test>
-	
-	<test name="EmptySubject">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:subject></ce:subject>
-		</ce:event>
-	</test>
-	
-	<test name="InvalidTime">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:time>invalid</ce:time>
-		</ce:event>
-	</test>
+  <!-- Note: ideally we'd have a test for an invalid URI reference for the source too, but the .NET Uri parser doesn't reject anything :( -->
+  <test name="InvalidDataContentType">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:datacontenttype>invalid</ce:datacontenttype>
+    </ce:event>
+  </test>
+  
+  <test name="InvalidDataSchema">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:dataschema>//cloudevents.io?query=value</ce:dataschema>
+    </ce:event>
+  </test>
+  
+  <test name="EmptySubject">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:subject></ce:subject>
+    </ce:event>
+  </test>
+  
+  <test name="InvalidTime">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:time>invalid</ce:time>
+    </ce:event>
+  </test>
 
-	<!-- We use just the id element to test additional problems that could apply to any CloudEvent attribute. -->
-	<test name="WrongNamespaceForIdElement">
-		<event specversion="1.0">
-			<ce2:id xmlns:ce2="http://cloudevents.io/xmlformat/V2">test-id</ce2:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</event>
-	</test>
-	
-	<test name="MissingNamespaceForIdElement">
-		<event specversion="1.0">
-			<id>test-id</id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</event>
-	</test>
-	
-	<test name="ElementWithinIdElement">
-		<ce:event specversion="1.0" >
-			<ce:id>
-				test-id<nested />
-			</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="AdditionalAttributeWithinIdElement">
-		<ce:event specversion="1.0" >
-			<ce:id test="invalid">test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="InvalidXsiTypeForIdElement">
-		<ce:event specversion="1.0" >
-			<ce:id xsi:type="xs:invalid">test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
-	
-	<test name="IncorrectXsiTypeForIdElement">
-		<ce:event specversion="1.0" >
-			<ce:id xsi:type="xs:boolean">true</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
+  <!-- We use just the id element to test additional problems that could apply to any CloudEvent attribute. -->
+  <test name="WrongNamespaceForIdElement">
+    <event specversion="1.0">
+      <ce2:id xmlns:ce2="http://cloudevents.io/xmlformat/V2">test-id</ce2:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </event>
+  </test>
+  
+  <test name="MissingNamespaceForIdElement">
+    <event specversion="1.0">
+      <id>test-id</id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </event>
+  </test>
+  
+  <test name="ElementWithinIdElement">
+    <ce:event specversion="1.0" >
+      <ce:id>
+        test-id<nested />
+      </ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="AdditionalAttributeWithinIdElement">
+    <ce:event specversion="1.0" >
+      <ce:id test="invalid">test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="InvalidXsiTypeForIdElement">
+    <ce:event specversion="1.0" >
+      <ce:id xsi:type="xs:invalid">test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="IncorrectXsiTypeForIdElement">
+    <ce:event specversion="1.0" >
+      <ce:id xsi:type="xs:boolean">true</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
 
-	<!-- Extension attribute tests -->
-	<text name="InvalidExtensionAttributeName">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:SHOUTY>text</ce:SHOUTY>
-		</ce:event>
-	</text>
-	
-	<text name="MissingExtensionType">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:ext>xyz</ce:ext>
-		</ce:event>
-	</text>
-	
-	<text name="InvalidExtensionType">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:ext xsi:type="xs:decimal">1.5</ce:ext>
-		</ce:event>
-	</text>
-	
-	<text name="ConflictingExtensionType">
-		<extension name="ext" type="string" />
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:ext xsi:type="xs:int">10</ce:ext>
-		</ce:event>
-	</text>
-	
-	<text name="ExtensionValueViolatesValidation">
-		<extension name="ext" type="string" validtion="non-empty-string" />
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:ext xsi:type="xs:string"></ce:ext>
-		</ce:event>
-	</text>
+  <!-- Extension attribute tests -->
+  <test name="InvalidExtensionAttributeName">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:SHOUTY>text</ce:SHOUTY>
+    </ce:event>
+  </test>
+  
+  <test name="MissingExtensionType">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:ext>xyz</ce:ext>
+    </ce:event>
+  </test>
+  
+  <test name="InvalidExtensionType">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:ext xsi:type="xs:decimal">1.5</ce:ext>
+    </ce:event>
+  </test>
+  
+  <test name="ConflictingExtensionType">
+    <extension name="ext" type="String" />
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:ext xsi:type="xs:int">10</ce:ext>
+    </ce:event>
+  </test>
+  
+  <test name="ExtensionValueViolatesValidation">
+    <extension name="ext" type="String" validator="non-empty-string" />
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:ext xsi:type="xs:string"></ce:ext>
+    </ce:event>
+  </test>
 
-	<!-- Data tests -->
-	<test name="DataWithNoType">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:data>Text data</ce:data>
-		</ce:event>
-	</test>
-	
-	<test name="DataWithInvalidType">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:data xsi:type="invalid">Text data</ce:data>
-		</ce:event>
-	</test>
-	
-	<test name="DataWithUnsupportedType">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:data xsi:type="xs:boolean">true</ce:data>
-		</ce:event>
-	</test>
+  <!-- Data tests -->
+  <test name="DataWithNoType">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:data>Text data</ce:data>
+    </ce:event>
+  </test>
+  
+  <test name="DataWithInvalidType">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:data xsi:type="invalid">Text data</ce:data>
+    </ce:event>
+  </test>
+  
+  <test name="DataWithUnsupportedType">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:data xsi:type="xs:boolean">true</ce:data>
+    </ce:event>
+  </test>
 
-	<test name="DataWithNoContentInAny">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:data xsi:type="xs:any" />
-		</ce:event>
-	</test>
+  <test name="DataWithNoContentInAny">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:data xsi:type="xs:any" />
+    </ce:event>
+  </test>
 
-	<test name="DataWithTextContentInAny">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:data xsi:type="xs:any">xyz<element />abc</ce:data>
-		</ce:event>
-	</test>
+  <test name="DataWithTextContentInAny">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:data xsi:type="xs:any">xyz<element />abc</ce:data>
+    </ce:event>
+  </test>
 
-	<test name="DataWithMultipleElementsInAny">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:data xsi:type="xs:any">
-				<element1 />
-				<element2 />
-			</ce:data>
-		</ce:event>
-	</test>
+  <test name="DataWithMultipleElementsInAny">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:data xsi:type="xs:any">
+        <element1 />
+        <element2 />
+      </ce:data>
+    </ce:event>
+  </test>
 
-	<!-- Miscellaneous tests -->
-	<test name="AdditionalTextNode">
-		<ce:event specversion="1.0" >
-			This shouldn't be here.
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
+  <!-- Miscellaneous tests -->
+  <test name="AdditionalTextNode">
+    <ce:event specversion="1.0" >
+      This shouldn't be here.
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
 
-	<test name="DuplicateKnownContextAttributeName">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-		</ce:event>
-	</test>
+  <test name="DuplicateKnownContextAttributeName">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+    </ce:event>
+  </test>
 
-	<test name="DuplicateExtensionAttributeName">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:ext xsi:type="string">xyz</ce:ext>
-			<ce:ext xsi:type="string">xyz</ce:ext>
-		</ce:event>
-	</test>
+  <test name="DuplicateExtensionAttributeName">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:ext xsi:type="string">xyz</ce:ext>
+      <ce:ext xsi:type="string">xyz</ce:ext>
+    </ce:event>
+  </test>
 
-	<test name="DuplicateDataElement">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test-source</ce:source>
-			<ce:data xsi:type="xs:string">Text</ce:data>
-			<ce:data xsi:type="xs:string">Text</ce:data>
-		</ce:event>
-	</test>
-	
-	<!--
-	 - Additional hand-written tests (that can't be easily included in this file):
-	 - * Value that doesn't match the specified extension attribute type (e.g. "x" for "xs:int")
-	 - * Data element with xsi:type=xs:base64Binary but with invalid base64 data
-	 - * Data element with xsi:type=xs:base64Binary but with an element as well as text
-	 - * Data element with xsi:type=xs:string but with an element as well as text
-	 -->
+  <test name="DuplicateDataElement">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test-source</ce:source>
+      <ce:data xsi:type="xs:string">Text</ce:data>
+      <ce:data xsi:type="xs:string">Text</ce:data>
+    </ce:event>
+  </test>
+  
+  <!--
+   - Additional hand-written tests (that can't be easily included in this file):
+   - * Value that doesn't match the specified extension attribute type (e.g. "x" for "xs:int")
+   - * Data element with xsi:type=xs:base64Binary but with invalid base64 data
+   - * Data element with xsi:type=xs:base64Binary but with an element as well as text
+   - * Data element with xsi:type=xs:string but with an element as well as text
+   -->
 
 </tests>

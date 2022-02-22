@@ -1,11 +1,122 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <tests xmlns:ce="http://cloudevents.io/xmlformat/V1"
-	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<test name="Minimal">
-		<ce:event specversion="1.0" >
-			<ce:id>test-id</ce:id>
-			<ce:type>test-type</ce:type>
-			<ce:source>//test</ce:source>
-		</ce:event>
-	</test>
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <test name="Minimal">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+    </ce:event>
+  </test>
+  
+  <test name="CommentsAreIgnored">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <!-- Comment between attribute elements -->
+      <ce:type>test-type<!-- Comment in attribute element --></ce:type>
+      <ce:source>//test</ce:source>
+      <ce:data xsi:type="xs:string">Test <!-- Comment in data element -->data</ce:data>
+    </ce:event>
+  </test>
+  
+  <test name="AllV1Attributes">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+      <ce:datacontenttype>text/plain</ce:datacontenttype>
+      <ce:dataschema>https://absoluteuri/path</ce:dataschema>
+      <ce:subject>test-subject</ce:subject>
+      <ce:time>2021-02-19T12:34:56.789+01:00</ce:time>
+      <ce:data xsi:type="xs:string">Test data</ce:data>
+    </ce:event>
+  </test>
+  
+  <test name="AllV1AttributesWithXsiTypes" roundtrip="false">
+    <ce:event specversion="1.0" >
+      <ce:id xsi:type="xs:string">test-id</ce:id>
+      <ce:type xsi:type="xs:string">test-type</ce:type>
+      <ce:source xsi:type="xs:anyURI">//test</ce:source>
+      <ce:datacontenttype xsi:type="xs:string">text/plain</ce:datacontenttype>
+      <ce:dataschema xsi:type="xs:anyURI" isref="false">https://absoluteuri/path</ce:dataschema>
+      <ce:subject xsi:type="xs:string">test-subject</ce:subject>
+      <ce:time xsi:type="xs:dateTime">2021-02-19T12:34:56.789+01:00</ce:time>
+      <ce:data xsi:type="xs:string">Test data</ce:data>
+    </ce:event>
+  </test>
+  
+  <test name="AllExtensionAttributeTypes">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+      <ce:binary xsi:type="xs:base64Binary">AQID</ce:binary>
+      <ce:boolean xsi:type="xs:boolean">true</ce:boolean>
+      <ce:integer xsi:type="xs:int">10</ce:integer>
+      <ce:string xsi:type="xs:string">text</ce:string>
+      <ce:timestamp xsi:type="xs:dateTime">2021-02-19T12:34:56.789+01:00</ce:timestamp>
+      <ce:uri xsi:type="xs:anyURI" isref="false">https://absoluteuri/path</ce:uri>
+      <ce:urireference xsi:type="xs:anyURI">//urireference/path</ce:urireference>
+    </ce:event>
+  </test>
+  
+  <test name="AllExtensionAttributeTypesPrespecified">
+    <extension name="binary" type="Binary" />
+    <extension name="boolean" type="Boolean" />
+    <extension name="integer" type="Integer" />
+    <extension name="string" type="String" />
+    <extension name="timestamp" type="Timestamp" />
+    <extension name="uri" type="URI" />
+    <extension name="urireference" type="URI-Reference" />
+
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+      <ce:binary xsi:type="xs:base64Binary">AQID</ce:binary>
+      <ce:boolean xsi:type="xs:boolean">true</ce:boolean>
+      <ce:integer xsi:type="xs:int">10</ce:integer>
+      <ce:string xsi:type="xs:string">text</ce:string>
+      <ce:timestamp xsi:type="xs:dateTime">2021-02-19T12:34:56.789+01:00</ce:timestamp>
+      <ce:uri xsi:type="xs:anyURI" isref="false">https://absoluteuri/path</ce:uri>
+      <ce:urireference xsi:type="xs:anyURI">//urireference/path</ce:urireference>
+    </ce:event>
+  </test>
+
+  <test name="ExtensionValueSatisfiesValidation">
+    <extension name="ext" type="String" validator="non-empty-string" />
+    <ce:event specversion="1.0">
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+      <ce:ext xsi:type="xs:string">xyz</ce:ext>
+    </ce:event>
+  </test>
+
+  <test name="TextData">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+      <ce:data xsi:type="xs:string">Test data</ce:data>
+    </ce:event>
+  </test>
+  
+  <test name="BinaryData">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+      <ce:data xsi:type="xs:base64Binary">AQID</ce:data>
+    </ce:event>
+  </test>
+  
+  <test name="XmlData">
+    <ce:event specversion="1.0" >
+      <ce:id>test-id</ce:id>
+      <ce:type>test-type</ce:type>
+      <ce:source>//test</ce:source>
+      <ce:data xsi:type="xs:any"><test attr="x">Text<nested /></test></ce:data>
+    </ce:event>
+  </test>
 </tests>

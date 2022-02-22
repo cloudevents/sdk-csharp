@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<tests xmlns:ce="http://cloudevents.io/xmlformat/V1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  
+  <test name="Empty">
+    <ce:batch />
+  </test>
+  
+  <test name="MinimalSingle">
+    <ce:batch>
+      <ce:event specversion="1.0" >
+        <ce:id>test-id</ce:id>
+        <ce:type>test-type</ce:type>
+        <ce:source>//test</ce:source>
+      </ce:event>
+    </ce:batch>
+  </test>
+
+  <test name="WithAndWithoutData">
+    <ce:batch>
+      <ce:event specversion="1.0" >
+        <ce:id>test-id-1</ce:id>
+        <ce:type>test-type-1</ce:type>
+        <ce:source>//test-1</ce:source>
+      </ce:event>
+      
+      <ce:event specversion="1.0" >
+        <ce:id>test-id-2</ce:id>
+        <ce:type>test-type-2</ce:type>
+        <ce:source>//test-2</ce:source>
+        <ce:datacontenttype>text/plain</ce:datacontenttype>
+        <ce:data xsi:type="xs:string">Test data</ce:data>
+      </ce:event>
+    </ce:batch>
+  </test>
+
+  <test name="CommentsAreIgnored">
+    <ce:batch>
+      <!-- Comment in batch element -->
+      <ce:event specversion="1.0" >
+        <ce:id>test-id</ce:id>
+        <ce:type>test-type</ce:type>
+        <ce:source>//test</ce:source>
+      </ce:event>
+    </ce:batch>
+  </test>
+</tests>

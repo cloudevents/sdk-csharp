@@ -32,4 +32,9 @@
 		<EmbeddedResource Include="Xml\*.xml" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="Xml\InvalidBatches.xml" />
+	  <None Remove="Xml\ValidBatches.xml" />
+	</ItemGroup>
+
 </Project>

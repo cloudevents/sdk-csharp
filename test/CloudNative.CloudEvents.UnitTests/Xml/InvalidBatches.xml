@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<tests xmlns:ce="http://cloudevents.io/xmlformat/V1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- 
+    - The last element in any test element is the one we try to decode
+    - as an XML element. All previous elements should be <extension> elements.
+    -->
+
+  <test name="WrongElementName">
+    <ce:Batch specversion="1.0" />
+  </test>
+  
+  <test name="WrongElementNamespace">
+    <ce2:batch specversion="1.0" xmlns:ce2="http://cloudevents.io/xmlformat/V2" />
+  </test>
+  
+  <test name="MissingElementNamespace">
+    <batch />
+  </test>
+  
+  <test name="AdditionalAttributeInBatchElement">
+    <ce:batch test="invalid"/>
+  </test>
+
+  <text name="TextInBatchElement">
+    <ce:batch>
+      Text
+    </ce:batch>>
+  </text>
+
+  <text name="NonEventElementInBatchElement">
+    <ce:batch>
+      <not-an-event />
+    </ce:batch>
+  </text>
+</tests>

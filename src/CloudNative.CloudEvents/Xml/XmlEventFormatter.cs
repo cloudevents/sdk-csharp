@@ -5,7 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Text;
+#if NETSTANDARD2_1_OR_GREATER
 using System.Threading.Tasks;
+#endif
+using System.Xml;
 using System.Xml.Linq;
 
 namespace CloudNative.CloudEvents.Xml
@@ -15,6 +18,11 @@ namespace CloudNative.CloudEvents.Xml
     /// </summary>
     public class XmlEventFormatter : CloudEventFormatter
     {
+        private const string JsonMediaType = "application/xml";
+        private const string MediaTypeSuffix = "+xml";
+        private static readonly string StructuredMediaType = MimeUtilities.MediaType + MediaTypeSuffix;
+        private static readonly string BatchMediaType = MimeUtilities.BatchMediaType + MediaTypeSuffix;
+
         internal static XNamespace CloudEventsNamespace { get; } = "http://cloudevents.io/xmlformat/V1";
         internal static XNamespace XsiNamespace { get; } = "http://www.w3.org/2001/XMLSchema-instance";
         internal static XName BatchElementName { get; } = CloudEventsNamespace + "batch";
@@ -22,6 +30,7 @@ namespace CloudNative.CloudEvents.Xml
         internal static XName DataElementName { get; } = CloudEventsNamespace + "data";
         internal static XName XsiTypeAttributeName { get; } = XsiNamespace + "type";
         internal static XName SpecVersionAttributeName { get; } = CloudEventsSpecVersion.SpecVersionAttribute.Name;
+        internal static XName IsRefAttributeName { get; } = "isref";
 
         private static readonly Dictionary<string, CloudEventAttributeType> CloudEventAttributeTypesByXsiType = new Dictionary<string, CloudEventAttributeType>
         {
@@ -32,6 +41,18 @@ namespace CloudNative.CloudEvents.Xml
             // FIXME: needs differentiating from URI
             { "xs:anyURI", CloudEventAttributeType.UriReference },
             { "xs:dateTime", CloudEventAttributeType.Timestamp }
+        };
+
+        private static readonly Dictionary<CloudEventAttributeType, string> XsiTypesByCloudEventAttributeType = new Dictionary<CloudEventAttributeType, string>
+        {
+            { CloudEventAttributeType.Boolean, "xs:boolean" },
+            { CloudEventAttributeType.Integer, "xs:int" },
+            { CloudEventAttributeType.String, "xs:string" },
+            { CloudEventAttributeType.Binary, "xs:base64Binary" },
+            // These are further differentiated via the "isref" attribute
+            { CloudEventAttributeType.Uri, "xs:anyURI" },
+            { CloudEventAttributeType.UriReference, "xs:anyURI" },
+            { CloudEventAttributeType.Timestamp, "xs:dateTime" }
         };
 
 #if NETSTANDARD2_1_OR_GREATER
@@ -68,7 +89,7 @@ namespace CloudNative.CloudEvents.Xml
             Validation.CheckNotNull(body, nameof(body));
 
             var element = await XElement.LoadAsync(body, LoadOptions.PreserveWhitespace, default).ConfigureAwait(false);
-            return DecodeBatch(element, extensionAttributes, nameof(body));
+            return DecodeBatch(element, extensionAttributes);
         }
 #endif
 
@@ -78,18 +99,44 @@ namespace CloudNative.CloudEvents.Xml
             Validation.CheckNotNull(body, nameof(body));
 
             var element = XElement.Load(body, LoadOptions.PreserveWhitespace);
-            return DecodeBatch(element, extensionAttributes, nameof(body));
+            return DecodeBatch(element, extensionAttributes);
         }
 
         /// <inheritdoc />
         public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             DecodeBatchModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
 
-        private IReadOnlyList<CloudEvent> DecodeBatch(XElement batchElement, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
+        // Visible for testing
+        internal IReadOnlyList<CloudEvent> DecodeBatch(XElement batchElement, IEnumerable<CloudEventAttribute>? extensionAttributes)
         {
-            // TODO: Validate element name
+            if (batchElement.Name != BatchElementName)
+            {
+                throw new ArgumentException("Incorrect element name for CloudEvent batch.");
+            }
 
-            return batchElement.Elements().Select(eventElement => DecodeEvent(eventElement, extensionAttributes)).ToList();
+            var firstBadAttribute = batchElement.Attributes().FirstOrDefault();
+            if (firstBadAttribute is object)
+            {
+                throw new ArgumentException($"Invalid attribute within <ce:batch> element: '{firstBadAttribute.Name}'");
+            }
+
+            List<CloudEvent> batch = new List<CloudEvent>();
+            foreach (var node in batchElement.Nodes())
+            {
+                if (node is XText text)
+                {
+                    if (!string.IsNullOrWhiteSpace(text.Value))
+                    {
+                        throw new ArgumentException("Unexpected non-whitespace text node in <ce:batch>");
+                    }
+                }
+                if (!(node is XElement child))
+                {
+                    continue;
+                }
+                batch.Add(DecodeEvent(child, extensionAttributes));
+            }
+            return batch;
         }
 
         // Internal for testing
@@ -169,7 +216,7 @@ namespace CloudNative.CloudEvents.Xml
                     throw new ArgumentException("XML elements representing CloudEvent attributes must not have child elements");
                 }
 
-                var firstBadAttribute = child.Attributes().FirstOrDefault(attr => attr.Name != XsiTypeAttributeName);
+                var firstBadAttribute = child.Attributes().FirstOrDefault(attr => attr.Name != XsiTypeAttributeName && attr.Name != IsRefAttributeName);
                 if (firstBadAttribute is object)
                 {
                     throw new ArgumentException($"Invalid attribute within child of <ce:event>: '{firstBadAttribute.Name}'");
@@ -178,6 +225,17 @@ namespace CloudNative.CloudEvents.Xml
                 string value = child.Value;
                 var cloudEventAttribute = cloudEvent.GetAttribute(localName);
                 var attributeXsiType = child.Attribute(XsiTypeAttributeName)?.Value;
+                var attributeIsRef = child.Attribute(IsRefAttributeName)?.Value;
+                var cloudEventAttributeType = CloudEventAttributeTypesByXsiType.GetValueOrDefault(attributeXsiType ?? "");
+                if (attributeXsiType is object && cloudEventAttributeType is null)
+                {
+                    throw new ArgumentException($"Unknown xsi:type '{attributeXsiType}' for element '{localName}'");
+                }
+                // TODO: Much more detail about this when we have a spec
+                if (attributeIsRef == "false" && cloudEventAttributeType == CloudEventAttributeType.UriReference)
+                {
+                    cloudEventAttributeType = CloudEventAttributeType.Uri;
+                }                
 
                 // Extension attribute
                 if (cloudEventAttribute is null || cloudEventAttribute.IsExtension)
@@ -186,13 +244,11 @@ namespace CloudNative.CloudEvents.Xml
                     {
                         throw new ArgumentException($"Element '{localName}' representing a CloudEvent extension attribute does not specify its type.");
                     }
-                    if (!CloudEventAttributeTypesByXsiType.TryGetValue(attributeXsiType, out var cloudEventAttributeType))
-                    {
-                        throw new ArgumentException($"Unknown xsi:type '{attributeXsiType}' for element '{localName}'");
-                    }
                     if (cloudEventAttribute is null)
                     {
-                        cloudEventAttribute = CloudEventAttribute.CreateExtension(localName, cloudEventAttributeType);
+                        // We know that cloudEventAttributeType is non-null at this point, as attributeXsiType is non-null, and we
+                        // passed the earlier check.
+                        cloudEventAttribute = CloudEventAttribute.CreateExtension(localName, cloudEventAttributeType!);
                     }
                     else if (cloudEventAttribute.Type != cloudEventAttributeType)
                     {
@@ -202,10 +258,6 @@ namespace CloudNative.CloudEvents.Xml
                 // Known attributes (required or optional) don't have to have a type, but if one is specified it should match.
                 else if (attributeXsiType is object)
                 {
-                    if (!CloudEventAttributeTypesByXsiType.TryGetValue(attributeXsiType, out var cloudEventAttributeType))
-                    {
-                        throw new ArgumentException($"Unknown xsi:type '{attributeXsiType}' for element '{localName}'");
-                    }
                     if (cloudEventAttribute.Type != cloudEventAttributeType)
                     {
                         throw new ArgumentException($"Element '{localName}' specifies xsi:type '{attributeXsiType}', but the attribute is known to have type '{cloudEventAttribute.Type}'");
@@ -273,7 +325,7 @@ namespace CloudNative.CloudEvents.Xml
                     }
                     cloudEvent.Data = dataElement.Elements().Single();
                     break;
-                case "xs:base64binary":
+                case "xs:base64Binary":
                     if (dataElement.Elements().Any())
                     {
                         throw new ArgumentException("<ce:data> element with xsi:type of xs:base64Binary must not have child elements");
@@ -294,13 +346,106 @@ namespace CloudNative.CloudEvents.Xml
         /// <inheritdoc />
         public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
         {
-            throw new NotImplementedException();
+            // The cloudEvent parameter will be validated in WriteCloudEventForBatchOrStructuredMode
+
+            contentType = new ContentType(StructuredMediaType)
+            {
+                CharSet = Encoding.UTF8.WebName
+            };
+
+            var stream = new MemoryStream();
+            // TODO: XmlWriterSettings?
+            var writer = XmlWriter.Create(stream);
+            WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
+            writer.Flush();
+            return stream.ToArray();
+        }
+
+        private void WriteCloudEventForBatchOrStructuredMode(XmlWriter writer, CloudEvent cloudEvent)
+        {
+            Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
+
+            // TODO: To we actually want to hard-code "ce" here?
+            WriteStartElement(writer, EventElementName, "ce");
+            WriteAttributeString(writer, SpecVersionAttributeName, cloudEvent.SpecVersion.VersionId);
+
+            var attributes = cloudEvent.GetPopulatedAttributes();
+            foreach (var keyValuePair in attributes)
+            {
+                var attribute = keyValuePair.Key;
+                var value = keyValuePair.Value;
+                writer.WriteStartElement(attribute.Name, CloudEventsNamespace.NamespaceName);
+                if (attribute.IsExtension)
+                {
+                    WriteAttributeString(writer, XsiTypeAttributeName, XsiTypesByCloudEventAttributeType[attribute.Type]);
+                    if (attribute.Type == CloudEventAttributeType.Uri)
+                    {
+                        WriteAttributeString(writer, IsRefAttributeName, "false");
+                    }
+                }
+                writer.WriteString(attribute.Format(value));
+                writer.WriteEndElement();
+            }
+
+            if (cloudEvent.Data is object)
+            {
+                EncodeStructuredModeData(cloudEvent, writer);
+            }
+            writer.WriteEndElement();
+        }
+
+        /// <summary>
+        /// Encodes structured mode data within a CloudEvent, writing it to the specified <see cref="XmlWriter"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// </para>
+        /// </remarks>
+        /// <param name="cloudEvent">The CloudEvent being encoded, which will have a non-null value for
+        /// its <see cref="CloudEvent.Data"/> property.
+        /// <param name="writer"/>The writer to serialize the data to. Will not be null.</param>
+        protected virtual void EncodeStructuredModeData(CloudEvent cloudEvent, XmlWriter writer)
+        {
+            WriteStartElement(writer, DataElementName);
+            if (cloudEvent.Data is string text)
+            {
+                WriteAttributeString(writer, XsiTypeAttributeName, "xs:string");
+                writer.WriteString(text);
+            }
+            else if (cloudEvent.Data is byte[] binary)
+            {
+                WriteAttributeString(writer, XsiTypeAttributeName, "xs:base64Binary");
+                writer.WriteBase64(binary, 0, binary.Length);
+            }
+            else if (cloudEvent.Data is XElement element)
+            {
+                WriteAttributeString(writer, XsiTypeAttributeName, "xs:any");
+                element.WriteTo(writer);
+            }
+            writer.WriteEndElement();
         }
 
         /// <inheritdoc />
         public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType)
         {
-            throw new NotImplementedException();
+            Validation.CheckNotNull(cloudEvents, nameof(cloudEvents));
+            contentType = new ContentType(BatchMediaType)
+            {
+                CharSet = Encoding.UTF8.WebName
+            };
+
+            var stream = new MemoryStream();
+            // TODO: XmlWriterSettings?
+            var writer = XmlWriter.Create(stream);
+            // TODO: Configurable prefix?
+            WriteStartElement(writer, BatchElementName, "ce");
+            foreach (var cloudEvent in cloudEvents)
+            {
+                WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
+            }
+            writer.WriteEndElement();
+            writer.Flush();
+            return stream.ToArray();
         }
 
         /// <inheritdoc />
@@ -308,5 +453,12 @@ namespace CloudNative.CloudEvents.Xml
         {
             throw new NotImplementedException();
         }
+
+        // Convenience methods 
+        private static void WriteAttributeString(XmlWriter writer, XName name, string value) =>
+            writer.WriteAttributeString(name.LocalName, name.NamespaceName, value);
+
+        private static void WriteStartElement(XmlWriter writer, XName name, string? prefix = null) =>
+            writer.WriteStartElement(prefix, name.LocalName, name.NamespaceName);
     }
 }
