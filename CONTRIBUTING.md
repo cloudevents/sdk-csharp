@@ -1,0 +1,162 @@
+# Contributing to CloudEvents C# SDK
+
+We welcome contributions from the community! Please take some time to become
+acquainted with the process before submitting a pull request. There are just
+a few things to keep in mind.
+
+# Issues
+
+If you have found a bug, want to add an improvement, or suggest an
+API change, please create an issue before proceeding with a pull
+request. If you are intending to create a pull request yourself,
+please indicate this in the issue to avoid duplication of work.
+
+Please be aware that while the maintainers are typically familiar
+with the core aspects of CloudEvents, along with the HTTP transport
+options, and JSON/XML/Protobuf event formats, they are less
+experienced with some other transports and formats (such as AMQP and
+Kafka). If you have a feature request or issue around these, you may
+need to provide more details or even implement the improvement
+yourself - with support from the maintainers, of course.
+
+# Pull requests
+
+Typically, a pull request should relate to an existing issue. For
+very minor changes such as typos in the documentation this isn't
+really necessary.
+
+## Getting started
+
+When creating a pull request, first fork this repository and clone it to your
+local development environment. Then add this repository as the upstream.
+
+```console
+git clone https://github.com/mygithuborg/sdk-csharp.git
+cd sdk-csharp
+git remote add upstream https://github.com/cloudevents/sdk-csharp.git
+```
+
+## Branches
+
+The first thing you'll need to do is create a branch for your work.
+If you are submitting a pull request that fixes or relates to an existing
+GitHub issue, you can use the issue number in your branch name to keep things
+organized.
+
+```console
+git fetch upstream
+git reset --hard upstream/master
+git checkout master
+git checkout -b fix-some-issue
+```
+
+## Commit Messages
+
+All commit message lines should be kept to fewer than 80 characters if possible.
+
+Commit messages following [Conventional Commits]
+(https://www.conventionalcommits.org/en/v1.0.0/#summary) are
+welcome, but not currently required.
+
+Where the commit addresses an issue, please refer to that 
+numerically. For example:
+
+```log
+fix: Make HTTP header handling case-insensitive
+
+Fixes #12345
+```
+
+### Signing your commits
+
+Each commit must be signed. Use the `--signoff` flag for your commits.
+
+```console
+git commit --signoff
+```
+
+This will add a line to every git commit message:
+
+    Signed-off-by: Joe Smith <joe.smith@email.com>
+
+Use your real name (sorry, no pseudonyms or anonymous contributions.)
+
+The sign-off is a signature line at the end of your commit message. Your
+signature certifies that you wrote the patch or otherwise have the right to pass
+it on as open-source code. See [developercertificate.org](http://developercertificate.org/)
+for the full text of the certification.
+
+Be sure to have your `user.name` and `user.email` set in your git config.
+If your git config information is set properly then viewing the `git log`
+information for your commit will look something like this:
+
+```
+Author: Joe Smith <joe.smith@email.com>
+Date:   Thu Feb 2 11:41:15 2018 -0800
+
+    Update README
+
+    Signed-off-by: Joe Smith <joe.smith@email.com>
+```
+
+Notice the `Author` and `Signed-off-by` lines match. If they don't your PR will
+be rejected by the automated DCO check.
+
+## Staying Current with `master`
+
+As you are working on your branch, changes may happen on `master`. Before
+submitting your pull request, be sure that your branch has been updated
+with the latest commits.
+
+```console
+git fetch upstream
+git rebase upstream/master
+```
+
+This may cause conflicts if the files you are changing on your branch are
+also changed on master. Error messages from `git` will indicate if conflicts
+exist and what files need attention. Resolve the conflicts in each file, then
+continue with the rebase with `git rebase --continue`.
+
+
+If you've already pushed some changes to your `origin` fork, you'll
+need to force push these changes.
+
+```console
+git push -f origin fix-some-issue
+```
+
+## Submitting and updating your pull request
+
+Before submitting a pull request, you should make sure that all of the tests
+successfully pass.
+
+Once you have sent your pull request, `master` may continue to evolve
+before your pull request has landed. If there are any commits on `master`
+that conflict with your changes, you may need to update your branch with
+these changes before the pull request can land. Resolve conflicts the same
+way as before.
+
+```console
+git fetch upstream
+git rebase upstream/master
+# fix any potential conflicts
+git push -f origin fix-some-issue
+```
+
+This will cause the pull request to be updated with your changes, and
+CI will rerun.
+
+A maintainer may ask you to make changes to your pull request. Sometimes these
+changes are minor and shouldn't appear in the commit log. For example, you may
+have a typo in one of your code comments that should be fixed before merge.
+You can prevent this from adding noise to the commit log with an interactive
+rebase. See the [git documentation](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History)
+for details.
+
+```console
+git commit -m "fixup: fix typo"
+git rebase -i upstream/master # follow git instructions
+```
+
+Once you have rebased your commits, you can force push to your fork as before.
