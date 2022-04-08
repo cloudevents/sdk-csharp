@@ -217,16 +217,15 @@ namespace CloudNative.CloudEvents
         /// and the 'schemaurl'. It is encoded into a media format which is specified by the
         /// 'contenttype' attribute (e.g. application/json).
         /// </summary>
-        /// <see href="https://github.com/cloudevents/spec/blob/master/spec.md#data-1"/>
+        /// <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#event-data"/>
         public object? Data { get; set; }
 
         /// <summary>
-        /// CloudEvent <see href="https://github.com/cloudevents/spec/blob/master/spec.md#id">'datacontenttype'</see> attribute.
+        /// CloudEvent <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#datacontenttype">'datacontenttype'</see> attribute.
         /// This is the content type of the <see cref="Data"/> property.
         /// This attribute enables the data attribute to carry any type of content, where the
         /// format and encoding might differ from that of the chosen event format.
         /// </summary>
-        /// <see href="https://github.com/cloudevents/spec/blob/master/spec.md#contenttype"/>
         public string? DataContentType
         {
             // TODO: Guard against a version that doesn't have this attribute?
@@ -235,7 +234,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// CloudEvent <see href="https://github.com/cloudevents/spec/blob/master/spec.md#id">'id'</see> attribute,
+        /// CloudEvent <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#id">'id'</see> attribute,
         /// This is the ID of the event. When combined with <see cref="Source"/>, this enables deduplication.
         /// </summary>
         public string? Id
@@ -245,7 +244,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/master/spec.md#dataschema">'dataschema'</see> attribute.
+        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#dataschema">'dataschema'</see> attribute.
         /// A link to the schema that the data attribute adheres to.
         /// Incompatible changes to the schema SHOULD be reflected by a different URI.
         /// </summary>
@@ -256,7 +255,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/master/spec.md#source">'source'</see> attribute.
+        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#source">'source'</see> attribute.
         /// This describes the event producer. Often this will include information such as the type of the event source, the
         /// organization publishing the event, the process that produced the event, and some unique identifiers.
         /// When combined with <see cref="Id"/>, this enables deduplication.
@@ -273,7 +272,7 @@ namespace CloudNative.CloudEvents
         //    new CloudEvent(attributes.WithSpecVersion(newSpecVersion), Extensions.Values);
 
         /// <summary>
-        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/master/spec.md#subject">'subject'</see> attribute.
+        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#subject">'subject'</see> attribute.
         /// This describes the subject of the event in the context of the event producer (identified by <see cref="Source"/>).
         /// In publish-subscribe scenarios, a subscriber will typically subscribe to events emitted by a source,
         /// but the source identifier alone might not be sufficient as a qualifier for any specific event if the source context has
@@ -286,7 +285,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/master/spec.md#time">'time'</see> attribute.
+        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#time">'time'</see> attribute.
         /// Timestamp of when the occurrence happened.
         /// </summary>
         public DateTimeOffset? Time
@@ -296,7 +295,7 @@ namespace CloudNative.CloudEvents
         }
 
         /// <summary>
-        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/master/spec.md#type">'type'</see> attribute.
+        /// CloudEvents <see href="https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#type">'type'</see> attribute.
         /// Type of occurrence which has happened.
         /// Often this attribute is used for routing, observability, policy enforcement, etc.
         /// </summary>

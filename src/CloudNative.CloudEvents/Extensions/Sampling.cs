@@ -10,7 +10,7 @@ using System.Linq;
 namespace CloudNative.CloudEvents.Extensions
 {
     /// <summary>
-    /// Support for the <see href="https://github.com/cloudevents/spec/blob/master/extensions/sampled-rate.md">sampling</see>
+    /// Support for the <see href="https://github.com/cloudevents/spec/tree/main/cloudevents/extensions/sampledrate.md">sampling</see>
     /// CloudEvent extension.
     /// </summary>
     public static class Sampling

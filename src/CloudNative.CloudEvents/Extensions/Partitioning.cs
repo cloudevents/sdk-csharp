@@ -9,7 +9,7 @@ using System.Linq;
 namespace CloudNative.CloudEvents.Extensions
 {
     /// <summary>
-    /// Support for the <see href="https://github.com/cloudevents/spec/blob/master/extensions/partitioning.md">partitioning</see>
+    /// Support for the <see href="https://github.com/cloudevents/spec/tree/main/cloudevents/extensions/partitioning.md">partitioning</see>
     /// CloudEvent extension.
     /// </summary>
     public static class Partitioning
