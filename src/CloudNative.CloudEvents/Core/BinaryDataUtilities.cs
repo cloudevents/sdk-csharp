@@ -106,7 +106,9 @@ namespace CloudNative.CloudEvents.Core
         public static byte[] AsArray(ReadOnlyMemory<byte> memory)
         {
             var segment = GetArraySegment(memory);
-            return segment.Offset == 0 || segment.Count == memory.Length
+            // We probably don't actually need to check the offset: if the count is the same as the length,
+            // I can't see how the offset can be non-zero. But it doesn't *hurt* as a check.
+            return segment.Offset == 0 && segment.Count == segment.Array.Length
                 ? segment.Array
                 : memory.ToArray();
         }
