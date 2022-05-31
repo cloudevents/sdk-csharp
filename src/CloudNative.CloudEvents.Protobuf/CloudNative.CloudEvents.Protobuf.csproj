@@ -6,7 +6,6 @@
 	<PackageTags>cncf;cloudnative;cloudevents;events;protobuf</PackageTags>
 	<LangVersion>8.0</LangVersion>
 	<Nullable>enable</Nullable>
-	<Version>2.0.0-beta.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

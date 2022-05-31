@@ -1,5 +1,14 @@
 # Version history (from 2.0)
 
+## 2.3.0 (2022-05-31)
+
+- Bug fix: BinaryDataUtilities.AsArray misbehavior with array segments ([#209](https://github.com/cloudevents/sdk-csharp/issues/209))
+- Bug fix: Links within XML documentation corrected after spec repo change
+- Feature: Reject "data" as a context attribute name (spec has been clarified for this)
+- Feature: Support Data content type inference in event formatters
+  - The JsonEventFormatter classes infer "application/json" for all data
+- Feature: CloudNative.CloudEvents.Protobuf is now GA (same version as other packages)
+
 ## 2.2.0 (2022-02-02)
 
 - Bug fix: the "source" attribute is now validated to be non-empty
@@ -9,7 +18,7 @@
 
 ## 2.1.1 (2021-07-21)
 
-Bug fix ([#77](https://github.com/cloudevents/sdk-csharp/pull/177)): dependency on the
+Bug fix ([#177](https://github.com/cloudevents/sdk-csharp/pull/177)): dependency on the
 `Nullable` package was not declared with `PrivateAssets=all`,
 leading to that showing up as a dependency. This would break users
 who explicitly have a dependency on an older version of `Nullable`.
