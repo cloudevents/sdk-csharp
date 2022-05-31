@@ -1,6 +1,6 @@
 # Implementing a protocol binding
 
-From the [specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md#protocol-binding):
+From the [specification](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#protocol-binding):
 
 > A protocol binding describes how events are sent and received over a given protocol.
 

@@ -2,7 +2,7 @@
 
 The `CloudEventFormatter` abstract type in the C# SDK is an
 augmentation of the [Event
-Format](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md#event-format)
+Format](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#event-format)
 concept in the specification.
 
 Strictly speaking, CloudEvent data is simply a sequence of bytes. In
