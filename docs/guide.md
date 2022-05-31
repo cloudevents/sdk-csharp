@@ -47,7 +47,7 @@ There are three kinds of attributes:
 - Extension: these attributes are not formalized as part of the
   CloudEvents specification. The CloudEvents specification repository
   [includes descriptions of some extension
-  attributes](https://github.com/cloudevents/spec/tree/v1.0.1/extensions)
+  attributes](https://github.com/cloudevents/spec/tree/main/cloudevents/extensions)
   that may become standardized over time, but they are not
   considered part of the specification.
   
