@@ -22,7 +22,7 @@ the [user guide](docs/guide.md) for details of the packages available.
 1. The [CloudEvent](src/CloudNative.CloudEvents/CloudEvent.cs) class is not meant to be used with 
    object serializers like JSON.NET. If you need to serialize or deserialize a CloudEvent directly, always use a
    [CloudEventFormatter](src/CloudNative.CloudEvents/CloudEventFormatter.cs)
-   such as  [JsonEventFormatter](src/CloudNative.CloudEvents.JsonNet/JsonEventFormatter.cs).
+   such as  [JsonEventFormatter](src/CloudNative.CloudEvents.NewtonsoftJson/JsonEventFormatter.cs).
 2. Protocol binding integration is provided in the form of extensions and the objective of those extensions
    is to map the CloudEvent to and from the respective protocol message, such as an HTTP request or response.
    The application is otherwise fully in control of the client. Therefore, the extensions do not
