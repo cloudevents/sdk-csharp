@@ -35,6 +35,7 @@ namespace HttpSend
         {
             var cloudEvent = new CloudEvent
             {
+                Id = new Guid().ToString(),
                 Type = Type,
                 Source = new Uri(Source),
                 DataContentType = MediaTypeNames.Application.Json,
