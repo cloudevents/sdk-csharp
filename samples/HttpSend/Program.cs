@@ -19,8 +19,7 @@ namespace HttpSend
     // line and calling the application code. The [Option] attributes designate the parameters.
     class Program
     {
-        [Option(Description = "CloudEvents 'source' (default: urn:example-com:mysource:abc)", LongName = "source",
-            ShortName = "s")]
+        [Option(Description = "CloudEvents 'source' (default: urn:example-com:mysource:abc)", LongName = "source", ShortName = "s")]
         private string Source { get; } = "urn:example-com:mysource:abc";
 
         [Option(Description = "CloudEvents 'type' (default: com.example.myevent)", LongName = "type", ShortName = "t")]
@@ -35,6 +34,7 @@ namespace HttpSend
         {
             var cloudEvent = new CloudEvent
             {
+                Id = Guid.NewGuid().ToString(),
                 Type = Type,
                 Source = new Uri(Source),
                 DataContentType = MediaTypeNames.Application.Json,
@@ -44,10 +44,10 @@ namespace HttpSend
             var content = cloudEvent.ToHttpContent(ContentMode.Structured, new JsonEventFormatter());
 
             var httpClient = new HttpClient();
-            // your application remains in charge of adding any further headers or 
+            // Your application remains in charge of adding any further headers or 
             // other information required to authenticate/authorize or otherwise
             // dispatch the call at the server.
-            var result = (await httpClient.PostAsync(this.Url, content));
+            var result = await httpClient.PostAsync(Url, content);
 
             Console.WriteLine(result.StatusCode);
         }
