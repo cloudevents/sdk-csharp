@@ -787,6 +787,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("application/json")]
+        [InlineData("application/json; charset=utf-8")]
         public void DecodeStructuredModeMessage_JsonContentType_JsonStringToken(string contentType)
         {
             var obj = CreateMinimalValidJObject();
@@ -805,6 +806,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         [InlineData(null)]
         [InlineData("application/json")]
         [InlineData("application/xyz+json")]
+        [InlineData("application/xyz+json; charset=utf-8")]
         public void DecodeStructuredModeMessage_JsonContentType_NonStringValue(string contentType)
         {
             var obj = CreateMinimalValidJObject();
