@@ -377,7 +377,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// <returns>The data to populate in the <see cref="CloudEvent.Data"/> property.</returns>
         protected virtual void DecodeStructuredModeDataProperty(JsonElement dataElement, CloudEvent cloudEvent)
         {
-            if (IsJsonMediaType(cloudEvent.DataContentType!))
+            if (IsJsonMediaType(new ContentType(cloudEvent.DataContentType!).MediaType))
             {
                 cloudEvent.Data = dataElement.Clone();
             }
