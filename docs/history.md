@@ -1,5 +1,10 @@
 # Version history (from 2.0)
 
+## 2.3.1 (2022-06-29)
+
+- Bug fix: ignore the charset when determining the content type for decoding JSON ([#216](https://github.com/cloudevents/sdk-csharp/issues/216))
+- Bug fix: make the NuGet package deterministic ([#175](https://github.com/cloudevents/sdk-csharp/issues/175))
+
 ## 2.3.0 (2022-05-31)
 
 - Bug fix: BinaryDataUtilities.AsArray misbehavior with array segments ([#209](https://github.com/cloudevents/sdk-csharp/issues/209))
