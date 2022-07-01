@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Mime;
 
-namespace CloudNative.CloudEvents
+namespace CloudNative.CloudEvents.Avro
 {
     /// <summary>
     /// Formatter that implements the Avro Event Format.
