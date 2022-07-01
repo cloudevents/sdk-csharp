@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Description>Avro extensions for CloudNative.CloudEvents</Description>
     <PackageTags>cncf;cloudnative;cloudevents;events;avro</PackageTags>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
