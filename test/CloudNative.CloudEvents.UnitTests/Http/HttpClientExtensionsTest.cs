@@ -8,7 +8,6 @@ using CloudNative.CloudEvents.UnitTests;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -39,6 +38,20 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             {
                 "Structured",
                 new StringContent("content is ignored", Encoding.UTF8, "application/cloudevents+json"),
+                null
+            },
+            {
+                "Binary with header in content",
+                new StringContent("header is in the content", Encoding.UTF8, "application/json")
+                {
+                    Headers =
+                    {
+                        { "ce-specversion", "1.0" },
+                        { "ce-type", "test-type" },
+                        { "ce-id", "test-id" },
+                        { "ce-source", "//test" }
+                    }
+                },
                 null
             }
         };
@@ -436,6 +449,32 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var bytes = await content.ReadAsByteArrayAsync();
             var parsedBatch = formatter.DecodeBatchModeMessage(bytes, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes: null);
             AssertBatchesEqual(batch, parsedBatch);
+        }
+
+        [Theory]
+        [InlineData(ContentMode.Binary)]
+        [InlineData(ContentMode.Structured)]
+        public async Task RoundtripRequest(ContentMode contentMode)
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var content = cloudEvent.ToHttpContent(contentMode, formatter);
+            var request = new HttpRequestMessage { Content = content };
+            var parsed = await request.ToCloudEventAsync(formatter);
+            AssertCloudEventsEqual(cloudEvent, parsed);
+        }
+
+        [Theory]
+        [InlineData(ContentMode.Binary)]
+        [InlineData(ContentMode.Structured)]
+        public async Task RoundtripResponse(ContentMode contentMode)
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter();
+            var content = cloudEvent.ToHttpContent(contentMode, formatter);
+            var request = new HttpResponseMessage { Content = content };
+            var parsed = await request.ToCloudEventAsync(formatter);
+            AssertCloudEventsEqual(cloudEvent, parsed);
         }
 
         internal static void CopyHeaders(IDictionary<string, string>? source, HttpHeaders target)
