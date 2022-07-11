@@ -6,7 +6,6 @@ using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
@@ -36,7 +35,7 @@ namespace CloudNative.CloudEvents.Http
         {
             Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
             return HasCloudEventsContentType(httpRequestMessage.Content) ||
-                httpRequestMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
+                (MaybeGetVersionId(httpRequestMessage.Headers) ?? MaybeGetVersionId(httpRequestMessage.Content?.Headers)) is not null;
         }
 
         /// <summary>
@@ -48,7 +47,7 @@ namespace CloudNative.CloudEvents.Http
         {
             Validation.CheckNotNull(httpResponseMessage, nameof(httpResponseMessage));
             return HasCloudEventsContentType(httpResponseMessage.Content) ||
-                httpResponseMessage.Headers.Contains(HttpUtilities.SpecVersionHttpHeader);
+                (MaybeGetVersionId(httpResponseMessage.Headers) ?? MaybeGetVersionId(httpResponseMessage.Content?.Headers)) is not null;
         }
 
         /// <summary>
@@ -143,9 +142,7 @@ namespace CloudNative.CloudEvents.Http
             }
             else
             {
-                string? versionId = headers.Contains(HttpUtilities.SpecVersionHttpHeader)
-                    ? headers.GetValues(HttpUtilities.SpecVersionHttpHeader).First()
-                    : null;
+                string? versionId = MaybeGetVersionId(headers) ?? MaybeGetVersionId(content.Headers);
                 if (versionId is null)
                 {
                     throw new ArgumentException($"Request does not represent a CloudEvent. It has neither a {HttpUtilities.SpecVersionHttpHeader} header, nor a suitable content type.", nameof(paramName));
@@ -154,7 +151,7 @@ namespace CloudNative.CloudEvents.Http
                     ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", paramName);
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
-                foreach (var header in headers)
+                foreach (var header in headers.Concat(content.Headers))
                 {
                     string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(header.Key);
                     if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
@@ -345,5 +342,10 @@ namespace CloudNative.CloudEvents.Http
 
         private static bool HasCloudEventsBatchContentType(HttpContent content) =>
             MimeUtilities.IsCloudEventsBatchContentType(content?.Headers?.ContentType?.MediaType);
+
+        private static string? MaybeGetVersionId(HttpHeaders? headers) =>
+            headers is not null && headers.Contains(HttpUtilities.SpecVersionHttpHeader)
+            ? headers.GetValues(HttpUtilities.SpecVersionHttpHeader).First()
+            : null;
     }
 }
