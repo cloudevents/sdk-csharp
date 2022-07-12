@@ -29,7 +29,7 @@ jobs:
 
     - name: Build
       run: |
-        dotnet build -c Release
+        dotnet build -c Release -p:ContinuousIntegrationBuild=true
         dotnet test -c Release
         mkdir nuget
 
