@@ -402,7 +402,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
             };
 
             var stream = new MemoryStream();
-            var writer = new Utf8JsonWriter(stream);
+            var writer = CreateUtf8JsonWriter(stream);
             writer.WriteStartArray();
             foreach (var cloudEvent in cloudEvents)
             {
@@ -422,10 +422,22 @@ namespace CloudNative.CloudEvents.SystemTextJson
             };
 
             var stream = new MemoryStream();
-            var writer = new Utf8JsonWriter(stream);
+            var writer = CreateUtf8JsonWriter(stream);
             WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
             writer.Flush();
             return stream.ToArray();
+        }
+
+        private Utf8JsonWriter CreateUtf8JsonWriter(Stream stream)
+        {
+            var options = new JsonWriterOptions
+            {
+                Encoder = SerializerOptions?.Encoder,
+                Indented = SerializerOptions?.WriteIndented ?? false,
+                // TODO: Consider skipping validation in the future for the sake of performance.
+                SkipValidation = false
+            };
+            return new Utf8JsonWriter(stream, options);
         }
 
         private void WriteCloudEventForBatchOrStructuredMode(Utf8JsonWriter writer, CloudEvent cloudEvent)
