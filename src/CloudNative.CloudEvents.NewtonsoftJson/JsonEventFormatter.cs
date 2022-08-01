@@ -389,7 +389,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             };
 
             var stream = new MemoryStream();
-            var writer = new JsonTextWriter(new StreamWriter(stream));
+            var writer = CreateJsonTextWriter(stream);
             WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
             writer.Flush();
             return stream.ToArray();
@@ -406,7 +406,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             };
 
             var stream = new MemoryStream();
-            var writer = new JsonTextWriter(new StreamWriter(stream));
+            var writer = CreateJsonTextWriter(stream);
             writer.WriteStartArray();
             foreach (var cloudEvent in cloudEvents)
             {
@@ -416,6 +416,20 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             writer.Flush();
             return stream.ToArray();
         }
+
+        private JsonTextWriter CreateJsonTextWriter(Stream stream) =>
+            // TODO: Allow settings to be specified separately?
+            // JsonSerializer doesn't allow us to set the indentation or indentation character, for example.
+            new JsonTextWriter(new StreamWriter(stream))
+            {
+                Formatting = Serializer.Formatting,
+                DateFormatHandling = Serializer.DateFormatHandling,
+                DateFormatString = Serializer.DateFormatString,
+                DateTimeZoneHandling = Serializer.DateTimeZoneHandling,
+                FloatFormatHandling = Serializer.FloatFormatHandling,
+                Culture = Serializer.Culture,
+                StringEscapeHandling = Serializer.StringEscapeHandling,
+            };
 
         private void WriteCloudEventForBatchOrStructuredMode(JsonWriter writer, CloudEvent cloudEvent)
         {
