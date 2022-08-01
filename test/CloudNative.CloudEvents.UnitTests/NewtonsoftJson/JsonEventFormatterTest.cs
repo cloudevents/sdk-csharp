@@ -1080,6 +1080,18 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             Assert.Equal("some text", jsonData.Value);
         }
 
+        [Fact]
+        public void EncodeStructured_IndentationSettings()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter(new JsonSerializer { Formatting = Formatting.Indented });
+            var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+            // Normalize the result to LF line endings.
+            var json = BinaryDataUtilities.GetString(encoded, Encoding.UTF8).Replace("\r\n", "\n").Replace("\r", "\n");
+            var expected = "{\n  \"specversion\": \"1.0\",\n  \"id\": \"test-id\",\n  \"source\": \"//test\",\n  \"type\": \"test-type\"\n}";
+            Assert.Equal(expected, json);
+        }
+
         // Utility methods
         private static object? DecodeBinaryModeEventData(byte[] bytes, string contentType)
         {
