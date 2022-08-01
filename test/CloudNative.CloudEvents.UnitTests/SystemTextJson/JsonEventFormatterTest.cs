@@ -1087,6 +1087,21 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             Assert.Equal("some text", jsonData.GetString());
         }
 
+        [Fact]
+        public void EncodeStructured_IndentationSettings()
+        {
+            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+            var formatter = new JsonEventFormatter(new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }, new JsonDocumentOptions());
+            var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+            // Normalize the result to LF line endings.
+            var json = BinaryDataUtilities.GetString(encoded, Encoding.UTF8).Replace("\r\n", "\n").Replace("\r", "\n");
+            var expected = "{\n  \"specversion\": \"1.0\",\n  \"id\": \"test-id\",\n  \"source\": \"//test\",\n  \"type\": \"test-type\"\n}";
+            Assert.Equal(expected, json);
+        }
+
         // Utility methods
         private static object DecodeBinaryModeEventData(byte[] bytes, string contentType)
         {
