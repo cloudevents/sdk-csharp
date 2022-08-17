@@ -1092,6 +1092,55 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             Assert.Equal(expected, json);
         }
 
+        // Effectively smoke tests for LINQ to JSON conversions; these piggy-back on the same implementation
+        // as the rest of the code, so we don't need to test exhaustively.
+
+        [Fact]
+        public void ConvertToJObject()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = SampleBinaryData
+            }.PopulateRequiredAttributes();
+
+            JObject obj = new JsonEventFormatter().ConvertToJObject(cloudEvent);
+            var asserter = new JTokenAsserter
+            {
+                { "data_base64", JTokenType.String, SampleBinaryDataBase64 },
+                { "id", JTokenType.String, "test-id" },
+                { "source", JTokenType.String, "//test" },
+                { "specversion", JTokenType.String, "1.0" },
+                { "type", JTokenType.String, "test-type" },
+            };
+            asserter.AssertProperties(obj, assertCount: true);
+        }
+
+        [Fact]
+        public void ConvertFromJObject()
+        {
+            var obj = new JObject
+            {
+                ["specversion"] = "1.0",
+                ["type"] = "test-type",
+                ["id"] = "test-id",
+                ["data"] = "text", // Just so that it's reasonable to have a DataContentType,
+                ["datacontenttype"] = "text/plain",
+                ["dataschema"] = "https://data-schema",
+                ["subject"] = "event-subject",
+                ["source"] = "//event-source",
+                ["time"] = SampleTimestampText
+            };
+            var cloudEvent = new JsonEventFormatter().ConvertFromJObject(obj, extensionAttributes: null);
+            Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
+            Assert.Equal("test-type", cloudEvent.Type);
+            Assert.Equal("test-id", cloudEvent.Id);
+            Assert.Equal("text/plain", cloudEvent.DataContentType);
+            Assert.Equal(new Uri("https://data-schema"), cloudEvent.DataSchema);
+            Assert.Equal("event-subject", cloudEvent.Subject);
+            Assert.Equal(new Uri("//event-source", UriKind.RelativeOrAbsolute), cloudEvent.Source);
+            AssertTimestampsEqual(SampleTimestamp, cloudEvent.Time);
+        }
+
         // Utility methods
         private static object? DecodeBinaryModeEventData(byte[] bytes, string contentType)
         {
