@@ -2,6 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
+using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.UnitTests;
 using System;
 using System.Collections.Generic;
@@ -15,10 +16,9 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
+using JArray = Newtonsoft.Json.Linq.JArray;
 // JObject is a really handy way of creating JSON which we can then parse with System.Text.Json
 using JObject = Newtonsoft.Json.Linq.JObject;
-using JArray = Newtonsoft.Json.Linq.JArray;
-using CloudNative.CloudEvents.Core;
 
 namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
 {
@@ -1100,6 +1100,53 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var json = BinaryDataUtilities.GetString(encoded, Encoding.UTF8).Replace("\r\n", "\n").Replace("\r", "\n");
             var expected = "{\n  \"specversion\": \"1.0\",\n  \"id\": \"test-id\",\n  \"source\": \"//test\",\n  \"type\": \"test-type\"\n}";
             Assert.Equal(expected, json);
+        }
+
+        [Fact]
+        public void ConvertToJsonElement()
+        {
+            var cloudEvent = new CloudEvent
+            {
+                Data = SampleBinaryData
+            }.PopulateRequiredAttributes();
+
+            JsonElement element = new JsonEventFormatter().ConvertToJsonElement(cloudEvent);
+            var asserter = new JsonElementAsserter
+            {
+                { "data_base64", JsonValueKind.String, SampleBinaryDataBase64 },
+                { "id", JsonValueKind.String, "test-id" },
+                { "source", JsonValueKind.String, "//test" },
+                { "specversion", JsonValueKind.String, "1.0" },
+                { "type", JsonValueKind.String, "test-type" }
+            };
+            asserter.AssertProperties(element, assertCount: true);
+        }
+
+        [Fact]
+        public void ConvertFromJsonElement()
+        {
+            var obj = new JObject
+            {
+                ["specversion"] = "1.0",
+                ["type"] = "test-type",
+                ["id"] = "test-id",
+                ["data"] = "text", // Just so that it's reasonable to have a DataContentType,
+                ["datacontenttype"] = "text/plain",
+                ["dataschema"] = "https://data-schema",
+                ["subject"] = "event-subject",
+                ["source"] = "//event-source",
+                ["time"] = SampleTimestampText
+            };
+            using var document = JsonDocument.Parse(obj.ToString());
+            var cloudEvent = new JsonEventFormatter().ConvertFromJsonElement(document.RootElement, extensionAttributes: null);
+            Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
+            Assert.Equal("test-type", cloudEvent.Type);
+            Assert.Equal("test-id", cloudEvent.Id);
+            Assert.Equal("text/plain", cloudEvent.DataContentType);
+            Assert.Equal(new Uri("https://data-schema"), cloudEvent.DataSchema);
+            Assert.Equal("event-subject", cloudEvent.Subject);
+            Assert.Equal(new Uri("//event-source", UriKind.RelativeOrAbsolute), cloudEvent.Source);
+            AssertTimestampsEqual(SampleTimestamp, cloudEvent.Time);
         }
 
         // Utility methods

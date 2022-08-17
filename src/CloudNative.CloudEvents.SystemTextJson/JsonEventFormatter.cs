@@ -10,6 +10,7 @@ using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace CloudNative.CloudEvents.SystemTextJson
 {
@@ -156,6 +157,15 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// <inheritdoc />
         public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             DecodeBatchModeMessageImpl(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes, false).GetAwaiter().GetResult();
+
+        /// <summary>
+        /// Converts the given <see cref="JsonElement"/> into a <see cref="CloudEvent"/>.
+        /// </summary>
+        /// <param name="element">The JSON representation of a CloudEvent. Must have a <see cref="JsonElement.ValueKind"/> of <see cref="JsonValueKind.Object"/>.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The SDK representation of the CloudEvent.</returns>
+        public CloudEvent ConvertFromJsonElement(JsonElement element, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
+            DecodeJsonElement(element, extensionAttributes, nameof(element));
 
         private async Task<IReadOnlyList<CloudEvent>> DecodeBatchModeMessageImpl(Stream data, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes, bool async)
         {
@@ -426,6 +436,27 @@ namespace CloudNative.CloudEvents.SystemTextJson
             WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
             writer.Flush();
             return stream.ToArray();
+        }
+
+        /// <summary>
+        /// Converts the given <see cref="CloudEvent"/> to a <see cref="JsonElement"/> containing the structured mode JSON format representation
+        /// of the event.
+        /// </summary>
+        /// <remarks>The current implementation of this method is inefficient. Care should be taken before
+        /// using this in performance-sensitive scenarios. The efficiency may well be improved in the future.</remarks>
+        /// <param name="cloudEvent">The event to convert. Must not be null.</param>
+        /// <returns>A <see cref="JsonElement"/> containing the structured mode JSON format representation of the event.</returns>
+        public JsonElement ConvertToJsonElement(CloudEvent cloudEvent)
+        {
+            // Unfortunately System.Text.Json doesn't have an equivalent of JTokenWriter,
+            // so we serialize all the data then parse it. That's horrible, but at least
+            // it's contained in this one place (rather than in user code everywhere else).
+            // We can optimize it later by duplicating the logic of WriteCloudEventForBatchOrStructuredMode
+            // to use System.Text.Json.Nodes.
+            var data = EncodeStructuredModeMessage(cloudEvent, out _);
+            using var document = JsonDocument.Parse(data);
+            // We have to clone the data so that we can dispose of the JsonDocument.
+            return document.RootElement.Clone();
         }
 
         private Utf8JsonWriter CreateUtf8JsonWriter(Stream stream)
