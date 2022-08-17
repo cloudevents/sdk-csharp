@@ -136,7 +136,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
             var jsonReader = CreateJsonReader(body, MimeUtilities.GetEncoding(contentType));
             var jObject = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
-            return DecodeJObject(jObject, extensionAttributes);
+            return DecodeJObject(jObject, extensionAttributes, nameof(body));
         }
 
         /// <inheritdoc />
@@ -146,7 +146,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
             var jsonReader = CreateJsonReader(body, MimeUtilities.GetEncoding(contentType));
             var jObject = JObject.Load(jsonReader);
-            return DecodeJObject(jObject, extensionAttributes);
+            return DecodeJObject(jObject, extensionAttributes, nameof(body));
         }
 
         /// <inheritdoc />
@@ -177,6 +177,15 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             DecodeBatchModeMessage(BinaryDataUtilities.AsStream(body), contentType, extensionAttributes);
 
+        /// <summary>
+        /// Converts the given <see cref="JObject"/> into a <see cref="CloudEvent"/>.
+        /// </summary>
+        /// <param name="jObject">The JSON representation of a CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when populating the CloudEvent. May be null.</param>
+        /// <returns>The SDK representation of the CloudEvent.</returns>
+        public CloudEvent ConvertFromJObject(JObject jObject, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
+            DecodeJObject(Validation.CheckNotNull(jObject, nameof(jObject)), extensionAttributes, nameof(jObject));
+
         private IReadOnlyList<CloudEvent> DecodeJArray(JArray jArray, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
         {
             List<CloudEvent> events = new List<CloudEvent>(jArray.Count);
@@ -184,7 +193,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 if (token is JObject obj)
                 {
-                    events.Add(DecodeJObject(obj, extensionAttributes));
+                    events.Add(DecodeJObject(obj, extensionAttributes, paramName));
                 }
                 else
                 {
@@ -194,7 +203,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             return events;
         }
 
-        private CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute>? extensionAttributes)
+        private CloudEvent DecodeJObject(JObject jObject, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
         {
             if (!jObject.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var specVersionToken)
                 || specVersionToken.Type != JTokenType.String)
@@ -207,9 +216,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
             PopulateAttributesFromStructuredEvent(cloudEvent, jObject);
             PopulateDataFromStructuredEvent(cloudEvent, jObject);
-            // "data" is always the parameter from the public method. It's annoying not to be able to use
-            // nameof here, but this will give the appropriate result.
-            return Validation.CheckCloudEventArgument(cloudEvent, "data");
+            return Validation.CheckCloudEventArgument(cloudEvent, paramName);
         }
 
         private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
@@ -393,6 +400,19 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
             writer.Flush();
             return stream.ToArray();
+        }
+
+        /// <summary>
+        /// Converts the given <see cref="CloudEvent"/> to a <see cref="JObject"/> containing the structured mode JSON format representation
+        /// of the event.
+        /// </summary>
+        /// <param name="cloudEvent">The event to convert. Must not be null.</param>
+        /// <returns>A <see cref="JObject"/> containing the structured mode JSON format representation of the event.</returns>
+        public JObject ConvertToJObject(CloudEvent cloudEvent)
+        {
+            var writer = new JTokenWriter();
+            WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
+            return (JObject) writer.Token!;
         }
 
         /// <inheritdoc />
