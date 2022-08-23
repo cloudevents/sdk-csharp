@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 Data = "<much wow=\"xml\"/>",
                 ["comexampleextension1"] = "value"
             };
-
+       
             var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, new JsonEventFormatter());
 
             Assert.True(message.IsCloudEvent());
@@ -123,7 +123,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", (string?)receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
+            Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
@@ -176,10 +176,8 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal(contentType, receivedCloudEvent.DataContentType);
             Assert.Equal(expectedDecodedResult, receivedCloudEvent.Data);
             Assert.Equal("hello much wow", (string?)receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
-
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
-
 
         [Fact]
         public void ContentTypeCanBeInferredByFormatter()
@@ -208,16 +206,17 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 {
                     return null;
                 }
-
-                var surrogate = serializer.Deserialize<List<Header>>(reader)!;
-                var headers = new Headers();
-
-                foreach (var header in surrogate)
+                else 
                 {
-                    headers.Add(header.Key, header.GetValueBytes());
-                }
+                    var surrogate = serializer.Deserialize<List<Header>>(reader)!;
+                    var headers = new Headers();
 
-                return headers;
+                    foreach(var header in surrogate)
+                    {
+                        headers.Add(header.Key, header.GetValueBytes());
+                    }
+                    return headers;
+                }
             }
 
             public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
