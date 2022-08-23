@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 Data = "<much wow=\"xml\"/>",
                 ["comexampleextension1"] = "value"
             };
-       
+
             var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, new JsonEventFormatter());
 
             Assert.True(message.IsCloudEvent());
@@ -78,7 +78,6 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
-
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
@@ -124,16 +123,16 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
+            Assert.Equal("hello much wow", (string?)receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
         [Theory]
         [InlineData(MediaTypeNames.Application.Octet, new byte[0])]
-        [InlineData(MediaTypeNames.Application.Json,null)]
-        [InlineData(MediaTypeNames.Application.Xml,"")]
-        [InlineData(MediaTypeNames.Text.Plain,"")]
+        [InlineData(MediaTypeNames.Application.Json, null)]
+        [InlineData(MediaTypeNames.Application.Xml, "")]
+        [InlineData(MediaTypeNames.Text.Plain, "")]
         public void KafkaBinaryMessageTombstoneTest(string contentType, object? expectedDecodedResult)
         {
             var jsonEventFormatter = new JsonEventFormatter();
@@ -151,7 +150,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
 
             var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
-            
+
             // Sending an empty message is equivalent to a delete (tombstone) for that partition key, when using compacted topics in Kafka.
             // This is the main use case for empty data messages with Kafka.
             Assert.Empty(message.Value);
@@ -173,14 +172,14 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
             Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
-            Assert.Equal(contentType,receivedCloudEvent.DataContentType);
+            Assert.Equal(contentType, receivedCloudEvent.DataContentType);
             Assert.Equal(expectedDecodedResult, receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
+            Assert.Equal("hello much wow", (string?)receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
-        
+
         [Fact]
         public void ContentTypeCanBeInferredByFormatter()
         {
@@ -208,17 +207,16 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 {
                     return null;
                 }
-                else 
-                {
-                    var surrogate = serializer.Deserialize<List<Header>>(reader)!;
-                    var headers = new Headers();
 
-                    foreach(var header in surrogate)
-                    {
-                        headers.Add(header.Key, header.GetValueBytes());
-                    }
-                    return headers;
+                var surrogate = serializer.Deserialize<List<Header>>(reader)!;
+                var headers = new Headers();
+
+                foreach (var header in surrogate)
+                {
+                    headers.Add(header.Key, header.GetValueBytes());
                 }
+
+                return headers;
             }
 
             public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
