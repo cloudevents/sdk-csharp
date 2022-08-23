@@ -78,6 +78,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
+
             Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
         }
 
