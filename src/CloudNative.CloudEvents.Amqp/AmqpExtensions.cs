@@ -18,9 +18,14 @@ namespace CloudNative.CloudEvents.Amqp
     /// </summary>
     public static class AmqpExtensions
     {
-        internal const string AmqpHeaderPrefix = "cloudEvents:";
+        // This is internal in CloudEventsSpecVersion.
+        private const string SpecVersionAttributeName = "specversion";
 
-        internal const string SpecVersionAmqpHeader = AmqpHeaderPrefix + "specversion";
+        internal const string AmqpHeaderUnderscorePrefix = "cloudEvents_";
+        internal const string AmqpHeaderColonPrefix = "cloudEvents:";
+
+        internal const string SpecVersionAmqpHeaderWithUnderscore = AmqpHeaderUnderscorePrefix + SpecVersionAttributeName;
+        internal const string SpecVersionAmqpHeaderWithColon = AmqpHeaderColonPrefix + SpecVersionAttributeName;
 
         /// <summary>
         /// Indicates whether this <see cref="Message"/> holds a single CloudEvent.
@@ -32,7 +37,8 @@ namespace CloudNative.CloudEvents.Amqp
         /// <returns>true, if the request is a CloudEvent</returns>
         public static bool IsCloudEvent(this Message message) =>
             HasCloudEventsContentType(Validation.CheckNotNull(message, nameof(message)), out _) ||
-            message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeader);
+            message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeaderWithUnderscore) ||
+            message.ApplicationProperties.Map.ContainsKey(SpecVersionAmqpHeaderWithColon);
 
         /// <summary>
         /// Converts this AMQP message into a CloudEvent object.
@@ -69,7 +75,8 @@ namespace CloudNative.CloudEvents.Amqp
             else
             {
                 var propertyMap = message.ApplicationProperties.Map;
-                if (!propertyMap.TryGetValue(SpecVersionAmqpHeader, out var versionId))
+                if (!propertyMap.TryGetValue(SpecVersionAmqpHeaderWithUnderscore, out var versionId) &&
+                    !propertyMap.TryGetValue(SpecVersionAmqpHeaderWithColon, out versionId))
                 {
                     throw new ArgumentException("Request is not a CloudEvent");
                 }
@@ -84,11 +91,14 @@ namespace CloudNative.CloudEvents.Amqp
 
                 foreach (var property in propertyMap)
                 {
-                    if (!(property.Key is string key && key.StartsWith(AmqpHeaderPrefix)))
+                    if (!(property.Key is string key &&
+                        (key.StartsWith(AmqpHeaderColonPrefix) || key.StartsWith(AmqpHeaderUnderscorePrefix))))
                     {
                         continue;
                     }
-                    string attributeName = key.Substring(AmqpHeaderPrefix.Length).ToLowerInvariant();
+                    // Note: both prefixes have the same length. If we ever need any prefixes with a different length, we'll need to know which
+                    // prefix we're looking at.
+                    string attributeName = key.Substring(AmqpHeaderUnderscorePrefix.Length).ToLowerInvariant();
 
                     // We've already dealt with the spec version.
                     if (attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
@@ -142,17 +152,43 @@ namespace CloudNative.CloudEvents.Amqp
         }
 
         /// <summary>
-        /// Converts a CloudEvent to <see cref="Message"/>.
+        /// Converts a CloudEvent to <see cref="Message"/> using the default property prefix. Versions released prior to March 2023
+        /// use a default property prefix of "cloudEvents:". Versions released from March 2023 onwards use a property prefix of "cloudEvents_".
+        /// Code wishing to express the prefix explicitly should use <see cref="ToAmqpMessageWithColonPrefix(CloudEvent, ContentMode, CloudEventFormatter)"/> or
+        /// <see cref="ToAmqpMessageWithUnderscorePrefix(CloudEvent, ContentMode, CloudEventFormatter)"/>.
         /// </summary>
         /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
         /// <param name="contentMode">Content mode. Structured or binary.</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
-        public static Message ToAmqpMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
+        public static Message ToAmqpMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter) =>
+            ToAmqpMessage(cloudEvent, contentMode, formatter, AmqpHeaderColonPrefix);
+
+        /// <summary>
+        /// Converts a CloudEvent to <see cref="Message"/> using a property prefix of "cloudEvents_". This prefix was introduced as the preferred
+        /// prefix for the AMQP binding in August 2022.
+        /// </summary>
+        /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="contentMode">Content mode. Structured or binary.</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        public static Message ToAmqpMessageWithUnderscorePrefix(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter) =>
+            ToAmqpMessage(cloudEvent, contentMode, formatter, AmqpHeaderUnderscorePrefix);
+
+        /// <summary>
+        /// Converts a CloudEvent to <see cref="Message"/> using a property prefix of "cloudEvents:". This prefix
+        /// is a legacy retained only for compatibility purposes; it can't be used by JMS due to constraints in JMS property names.
+        /// </summary>
+        /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="contentMode">Content mode. Structured or binary.</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        public static Message ToAmqpMessageWithColonPrefix(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter) =>
+            ToAmqpMessage(cloudEvent, contentMode, formatter, AmqpHeaderColonPrefix);
+
+        private static Message ToAmqpMessage(CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter, string prefix)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
             Validation.CheckNotNull(formatter, nameof(formatter));
 
-            var applicationProperties = MapHeaders(cloudEvent);
+            var applicationProperties = MapHeaders(cloudEvent, prefix);
             RestrictedDescribed bodySection;
             Properties properties;
 
@@ -181,11 +217,11 @@ namespace CloudNative.CloudEvents.Amqp
             };
         }
 
-        private static ApplicationProperties MapHeaders(CloudEvent cloudEvent)
+        private static ApplicationProperties MapHeaders(CloudEvent cloudEvent, string prefix)
         {
             var applicationProperties = new ApplicationProperties();
             var properties = applicationProperties.Map;
-            properties.Add(SpecVersionAmqpHeader, cloudEvent.SpecVersion.VersionId);
+            properties.Add(prefix + SpecVersionAttributeName, cloudEvent.SpecVersion.VersionId);
 
             foreach (var pair in cloudEvent.GetPopulatedAttributes())
             {
@@ -197,7 +233,7 @@ namespace CloudNative.CloudEvents.Amqp
                     continue;
                 }
 
-                string propKey = AmqpHeaderPrefix + attribute.Name;
+                string propKey = prefix + attribute.Name;
 
                 // TODO: Check that AMQP can handle byte[], bool and int values
                 object propValue = pair.Value switch
