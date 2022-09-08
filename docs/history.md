@@ -1,5 +1,28 @@
 # Version history (from 2.0)
 
+## 2.4.0 (2022-09-08)
+
+- Feature: Implement underscore prefixes for AMQP (see below for more details) ([#236](https://github.com/cloudevents/sdk-csharp/pull/236))
+- Feature: Allow empty payloads in Kafka ([#224](https://github.com/cloudevents/sdk-csharp/pull/224))
+- Feature: Implement conversions to and from JObject/JsonElement in JsonEventFormatter ([#234](https://github.com/cloudevents/sdk-csharp/pull/234), part of [#231](https://github.com/cloudevents/sdk-csharp/issues/231))
+- Bug fix: Observe JSON serializer options in JsonEventFormat ([#226](https://github.com/cloudevents/sdk-csharp/pull/226), fixes [#225](https://github.com/cloudevents/sdk-csharp/issues/225))
+- Bug fix: Put AvroEventFormatter in the right namespace ([#220](https://github.com/cloudevents/sdk-csharp/pull/220), fixes [#219](https://github.com/cloudevents/sdk-csharp/issues/219))
+- Bug fix: Use content headers when parsing HTTP requests/responses ([#222](https://github.com/cloudevents/sdk-csharp/pull/222), fixes [#221](https://github.com/cloudevents/sdk-csharp/issues/221))
+- Bug fix: Perform release builds with ContinuousIntegrationBuild=true ([#223](https://github.com/cloudevents/sdk-csharp/pull/223), fixes [#175](https://github.com/cloudevents/sdk-csharp/issues/175))
+
+The AMQP change is significant: the [AMQP CloudEvent binding
+specification](https://github.com/cloudevents/spec/blob/main/cloudevents/bindings/amqp-protocol-binding.md)
+now recommends using `cloudEvents_` instead of `cloudEvents:` as the
+prefix. The change in this release allows both prefixes to be parsed, and
+there are now three conversion extension methods:
+
+- `ToAmqpMessageWithUnderscorePrefix` - always uses `cloudEvents_`
+- `ToAmqpMessageWithColonPrefix` - always uses `cloudEvents:`
+- `ToAmqpMessage` - currently uses `cloudEvents:` but will use `cloudEvents_` in a future release (planned for a March 2023 release)
+
+The intention is to effectively give six months notice of a change
+in the default behavior.
+
 ## 2.3.1 (2022-06-29)
 
 - Bug fix: ignore the charset when determining the content type for decoding JSON ([#216](https://github.com/cloudevents/sdk-csharp/issues/216))
