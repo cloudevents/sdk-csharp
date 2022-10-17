@@ -9,23 +9,23 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     env:
       DOTNET_NOLOGO: true
 
     steps:
     - name: Check out our repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     # We need the .NET Core 3.1 runtime for testing
     - name: Setup .NET Core 3.1
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 3.1.x
 
     # Build with .NET 6.0 SDK
     - name: Setup .NET 6.0
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
 
