@@ -4,7 +4,7 @@
       - We use the same version number for all stable
       - packages. See PROCESSES.md for details.
       -->
-    <Version>2.4.0</Version>
+    <Version>2.5.0</Version>
     
     <!-- Make the repository root available for other properties -->
     <RepoRoot>$([System.IO.Path]::GetDirectoryName($([MSBuild]::GetPathOfFileAbove('.gitignore', '$(MSBuildThisFileDirectory)'))))</RepoRoot>
