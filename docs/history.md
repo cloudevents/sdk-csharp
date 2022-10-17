@@ -1,5 +1,14 @@
 # Version history (from 2.0)
 
+## 2.5.0 (2022-10-17)
+
+- Dependencies: update dependencies in CloudNative.CloudEvents.AspNetCore:
+  - Remove dependency on Microsoft.AspNetCore.Mvc.Core (as we don't use it)
+  - Update dependency on Microsoft.AspNetCore.Http to 2.1.34
+  - Explicitly add dependency on System.Text.Encodings.Web 6.0.0 to avoid security issue in older version
+
+No APIs have changed, but this is a minor release due to the significant dependency changes.
+
 ## 2.4.0 (2022-09-08)
 
 - Feature: Implement underscore prefixes for AMQP (see below for more details) ([#236](https://github.com/cloudevents/sdk-csharp/pull/236))
