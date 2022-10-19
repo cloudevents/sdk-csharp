@@ -153,7 +153,7 @@ Due to differences between protocols, there's no abstract base class
 or interface for protocol bindings. However, protocol bindings are
 encouraged to follow certain conventions to provide a reasonably
 consistent experience across protocols. See the
-[bindings.md](protocol bindings implementation guide) for more
+[protocol bindings implementation guide](bindings.md) for more
 details of these conventions.
 
 The following table summarizes the protocol bindings available:
