@@ -1,5 +1,15 @@
 # Version history (from 2.0)
 
+## 2.5.1 (2022-11-10)
+
+- Dependencies: update dependencies in CloudNative.CloudEvents.Avro
+  - Add explicit dependency on Newtonsoft.Json 13.0.1 to avoid
+    transitive dependency on a version containing vulnerabilities
+  - Update Apache.Avro to 1.11.1
+
+No APIs have changed. This is a patch release as the dependency
+changes are very minor (but necessary to avoid vulnerabilities).
+
 ## 2.5.0 (2022-10-17)
 
 - Dependencies: update dependencies in CloudNative.CloudEvents.AspNetCore:
