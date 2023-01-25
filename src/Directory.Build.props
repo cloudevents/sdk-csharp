@@ -24,7 +24,7 @@
 
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/cloudevents/sdk-csharp</RepositoryUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
     <Copyright>Copyright Cloud Native Foundation</Copyright>
   </PropertyGroup>
