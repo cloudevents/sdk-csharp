@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
+// Type or member is obsolete - this whole file is testing WebRequest integration.
+#pragma warning disable SYSLIB0014
 namespace CloudNative.CloudEvents.Http.UnitTests
 {
     public class HttpWebExtensionsTest : HttpTestBase
@@ -163,7 +165,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var guid = Guid.NewGuid().ToString();
             request.Headers.Add(TestContextHeader, guid);
 
-            T result = default;
+            T result = default!;
             bool executed = false;
 
             PendingRequests[guid] = async context =>
