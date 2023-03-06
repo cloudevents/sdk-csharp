@@ -84,7 +84,8 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
         private async Task HandleContext(HttpListenerContext requestContext)
         {
-            var ctxHeaderValue = requestContext.Request.Headers[TestContextHeader];
+            var ctxHeaderValue = requestContext.Request.Headers[TestContextHeader]
+                ?? throw new InvalidOperationException("Test context header was missing");
 
             if (PendingRequests.TryRemove(ctxHeaderValue, out var pending))
             {

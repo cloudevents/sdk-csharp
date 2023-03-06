@@ -13,6 +13,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -160,12 +161,15 @@ namespace CloudNative.CloudEvents.UnitTests
             {
                 request.Headers[header.Key] = header.Value.Single();
             }
-            foreach (var header in message.Content.Headers)
+            if (message.Content?.Headers is HttpContentHeaders contentHeaders)
             {
-                request.Headers[header.Key] = header.Value.Single();
+                foreach (var header in contentHeaders)
+                {
+                    request.Headers[header.Key] = header.Value.Single();
+                }
             }
 
-            var contentBytes = await message.Content.ReadAsByteArrayAsync();
+            var contentBytes = await (message.Content?.ReadAsByteArrayAsync() ?? Task.FromResult(Array.Empty<byte>()));
             request.Body = new MemoryStream(contentBytes);
             return request;
         }

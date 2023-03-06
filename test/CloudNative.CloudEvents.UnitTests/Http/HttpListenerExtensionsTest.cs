@@ -196,7 +196,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 async context => await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, formatter));
             response.EnsureSuccessStatusCode();
             var content = response.Content;
-            Assert.Equal("text/plain", content.Headers.ContentType.MediaType);
+            Assert.Equal("text/plain", content.Headers.ContentType!.MediaType);
             Assert.Equal("plain text", await content.ReadAsStringAsync());
             Assert.Equal("1.0", response.Headers.GetValues("ce-specversion").Single());
             Assert.Equal(cloudEvent.Type, response.Headers.GetValues("ce-type").Single());
@@ -229,7 +229,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var response = await GetResponseAsync(
                 async context => await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, formatter));
             var content = response.Content;
-            Assert.Equal("application/json", content.Headers.ContentType.MediaType);
+            Assert.Equal("application/json", content.Headers.ContentType!.MediaType);
             Assert.Equal("\"plain text\"", await content.ReadAsStringAsync());
         }
 
@@ -255,7 +255,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 async context => await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Structured, formatter));
             response.EnsureSuccessStatusCode();
             var content = response.Content;
-            Assert.Equal(MimeUtilities.MediaType + "+json", content.Headers.ContentType.MediaType);
+            Assert.Equal(MimeUtilities.MediaType + "+json", content.Headers.ContentType!.MediaType);
             var bytes = await content.ReadAsByteArrayAsync();
 
             var parsed = new JsonEventFormatter().DecodeStructuredModeMessage(bytes, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes: null);
@@ -284,7 +284,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
             response.EnsureSuccessStatusCode();
             var content = response.Content;
-            Assert.Equal(MimeUtilities.BatchMediaType + "+json", content.Headers.ContentType.MediaType);
+            Assert.Equal(MimeUtilities.BatchMediaType + "+json", content.Headers.ContentType!.MediaType);
             var bytes = await content.ReadAsByteArrayAsync();
             var parsedBatch = new JsonEventFormatter().DecodeBatchModeMessage(bytes, MimeUtilities.ToContentType(content.Headers.ContentType), extensionAttributes: null);
             AssertBatchesEqual(batch, parsedBatch);
@@ -299,7 +299,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var guid = Guid.NewGuid().ToString();
             request.Headers.Add(TestContextHeader, guid);
 
-            T result = default;
+            T result = default!;
             bool executed = false;
 
             PendingRequests[guid] = async context =>
