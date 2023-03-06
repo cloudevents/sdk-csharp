@@ -4,12 +4,12 @@
 	<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
 	<Description>Support for the Protobuf event format in for CloudNative.CloudEvents</Description>
 	<PackageTags>cncf;cloudnative;cloudevents;events;protobuf</PackageTags>
-	<LangVersion>8.0</LangVersion>
+	<LangVersion>10.0</LangVersion>
 	<Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.19.3" />
+    <PackageReference Include="Google.Protobuf" Version="3.22.0" />
     
     <!-- Be explicit about not including these files in the package. -->
     <None Include="README.md" />
