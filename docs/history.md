@@ -1,5 +1,16 @@
 # Version history (from 2.0)
 
+## 2.6.0 (2023-03-07)
+
+- Dependencies: system-level dependencies updated
+- The NuGet package now uses PackageLicenseExpression (but still
+  includes the licence file as well).
+  Fixes ([#252](https://github.com/cloudevents/sdk-csharp/issues/252)).
+- Regenerated protobuf schema using the original filename of
+  cloudevents.proto instead of ProtoSchema.proto. An additional
+  ProtoSchemaReflection class has been added purely for compatibility.
+  Fixes ([#256](https://github.com/cloudevents/sdk-csharp/issues/256)).
+
 ## 2.5.1 (2022-11-10)
 
 - Dependencies: update dependencies in CloudNative.CloudEvents.Avro
