@@ -63,5 +63,14 @@ $PROTOC \
   --csharp_opt=file_extension=.g.cs \
   test/CloudNative.CloudEvents.UnitTests/Protobuf/*.proto
 
+# Conformance test protos
+$PROTOC \
+  -I tmp/include \
+  -I tmp/cloudevents \
+  -I conformance/format/protobuf \
+  --csharp_out=test/CloudNative.CloudEvents.UnitTests/Protobuf \
+  --csharp_opt=file_extension=.g.cs \
+  conformance/format/protobuf/*.proto
+
 echo "Generated code."
 rm -rf tmp
