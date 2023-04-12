@@ -95,7 +95,6 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
 
             var parsed = new JsonEventFormatter().DecodeStructuredModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
             AssertCloudEventsEqual(cloudEvent, parsed);
-            Assert.Equal(cloudEvent.Data, parsed.Data);
 
             // We populate headers even though we don't strictly need to; let's validate that.
             Assert.Equal("1.0", response.Headers["ce-specversion"]);

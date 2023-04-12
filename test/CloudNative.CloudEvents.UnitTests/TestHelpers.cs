@@ -4,7 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -15,6 +17,9 @@ namespace CloudNative.CloudEvents.UnitTests
     /// </summary>
     internal static class TestHelpers
     {
+        internal static IEqualityComparer<DateTimeOffset> InstantOnlyTimestampComparer => EqualityComparer<DateTimeOffset>.Default;
+        internal static IEqualityComparer<DateTimeOffset> StrictTimestampComparer => StrictTimestampComparerImpl.Instance;
+
         internal static CloudEventAttribute[] EmptyExtensionArray { get; } = new CloudEventAttribute[0];
         internal static IEnumerable<CloudEventAttribute> EmptyExtensionSequence { get; } = new List<CloudEventAttribute>().AsReadOnly();
 
@@ -44,7 +49,7 @@ namespace CloudNative.CloudEvents.UnitTests
         /// <summary>
         /// The base64 representation of <see cref="SampleBinaryData"/>.
         /// </summary>
-        internal static string SampleBinaryDataBase64 { get; } = Convert.ToBase64String(SampleBinaryData);
+        internal static string SampleBinaryDataBase64 { get; } = Convert.ToBase64String(SampleBinaryData); // AQID
 
         /// <summary>
         /// Arbitrary timestamp to be used for testing.
@@ -154,8 +159,12 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
         // TODO: Use this more widely
-        internal static void AssertCloudEventsEqual(CloudEvent expected, CloudEvent actual)
+        // TODO: Document handling of timestamps, and potentially parameterize it.
+        internal static void AssertCloudEventsEqual(CloudEvent expected, CloudEvent actual,
+            IEqualityComparer<DateTimeOffset>? timestampComparer = null,
+            IEqualityComparer<object?>? dataComparer = null)
         {
+            timestampComparer ??= StrictTimestampComparer;
             Assert.Equal(expected.SpecVersion, actual.SpecVersion);
             var expectedAttributes = expected.GetPopulatedAttributes().ToList();
             var actualAttributes = actual.GetPopulatedAttributes().ToList();
@@ -166,18 +175,62 @@ namespace CloudNative.CloudEvents.UnitTests
                 var actualAttribute = actualAttributes.FirstOrDefault(actual => actual.Key.Name == expectedAttribute.Key.Name);
                 Assert.NotNull(actualAttribute.Key);
 
-                Assert.Equal(actualAttribute.Key.Type, expectedAttribute.Key.Type);
-                Assert.Equal(actualAttribute.Value, expectedAttribute.Value);
+                Assert.Equal(expectedAttribute.Key.Type, actualAttribute.Key.Type);
+                if (expectedAttribute.Value is DateTimeOffset expectedDto &&
+                    actualAttribute.Value is DateTimeOffset actualDto)
+                {
+                    Assert.Equal(expectedDto, actualDto, timestampComparer);
+                }
+                else
+                {
+                    Assert.Equal(expectedAttribute.Value, actualAttribute.Value);
+                }
             }
+            Assert.Equal(expected.Data, actual.Data, dataComparer ?? EqualityComparer<object?>.Default);
         }
 
-        internal static void AssertBatchesEqual(IReadOnlyList<CloudEvent> expectedBatch, IReadOnlyList<CloudEvent> actualBatch)
+        internal static void AssertBatchesEqual(IReadOnlyList<CloudEvent> expectedBatch, IReadOnlyList<CloudEvent> actualBatch,
+            IEqualityComparer<DateTimeOffset>? timestampComparer = null,
+            IEqualityComparer<object?>? dataComparer = null)
         {
             Assert.Equal(expectedBatch.Count, actualBatch.Count);
             foreach (var pair in expectedBatch.Zip(actualBatch, (x, y) => (x, y)))
             {
-                AssertCloudEventsEqual(pair.x, pair.y);
+                AssertCloudEventsEqual(pair.x, pair.y, timestampComparer, dataComparer);
             }
+        }
+
+        /// <summary>
+        /// Loads the resource with the given name, copying it into a MemoryStream.
+        /// (That's often easier to work with when debugging.)
+        /// </summary>
+        internal static MemoryStream LoadResource(string resource)
+        {
+            using var stream = typeof(TestHelpers).Assembly.GetManifestResourceStream(resource);
+            if (stream is null)
+            {
+                throw new ArgumentException($"Resource {resource} is missing. Known resources: {string.Join(", ", typeof(TestHelpers).Assembly.GetManifestResourceNames())}");
+            }
+            var output = new MemoryStream();
+            stream.CopyTo(output);
+            output.Position = 0;
+            return output;
+        }
+
+        private class StrictTimestampComparerImpl : IEqualityComparer<DateTimeOffset>
+        {
+            internal static StrictTimestampComparerImpl Instance { get; } = new StrictTimestampComparerImpl();
+
+            private StrictTimestampComparerImpl()
+            {
+            }
+
+            public bool Equals(DateTimeOffset x, DateTimeOffset y) =>
+                x.UtcDateTime == y.UtcDateTime &&
+                x.Offset == y.Offset;
+
+            public int GetHashCode([DisallowNull] DateTimeOffset obj) =>
+                obj.UtcDateTime.GetHashCode() ^ obj.Offset.GetHashCode();
         }
     }
 }
