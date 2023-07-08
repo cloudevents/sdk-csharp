@@ -28,4 +28,7 @@
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\src\CloudNative.CloudEvents.Avro\AvroSchema.json" />
+  </ItemGroup>
 </Project>
