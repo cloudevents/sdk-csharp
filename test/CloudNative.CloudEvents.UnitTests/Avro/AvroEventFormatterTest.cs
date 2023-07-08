@@ -3,6 +3,7 @@
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.NewtonsoftJson;
+using CloudNative.CloudEvents.UnitTests.Avro.Helpers;
 using System;
 using System.Net.Mime;
 using Xunit;
@@ -82,6 +83,44 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
             Assert.Equal("value", cloudEvent[extensionAttribute]);
+        }
+
+        [Fact]
+        public void StructuredParseSerializationWithCustomSerializer()
+        {
+            var serializer = new FakeGenericRecordSerializer();
+            var jsonFormatter = new JsonEventFormatter();
+            var avroFormatter = new AvroEventFormatter(serializer);
+
+            var expectedSerializedData = new byte[] { 0x1, 0x2, 0x3, };
+            serializer.SetSerializeResponse(expectedSerializedData);
+
+            var inputCloudEvent = jsonFormatter.DecodeStructuredModeText(jsonv10);
+            var avroData = avroFormatter
+                .EncodeStructuredModeMessage(inputCloudEvent, out var _)
+                .ToArray();
+
+            Assert.Equal(1, serializer.SerializeCalls);
+            Assert.Equal(expectedSerializedData, avroData);
+        }
+
+        [Fact]
+        public void StructuredParseDeserializationWithCustomSerializer()
+        {
+            var serializer = new FakeGenericRecordSerializer();
+            var avroFormatter = new AvroEventFormatter(serializer);
+            var expectedCloudEventId = "4321";
+            var expectedCloudEventType = "MyBrilliantEvent";
+            var expectedCloudEventSource = "https://cloudevents.io.test/test-event";
+            serializer.SetDeserializeResponseAttributes(
+                expectedCloudEventId, expectedCloudEventType, expectedCloudEventSource);
+
+            var actualCloudEvent = avroFormatter.DecodeStructuredModeMessage(Array.Empty<byte>(), null, null);
+
+            Assert.Equal(1, serializer.DeserializeCalls);
+            Assert.Equal(expectedCloudEventId, actualCloudEvent.Id);
+            Assert.Equal(expectedCloudEventType, actualCloudEvent.Type);
+            Assert.Equal(expectedCloudEventSource, actualCloudEvent.Source!.ToString());
         }
     }
 }
