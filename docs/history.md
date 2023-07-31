@@ -1,5 +1,10 @@
 # Version history (from 2.0)
 
+## 2.7.0 (2023-07-31)
+
+- Add the ability to specify a custom serializer for Avro.
+  Fixes ([#261](https://github.com/cloudevents/sdk-csharp/issues/261)).
+
 ## 2.6.0 (2023-03-07)
 
 - Dependencies: system-level dependencies updated
