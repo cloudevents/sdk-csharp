@@ -122,7 +122,7 @@ namespace CloudNative.CloudEvents
             get
             {
                 Validation.CheckNotNull(attribute, nameof(attribute));
-                Validation.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                Validation.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), () => Strings.ErrorCannotIndexBySpecVersionAttribute);
 
                 // TODO: Is this validation definitely useful? It does mean we never return something
                 // that's invalid for the attribute, which is potentially good...
@@ -136,7 +136,7 @@ namespace CloudNative.CloudEvents
             set
             {
                 Validation.CheckNotNull(attribute, nameof(attribute));
-                Validation.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                Validation.CheckArgument(attribute.Name != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attribute), () => Strings.ErrorCannotIndexBySpecVersionAttribute);
 
                 string name = attribute.Name;
                 var knownAttribute = GetAttribute(name);
@@ -181,13 +181,13 @@ namespace CloudNative.CloudEvents
             {
                 // TODO: Validate the attribute name is valid (e.g. not upper case)? Seems overkill.
                 Validation.CheckNotNull(attributeName, nameof(attributeName));
-                Validation.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                Validation.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), () => Strings.ErrorCannotIndexBySpecVersionAttribute);
                 return attributeValues.GetValueOrDefault(Validation.CheckNotNull(attributeName, nameof(attributeName)));
             }            
             set
             {
                 Validation.CheckNotNull(attributeName, nameof(attributeName));
-                Validation.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), Strings.ErrorCannotIndexBySpecVersionAttribute);
+                Validation.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), () => Strings.ErrorCannotIndexBySpecVersionAttribute);
 
                 var knownAttribute = GetAttribute(attributeName);
 
