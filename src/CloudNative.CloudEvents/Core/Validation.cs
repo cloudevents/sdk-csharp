@@ -46,7 +46,7 @@ namespace CloudNative.CloudEvents.Core
         /// <param name="condition">The condition to validate; this method will throw an <see cref="ArgumentException"/> if this is false.</param>
         /// <param name="paramName">The name of the parameter being validated. May be null.</param>
         /// <param name="messageFunc">A func that returns the message to use in the exception, if one is thrown.</param>
-        public static void CheckArgument([DoesNotReturnIf(false)] bool condition, string paramName, Func<string> messageFunc)
+        internal static void CheckArgument([DoesNotReturnIf(false)] bool condition, string paramName, Func<string> messageFunc)
         {
             if (!condition)
             {
