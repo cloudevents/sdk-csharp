@@ -1,5 +1,10 @@
 # Version history (from 2.0)
 
+## 2.7.1 (2023-09-04)
+
+- Prevent string resource lookup if not required
+  Fixes ([#264](https://github.com/cloudevents/sdk-csharp/issues/264)).
+
 ## 2.7.0 (2023-07-31)
 
 - Add the ability to specify a custom serializer for Avro.
