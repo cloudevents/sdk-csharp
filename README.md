@@ -62,11 +62,14 @@ provided within the documentation.
 - Contact for additional information: Clemens Vasters (`@Clemens Vasters`
   on slack).
 
-Each SDK may have its own unique processes, tooling and guidelines, common
+The C# SDK welcomes community contributions; see the [contributing
+document](CONTRIBUTING.md) for more details.
+
+Each SDK may have its own unique processes, tooling and guidelines. Common
 governance related material can be found in the
 [CloudEvents `docs`](https://github.com/cloudevents/spec/tree/main/docs)
-directory. In particular, in there you will find information concerning
-how SDK projects are
+directory. In particular, in there you will find information
+concerning how SDK projects are
 [managed](https://github.com/cloudevents/spec/blob/main/docs/SDK-GOVERNANCE.md),
 [guidelines](https://github.com/cloudevents/spec/blob/main/docs/SDK-maintainer-guidelines.md)
 for how PR reviews and approval, and our
