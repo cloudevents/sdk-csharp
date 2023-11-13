@@ -14,5 +14,6 @@
     
     <!-- Never pack any sample projects -->
     <IsPackable>False</IsPackable>
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
 </Project>

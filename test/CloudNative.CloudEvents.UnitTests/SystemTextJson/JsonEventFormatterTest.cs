@@ -32,8 +32,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         /// A simple test that populates all known v1.0 attributes, so we don't need to test that
         /// aspect in the future.
         /// </summary>
-        [Fact]
-        public void EncodeStructuredModeMessage_V1Attributes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_V1Attributes(bool useContext)
         {
             var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V1_0)
             {
@@ -47,7 +49,8 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 Type = "event-type"
             };
 
-            var encoded = new JsonEventFormatter().EncodeStructuredModeMessage(cloudEvent, out var contentType);
+            var encoded = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+                .EncodeStructuredModeMessage(cloudEvent, out var contentType);
             Assert.Equal("application/cloudevents+json; charset=utf-8", contentType.ToString());
             JsonElement obj = ParseJson(encoded);
             var asserter = new JsonElementAsserter
@@ -65,8 +68,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter.AssertProperties(obj, assertCount: true);
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_AllAttributeTypes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_AllAttributeTypes(bool useContext)
         {
             var cloudEvent = new CloudEvent(AllTypesExtensions)
             {
@@ -81,7 +86,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             // We're not going to check these.
             cloudEvent.PopulateRequiredAttributes();
 
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             var asserter = new JsonElementAsserter
             {
                 { "binary", JsonValueKind.String, SampleBinaryDataBase64 },
@@ -101,7 +106,8 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new { Text = "simple text" };
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            // anonymous type do not support source generation for json serialization
+            JsonElement element = EncodeAndParseStructured(cloudEvent, false);
             JsonElement dataProperty = element.GetProperty("data");
             var asserter = new JsonElementAsserter
             {
@@ -110,13 +116,15 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter.AssertProperties(dataProperty, assertCount: true);
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_JsonDataType_NumberSerialization()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_JsonDataType_NumberSerialization(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = 10;
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             var asserter = new JsonElementAsserter
             {
                 { "data", JsonValueKind.Number, 10 }
@@ -146,13 +154,15 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter.AssertProperties(dataProperty, assertCount: true);
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_JsonDataType_AttributedModel()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_JsonDataType_AttributedModel(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new AttributedModel { AttributedProperty = "simple text" };
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             JsonElement dataProperty = element.GetProperty("data");
             var asserter = new JsonElementAsserter
             {
@@ -161,13 +171,15 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter.AssertProperties(dataProperty, assertCount: true);
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_JsonDataType_JsonElementObject()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_JsonDataType_JsonElementObject(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = ParseJson("{ \"value\": { \"Key\": \"value\" } }").GetProperty("value");
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             JsonElement data = element.GetProperty("data");
             var asserter = new JsonElementAsserter
             {
@@ -176,107 +188,125 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter.AssertProperties(data, assertCount: true);
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_JsonDataType_JsonElementString()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_JsonDataType_JsonElementString(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = ParseJson("{ \"value\": \"text\" }").GetProperty("value");
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             JsonElement data = element.GetProperty("data");
             Assert.Equal(JsonValueKind.String, data.ValueKind);
             Assert.Equal("text", data.GetString());
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_JsonDataType_JsonElementNull()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_JsonDataType_JsonElementNull(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = ParseJson("{ \"value\": null }").GetProperty("value");
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             JsonElement data = element.GetProperty("data");
             Assert.Equal(JsonValueKind.Null, data.ValueKind);
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_JsonDataType_JsonElementNumeric()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_JsonDataType_JsonElementNumeric(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = ParseJson("{ \"value\": 100 }").GetProperty("value");
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             JsonElement data = element.GetProperty("data");
             Assert.Equal(JsonValueKind.Number, data.ValueKind);
             Assert.Equal(100, data.GetInt32());
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_JsonDataType_NullValue()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_JsonDataType_NullValue(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = null;
             cloudEvent.DataContentType = "application/json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             Assert.False(element.TryGetProperty("data", out _));
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_TextType_String()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_TextType_String(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = "some text";
             cloudEvent.DataContentType = "text/anything";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             var dataProperty = element.GetProperty("data");
             Assert.Equal(JsonValueKind.String, dataProperty.ValueKind);
             Assert.Equal("some text", dataProperty.GetString());
         }
 
         // A text content type with bytes as data is serialized like any other bytes.
-        [Fact]
-        public void EncodeStructuredModeMessage_TextType_Bytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_TextType_Bytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = SampleBinaryData;
             cloudEvent.DataContentType = "text/anything";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             Assert.False(element.TryGetProperty("data", out _));
             var dataBase64 = element.GetProperty("data_base64");
             Assert.Equal(JsonValueKind.String, dataBase64.ValueKind);
             Assert.Equal(SampleBinaryDataBase64, dataBase64.GetString());
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_TextType_NotStringOrBytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_TextType_NotStringOrBytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new object();
             cloudEvent.DataContentType = "text/anything";
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             Assert.Throws<ArgumentException>(() => formatter.EncodeStructuredModeMessage(cloudEvent, out _));
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_ArbitraryType_Bytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_ArbitraryType_Bytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = SampleBinaryData;
             cloudEvent.DataContentType = "not_text/or_json";
-            JsonElement element = EncodeAndParseStructured(cloudEvent);
+            JsonElement element = EncodeAndParseStructured(cloudEvent, useContext);
             Assert.False(element.TryGetProperty("data", out _));
             var dataBase64 = element.GetProperty("data_base64");
             Assert.Equal(JsonValueKind.String, dataBase64.ValueKind);
             Assert.Equal(SampleBinaryDataBase64, dataBase64.GetString());
         }
 
-        [Fact]
-        public void EncodeStructuredModeMessage_ArbitraryType_NotBytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeStructuredModeMessage_ArbitraryType_NotBytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new object();
             cloudEvent.DataContentType = "not_text/or_json";
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             Assert.Throws<ArgumentException>(() => formatter.EncodeStructuredModeMessage(cloudEvent, out _));
         }
 
@@ -286,7 +316,9 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new { Text = "simple text" };
             cloudEvent.DataContentType = "application/json";
-            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            // anonymous type do not support source generation for json serialization
+            var bytes = new JsonEventFormatter()
+                .EncodeBinaryModeEventData(cloudEvent);
             JsonElement data = ParseJson(bytes);
             var asserter = new JsonElementAsserter
             {
@@ -316,13 +348,16 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter.AssertProperties(data, assertCount: true);
         }
 
-        [Fact]
-        public void EncodeBinaryModeEventData_JsonDataType_AttributedModel()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBinaryModeEventData_JsonDataType_AttributedModel(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new AttributedModel { AttributedProperty = "simple text" };
             cloudEvent.DataContentType = "application/json";
-            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+                .EncodeBinaryModeEventData(cloudEvent);
             JsonElement data = ParseJson(bytes);
             var asserter = new JsonElementAsserter
             {
@@ -332,78 +367,97 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         }
 
         [Theory]
-        [InlineData("utf-8")]
-        [InlineData("utf-16")]
-        public void EncodeBinaryModeEventData_JsonDataType_JsonElement(string charset)
+        [InlineData("utf-8", true)]
+        [InlineData("utf-8", false)]
+        [InlineData("utf-16", true)]
+        [InlineData("utf-16", false)]
+        public void EncodeBinaryModeEventData_JsonDataType_JsonElement(string charset, bool useContext)
         {
             // This would definitely be an odd thing to do, admittedly...
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = ParseJson($"{{ \"value\": \"some text\" }}").GetProperty("value");
             cloudEvent.DataContentType = $"application/json; charset={charset}";
-            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+                .EncodeBinaryModeEventData(cloudEvent);
             Assert.Equal("\"some text\"", BinaryDataUtilities.GetString(bytes, Encoding.GetEncoding(charset)));
         }
 
-        [Fact]
-        public void EncodeBinaryModeEventData_JsonDataType_NullValue()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBinaryModeEventData_JsonDataType_NullValue(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = null;
             cloudEvent.DataContentType = "application/json";
-            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+                .EncodeBinaryModeEventData(cloudEvent);
             Assert.True(bytes.IsEmpty);
         }
 
         [Theory]
-        [InlineData("utf-8")]
-        [InlineData("iso-8859-1")]
-        public void EncodeBinaryModeEventData_TextType_String(string charset)
+        [InlineData("utf-8", true)]
+        [InlineData("utf-8", false)]
+        [InlineData("iso-8859-1", true)]
+        [InlineData("iso-8859-1", false)]
+        public void EncodeBinaryModeEventData_TextType_String(string charset, bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = "some text";
             cloudEvent.DataContentType = $"text/anything; charset={charset}";
-            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+                .EncodeBinaryModeEventData(cloudEvent);
             Assert.Equal("some text", BinaryDataUtilities.GetString(bytes, Encoding.GetEncoding(charset)));
         }
 
         // A text content type with bytes as data is serialized like any other bytes.
-        [Fact]
-        public void EncodeBinaryModeEventData_TextType_Bytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBinaryModeEventData_TextType_Bytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = SampleBinaryData;
             cloudEvent.DataContentType = "text/anything";
-            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+                .EncodeBinaryModeEventData(cloudEvent);
             Assert.Equal(SampleBinaryData, bytes);
         }
 
-        [Fact]
-        public void EncodeBinaryModeEventData_TextType_NotStringOrBytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBinaryModeEventData_TextType_NotStringOrBytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new object();
             cloudEvent.DataContentType = "text/anything";
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             Assert.Throws<ArgumentException>(() => formatter.EncodeBinaryModeEventData(cloudEvent));
         }
 
-        [Fact]
-        public void EncodeBinaryModeEventData_ArbitraryType_Bytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBinaryModeEventData_ArbitraryType_Bytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = SampleBinaryData;
             cloudEvent.DataContentType = "not_text/or_json";
-            var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+            var bytes = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+                .EncodeBinaryModeEventData(cloudEvent);
             Assert.Equal(SampleBinaryData, bytes);
         }
 
-        [Fact]
-        public void EncodeBinaryModeEventData_ArbitraryType_NotBytes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBinaryModeEventData_ArbitraryType_NotBytes(bool useContext)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.Data = new object();
             cloudEvent.DataContentType = "not_text/or_json";
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             Assert.Throws<ArgumentException>(() => formatter.EncodeBinaryModeEventData(cloudEvent));
         }
 
@@ -440,11 +494,13 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         // per-CloudEvent implementation is shared with structured mode, so we rely on
         // structured mode testing for things like custom serialization.
 
-        [Fact]
-        public void EncodeBatchModeMessage_Empty()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBatchModeMessage_Empty(bool useContext)
         {
             var cloudEvents = new CloudEvent[0];
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
             Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
             var array = ParseJson(bytes);
@@ -452,8 +508,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             Assert.Equal(0, array.GetArrayLength());
         }
 
-        [Fact]
-        public void EncodeBatchModeMessage_TwoEvents()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBatchModeMessage_TwoEvents(bool useContext)
         {
             var event1 = new CloudEvent().PopulateRequiredAttributes();
             event1.Id = "event1";
@@ -464,7 +522,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             event2.Id = "event2";
 
             var cloudEvents = new[] { event1, event2 };
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
             Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
             var array = ParseJson(bytes).EnumerateArray().ToList();
@@ -491,10 +549,12 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter2.AssertProperties(array[1], assertCount: true);
         }
 
-        [Fact]
-        public void EncodeBatchModeMessage_Invalid()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void EncodeBatchModeMessage_Invalid(bool useContext)
         {
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             // Invalid CloudEvent
             Assert.Throws<ArgumentException>(() => formatter.EncodeBatchModeMessage(new[] { new CloudEvent() }, out _));
             // Null argument
@@ -504,18 +564,22 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             Assert.Throws<ArgumentNullException>(() => formatter.EncodeBatchModeMessage(new CloudEvent[1], out _));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_NotJson()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_NotJson(bool useContext)
         {
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             Assert.ThrowsAny<JsonException>(() => formatter.DecodeStructuredModeMessage(new byte[10], new ContentType("application/json"), null));
         }
 
         // Just a single test for the code that parses asynchronously... the guts are all the same.
         [Theory]
-        [InlineData("utf-8")]
-        [InlineData("iso-8859-1")]
-        public async Task DecodeStructuredModeMessageAsync_Minimal(string charset)
+        [InlineData("utf-8", true)]
+        [InlineData("utf-8", false)]
+        [InlineData("iso-8859-1", true)]
+        [InlineData("iso-8859-1", false)]
+        public async Task DecodeStructuredModeMessageAsync_Minimal(string charset, bool useContext)
         {
             // Note: just using Json.NET to get the JSON in a simple way...
             var obj = new JObject
@@ -528,7 +592,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             };
             var bytes = Encoding.GetEncoding(charset).GetBytes(obj.ToString());
             var stream = new MemoryStream(bytes);
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var cloudEvent = await formatter.DecodeStructuredModeMessageAsync(stream, new ContentType($"application/cloudevents+json; charset={charset}"), null);
             Assert.Equal("test-type", cloudEvent.Type);
             Assert.Equal("test-id", cloudEvent.Id);
@@ -537,9 +601,11 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         }
 
         [Theory]
-        [InlineData("utf-8")]
-        [InlineData("iso-8859-1")]
-        public void DecodeStructuredModeMessage_Minimal(string charset)
+        [InlineData("utf-8", true)]
+        [InlineData("utf-8", false)]
+        [InlineData("iso-8859-1", true)]
+        [InlineData("iso-8859-1", false)]
+        public void DecodeStructuredModeMessage_Minimal(string charset, bool useContext)
         {
             var obj = new JObject
             {
@@ -551,15 +617,17 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             };
             var bytes = Encoding.GetEncoding(charset).GetBytes(obj.ToString());
             var stream = new MemoryStream(bytes);
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var cloudEvent = formatter.DecodeStructuredModeMessage(stream, new ContentType($"application/cloudevents+json; charset={charset}"), null);
             Assert.Equal("test-type", cloudEvent.Type);
             Assert.Equal("test-id", cloudEvent.Id);
             Assert.Equal(SampleUri, cloudEvent.Source);
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_NoSpecVersion()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_NoSpecVersion(bool useContext)
         {
             var obj = new JObject
             {
@@ -567,11 +635,13 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 ["id"] = "test-id",
                 ["source"] = SampleUriText,
             };
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_UnknownSpecVersion()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_UnknownSpecVersion(bool useContext)
         {
             var obj = new JObject
             {
@@ -580,11 +650,13 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 ["id"] = "test-id",
                 ["source"] = SampleUriText,
             };
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_MissingRequiredAttributes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_MissingRequiredAttributes(bool useContext)
         {
             var obj = new JObject
             {
@@ -593,11 +665,13 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 ["id"] = "test-id"
                 // Source is missing
             };
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_SpecVersionNotString()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_SpecVersionNotString(bool useContext)
         {
             var obj = new JObject
             {
@@ -606,11 +680,13 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 ["id"] = "test-id",
                 ["source"] = SampleUriText,
             };
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_TypeNotString()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_TypeNotString(bool useContext)
         {
             var obj = new JObject
             {
@@ -619,11 +695,13 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 ["id"] = "test-id",
                 ["source"] = SampleUriText,
             };
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_V1Attributes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_V1Attributes(bool useContext)
         {
             var obj = new JObject
             {
@@ -637,7 +715,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 ["source"] = "//event-source",
                 ["time"] = SampleTimestampText
             };
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             Assert.Equal(CloudEventsSpecVersion.V1_0, cloudEvent.SpecVersion);
             Assert.Equal("test-type", cloudEvent.Type);
             Assert.Equal("test-id", cloudEvent.Id);
@@ -648,8 +726,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             AssertTimestampsEqual(SampleTimestamp, cloudEvent.Time);
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_AllAttributeTypes()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_AllAttributeTypes(bool useContext)
         {
             var obj = new JObject
             {
@@ -669,7 +749,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             };
 
             var bytes = Encoding.UTF8.GetBytes(obj.ToString());
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, AllTypesExtensions);
             Assert.Equal(SampleBinaryData, cloudEvent["binary"]);
             Assert.True((bool)cloudEvent["boolean"]!);
@@ -680,8 +760,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             Assert.Equal(SampleUriReference, cloudEvent["urireference"]);
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_IncorrectExtensionTypeWithValidValue()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_IncorrectExtensionTypeWithValidValue(bool useContext)
         {
             var obj = new JObject
             {
@@ -694,7 +776,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             };
             // Decode the event, providing the extension with the correct type.
             var bytes = Encoding.UTF8.GetBytes(obj.ToString());
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, AllTypesExtensions);
 
             // The value will have been decoded according to the extension.
@@ -702,65 +784,81 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         }
 
         // There are other invalid token types as well; this is just one of them.
-        [Fact]
-        public void DecodeStructuredModeMessage_AttributeValueAsArrayToken()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_AttributeValueAsArrayToken(bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["attr"] = new Newtonsoft.Json.Linq.JArray();
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_Null()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_Null(bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["attr"] = Newtonsoft.Json.Linq.JValue.CreateNull();
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             // The JSON event format spec demands that we ignore null values, so we shouldn't
             // have created an extension attribute.
             Assert.Null(cloudEvent.GetAttribute("attr"));
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("application/json")]
-        [InlineData("text/plain")]
-        [InlineData("application/binary")]
-        public void DecodeStructuredModeMessage_NoData(string contentType)
+        [InlineData(null, true)]
+        [InlineData(null, false)]
+        [InlineData("application/json", true)]
+        [InlineData("application/json", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/plain", false)]
+        [InlineData("application/binary", true)]
+        [InlineData("application/binary", false)]
+        public void DecodeStructuredModeMessage_NoData(string contentType, bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)
             {
                 obj["datacontenttype"] = contentType;
             }
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             Assert.Null(cloudEvent.Data);
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_BothDataAndDataBase64()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_BothDataAndDataBase64(bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["data"] = "text";
             obj["data_base64"] = SampleBinaryDataBase64;
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_DataBase64NonString()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_DataBase64NonString(bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["data_base64"] = 10;
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
         // data_base64 always ends up as bytes, regardless of content type.
         [Theory]
-        [InlineData(null)]
-        [InlineData("application/json")]
-        [InlineData("text/plain")]
-        [InlineData("application/binary")]
-        public void DecodeStructuredModeMessage_Base64(string contentType)
+        [InlineData(null, true)]
+        [InlineData(null, false)]
+        [InlineData("application/json", true)]
+        [InlineData("application/json", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/plain", false)]
+        [InlineData("application/binary", true)]
+        [InlineData("application/binary", false)]
+        public void DecodeStructuredModeMessage_Base64(string contentType, bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)
@@ -768,27 +866,32 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 obj["datacontenttype"] = contentType;
             }
             obj["data_base64"] = SampleBinaryDataBase64;
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             Assert.Equal(SampleBinaryData, cloudEvent.Data);
         }
 
         [Theory]
-        [InlineData("text/plain")]
-        [InlineData("image/png")]
-        public void DecodeStructuredModeMessage_NonJsonContentType_JsonStringToken(string contentType)
+        [InlineData("text/plain", true)]
+        [InlineData("text/plain", false)]
+        [InlineData("image/png", true)]
+        [InlineData("image/png", false)]
+        public void DecodeStructuredModeMessage_NonJsonContentType_JsonStringToken(string contentType, bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["datacontenttype"] = contentType;
             obj["data"] = "some text";
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             Assert.Equal("some text", cloudEvent.Data);
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("application/json")]
-        [InlineData("application/json; charset=utf-8")]
-        public void DecodeStructuredModeMessage_JsonContentType_JsonStringToken(string contentType)
+        [InlineData(null, true)]
+        [InlineData(null, false)]
+        [InlineData("application/json", true)]
+        [InlineData("application/json", false)]
+        [InlineData("application/json; charset=utf-8", true)]
+        [InlineData("application/json; charset=utf-8", false)]
+        public void DecodeStructuredModeMessage_JsonContentType_JsonStringToken(string contentType, bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)
@@ -796,18 +899,22 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 obj["datacontenttype"] = contentType;
             }
             obj["data"] = "text";
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             var element = (JsonElement) cloudEvent.Data!;
             Assert.Equal(JsonValueKind.String, element.ValueKind);
             Assert.Equal("text", element.GetString());
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("application/json")]
-        [InlineData("application/xyz+json")]
-        [InlineData("application/xyz+json; charset=utf-8")]
-        public void DecodeStructuredModeMessage_JsonContentType_NonStringValue(string contentType)
+        [InlineData(null, true)]
+        [InlineData(null, false)]
+        [InlineData("application/json", true)]
+        [InlineData("application/json", false)]
+        [InlineData("application/xyz+json", true)]
+        [InlineData("application/xyz+json", false)]
+        [InlineData("application/xyz+json; charset=utf-8", true)]
+        [InlineData("application/xyz+json; charset=utf-8", false)]
+        public void DecodeStructuredModeMessage_JsonContentType_NonStringValue(string contentType, bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)
@@ -815,40 +922,46 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 obj["datacontenttype"] = contentType;
             }
             obj["data"] = 10;
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             var element = (JsonElement) cloudEvent.Data!;
             Assert.Equal(JsonValueKind.Number, element.ValueKind);
             Assert.Equal(10, element.GetInt32());
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_NonJsonContentType_NonStringValue()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_NonJsonContentType_NonStringValue(bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["datacontenttype"] = "text/plain";
             obj["data"] = 10;
-            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj));
+            Assert.Throws<ArgumentException>(() => DecodeStructuredModeMessage(obj, useContext));
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_NullDataBase64Ignored()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_NullDataBase64Ignored(bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["data_base64"] = Newtonsoft.Json.Linq.JValue.CreateNull();
             obj["data"] = "some text";
             obj["datacontenttype"] = "text/plain";
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             Assert.Equal("some text", cloudEvent.Data);
         }
 
-        [Fact]
-        public void DecodeStructuredModeMessage_NullDataIgnored()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructuredModeMessage_NullDataIgnored(bool useContext)
         {
             var obj = CreateMinimalValidJObject();
             obj["data_base64"] = SampleBinaryDataBase64;
             obj["data"] = Newtonsoft.Json.Linq.JValue.CreateNull();
             obj["datacontenttype"] = "application/binary";
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             Assert.Equal(SampleBinaryData, cloudEvent.Data);
         }
 
@@ -911,46 +1024,56 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             Assert.Equal(bytes, data);
         }
 
-        [Fact]
-        public void DecodeBatchMode_NotArray()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeBatchMode_NotArray(bool useContext)
         {
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var data = Encoding.UTF8.GetBytes(CreateMinimalValidJObject().ToString());
             Assert.Throws<ArgumentException>(() => formatter.DecodeBatchModeMessage(data, s_jsonCloudEventBatchContentType, extensionAttributes: null));
         }
 
-        [Fact]
-        public void DecodeBatchMode_ArrayContainingNonObject()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeBatchMode_ArrayContainingNonObject(bool useContext)
         {
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var array = new JArray { CreateMinimalValidJObject(), "text" };
             var data = Encoding.UTF8.GetBytes(array.ToString());
             Assert.Throws<ArgumentException>(() => formatter.DecodeBatchModeMessage(data, s_jsonCloudEventBatchContentType, extensionAttributes: null));
         }
 
-        [Fact]
-        public void DecodeBatchMode_Empty()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeBatchMode_Empty(bool useContext)
         {
-            var cloudEvents = DecodeBatchModeMessage(new JArray());
+            var cloudEvents = DecodeBatchModeMessage(new JArray(), useContext);
             Assert.Empty(cloudEvents);
         }
 
-        [Fact]
-        public void DecodeBatchMode_Minimal()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeBatchMode_Minimal(bool useContext)
         {
-            var cloudEvents = DecodeBatchModeMessage(new JArray { CreateMinimalValidJObject() });
+            var cloudEvents = DecodeBatchModeMessage(new JArray { CreateMinimalValidJObject() }, useContext);
             var cloudEvent = Assert.Single(cloudEvents);
             Assert.Equal("event-type", cloudEvent.Type);
             Assert.Equal("event-id", cloudEvent.Id);
             Assert.Equal(new Uri("//event-source", UriKind.RelativeOrAbsolute), cloudEvent.Source);
         }
 
-        [Fact]
-        public void DecodeBatchMode_Minimal_WithStream()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeBatchMode_Minimal_WithStream(bool useContext)
         {
             var array = new JArray { CreateMinimalValidJObject() };
             var bytes = Encoding.UTF8.GetBytes(array.ToString());
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var cloudEvents = formatter.DecodeBatchModeMessage(new MemoryStream(bytes), s_jsonCloudEventBatchContentType, null);
             var cloudEvent = Assert.Single(cloudEvents);
             Assert.Equal("event-type", cloudEvent.Type);
@@ -959,8 +1082,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         }
 
         // Just a single test for the code that parses asynchronously... the guts are all the same.
-        [Fact]
-        public async Task DecodeBatchModeMessageAsync_Minimal()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task DecodeBatchModeMessageAsync_Minimal(bool useContext)
         {
             var obj = new JObject
             {
@@ -971,7 +1096,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             };
             var bytes = Encoding.UTF8.GetBytes(new JArray { obj }.ToString());
             var stream = new MemoryStream(bytes);
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var cloudEvents = await formatter.DecodeBatchModeMessageAsync(stream, s_jsonCloudEventBatchContentType, null);
             var cloudEvent = Assert.Single(cloudEvents);
             Assert.Equal("test-type", cloudEvent.Type);
@@ -980,8 +1105,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         }
 
 
-        [Fact]
-        public void DecodeBatchMode_Multiple()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeBatchMode_Multiple(bool useContext)
         {
             var array = new JArray
             {
@@ -1002,7 +1129,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                     ["source"] = "//event-source2"
                 },
             };
-            var cloudEvents = DecodeBatchModeMessage(array);
+            var cloudEvents = DecodeBatchModeMessage(array, useContext);
             Assert.Equal(2, cloudEvents.Count);
 
             var event1 = cloudEvents[0];
@@ -1069,8 +1196,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             asserter.AssertProperties(obj, assertCount: true);
         }
 
-        [Fact]
-        public void DecodeStructured_DefaultContentTypeToApplicationJson()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DecodeStructured_DefaultContentTypeToApplicationJson(bool useContext)
         {
             var obj = new JObject
             {
@@ -1080,7 +1209,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
                 ["source"] = SampleUriText,
                 ["data"] = "some text"
             };
-            var cloudEvent = DecodeStructuredModeMessage(obj);
+            var cloudEvent = DecodeStructuredModeMessage(obj, useContext);
             Assert.Equal("application/json", cloudEvent.DataContentType);
             var jsonData = Assert.IsType<JsonElement>(cloudEvent.Data);
             Assert.Equal(JsonValueKind.String, jsonData.ValueKind);
@@ -1189,9 +1318,9 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         /// Convenience method to format a CloudEvent with the default JsonEventFormatter in
         /// structured mode, then parse the result as a JObject.
         /// </summary>
-        private static JsonElement EncodeAndParseStructured(CloudEvent cloudEvent)
+        private static JsonElement EncodeAndParseStructured(CloudEvent cloudEvent, bool useContext)
         {
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             return ParseJson(encoded);
         }
@@ -1200,10 +1329,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         /// Convenience method to serialize a JObject to bytes, then
         /// decode it as a structured event with the default (System.Text.Json) JsonEventFormatter and no extension attributes.
         /// </summary>
-        private static CloudEvent DecodeStructuredModeMessage(Newtonsoft.Json.Linq.JObject obj)
+        private static CloudEvent DecodeStructuredModeMessage(Newtonsoft.Json.Linq.JObject obj, bool useContext)
         {
             var bytes = Encoding.UTF8.GetBytes(obj.ToString());
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             return formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, null);
         }
 
@@ -1211,10 +1340,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         /// Convenience method to serialize a JArray to bytes, then
         /// decode it as a structured event with the default (System.Text.Json) JsonEventFormatter and no extension attributes.
         /// </summary>
-        private static IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Newtonsoft.Json.Linq.JArray array)
+        private static IReadOnlyList<CloudEvent> DecodeBatchModeMessage(Newtonsoft.Json.Linq.JArray array, bool useContext)
         {
             var bytes = Encoding.UTF8.GetBytes(array.ToString());
-            var formatter = new JsonEventFormatter();
+            var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
             return formatter.DecodeBatchModeMessage(bytes, s_jsonCloudEventBatchContentType, null);
         }
 

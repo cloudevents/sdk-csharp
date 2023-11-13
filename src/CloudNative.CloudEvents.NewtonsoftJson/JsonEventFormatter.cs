@@ -345,7 +345,9 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 throw new ArgumentException($"Structured mode property '{DataBase64PropertyName}' must be a string, when present.");
             }
-            cloudEvent.Data = Convert.FromBase64String((string?)dataBase64Token);
+            var tokenString = (string?)dataBase64Token;
+            if (tokenString != null)
+                cloudEvent.Data = Convert.FromBase64String(tokenString);
         }
 
         /// <summary>
@@ -524,7 +526,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else
             {
-                ContentType dataContentType = new ContentType(GetOrInferDataContentType(cloudEvent));
+                ContentType dataContentType = new ContentType(GetOrInferDataContentType(cloudEvent)!);
                 if (IsJsonMediaType(dataContentType.MediaType))
                 {
                     writer.WritePropertyName(DataPropertyName);
@@ -696,7 +698,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// <inheritdoc />
         protected override void EncodeStructuredModeData(CloudEvent cloudEvent, JsonWriter writer)
         {
-            T data = (T)cloudEvent.Data;
+            var data = (T?)cloudEvent.Data;
             writer.WritePropertyName(DataPropertyName);
             Serializer.Serialize(writer, data);
         }

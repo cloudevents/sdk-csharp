@@ -27,6 +27,10 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
     <Copyright>Copyright Cloud Native Foundation</Copyright>
+
+    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</IsTrimmable>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   
   <!-- Package the icon specified in the PackageIcon property -->

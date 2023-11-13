@@ -5,6 +5,7 @@
 using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -60,6 +61,7 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
             return HasCloudEventsBatchContentType(httpRequestMessage.Content);
         }
+
         
         /// <summary>
         /// Indicates whether this <see cref="HttpResponseMessage"/> holds a batch of CloudEvents.
@@ -83,7 +85,7 @@ namespace CloudNative.CloudEvents.Http
             this HttpResponseMessage httpResponseMessage,
             CloudEventFormatter formatter,
             params CloudEventAttribute[]? extensionAttributes) =>
-            ToCloudEventAsync(httpResponseMessage, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
+            ToCloudEventAsync(httpResponseMessage, formatter, (IEnumerable<CloudEventAttribute>?)extensionAttributes);
 
         /// <summary>
         /// Converts this HTTP response message into a CloudEvent object
@@ -112,7 +114,7 @@ namespace CloudNative.CloudEvents.Http
             this HttpRequestMessage httpRequestMessage,
             CloudEventFormatter formatter,
             params CloudEventAttribute[]? extensionAttributes) =>
-            ToCloudEventAsync(httpRequestMessage, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
+            ToCloudEventAsync(httpRequestMessage, formatter, (IEnumerable<CloudEventAttribute>?)extensionAttributes);
 
         /// <summary>
         /// Converts this HTTP request message into a CloudEvent object.
@@ -130,7 +132,7 @@ namespace CloudNative.CloudEvents.Http
             return ToCloudEventInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
         }
 
-        private static async Task<CloudEvent> ToCloudEventInternalAsync(HttpHeaders headers, HttpContent content,
+        private static async Task<CloudEvent> ToCloudEventInternalAsync(HttpHeaders headers, HttpContent? content,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
         {
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -142,7 +144,7 @@ namespace CloudNative.CloudEvents.Http
             }
             else
             {
-                string? versionId = MaybeGetVersionId(headers) ?? MaybeGetVersionId(content.Headers);
+                string? versionId = MaybeGetVersionId(headers) ?? MaybeGetVersionId(content?.Headers);
                 if (versionId is null)
                 {
                     throw new ArgumentException($"Request does not represent a CloudEvent. It has neither a {HttpUtilities.SpecVersionHttpHeader} header, nor a suitable content type.", nameof(paramName));
@@ -151,7 +153,7 @@ namespace CloudNative.CloudEvents.Http
                     ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", paramName);
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
-                foreach (var header in headers.Concat(content.Headers))
+                foreach (var header in headers.Concat(content!.Headers))
                 {
                     string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(header.Key);
                     if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
@@ -231,7 +233,7 @@ namespace CloudNative.CloudEvents.Http
             return ToCloudEventBatchInternalAsync(httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
         }
 
-        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpContent content,
+        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpContent? content,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
         {
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -332,15 +334,15 @@ namespace CloudNative.CloudEvents.Http
 
         private static ByteArrayContent ToByteArrayContent(ReadOnlyMemory<byte> content) =>
             MemoryMarshal.TryGetArray(content, out var segment)
-            ? new ByteArrayContent(segment.Array, segment.Offset, segment.Count)
+            ? new ByteArrayContent(segment.Array!, segment.Offset, segment.Count)
             // TODO: Just throw?
             : new ByteArrayContent(content.ToArray());
 
         // TODO: This would include "application/cloudeventsarerubbish" for example...
-        private static bool HasCloudEventsContentType(HttpContent content) =>
+        private static bool HasCloudEventsContentType([NotNullWhen(true)] HttpContent? content) =>
             MimeUtilities.IsCloudEventsContentType(content?.Headers?.ContentType?.MediaType);
 
-        private static bool HasCloudEventsBatchContentType(HttpContent content) =>
+        private static bool HasCloudEventsBatchContentType([NotNullWhen(true)] HttpContent? content) =>
             MimeUtilities.IsCloudEventsBatchContentType(content?.Headers?.ContentType?.MediaType);
 
         private static string? MaybeGetVersionId(HttpHeaders? headers) =>

@@ -4,6 +4,7 @@
 
 using CloudNative.CloudEvents.Core;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace CloudNative.CloudEvents
@@ -21,6 +22,9 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// The type to use for CloudEvent formatting. Must not be null.
         /// </summary>
+#if NET7_0_OR_GREATER
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
         public Type FormatterType { get; }
 
         /// <summary>
@@ -56,7 +60,7 @@ namespace CloudNative.CloudEvents
                 throw new ArgumentException($"The {nameof(CloudEventFormatterAttribute)} on type {targetType} has no converter type specified.", nameof(targetType));
             }
 
-            object instance;
+            object? instance;
             try
             {
                 instance = Activator.CreateInstance(formatterType);
@@ -73,6 +77,6 @@ namespace CloudNative.CloudEvents
             }
 
             return formatter;
-    }
+        }
     }
 }

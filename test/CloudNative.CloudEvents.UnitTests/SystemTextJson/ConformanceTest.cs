@@ -4,6 +4,7 @@
 
 using CloudNative.CloudEvents.UnitTests;
 using CloudNative.CloudEvents.UnitTests.ConformanceTestData;
+using Microsoft.Extensions.ObjectPool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,8 @@ public class ConformanceTest
     private static IEnumerable<object[]> SelectTestIds(ConformanceTestType type) =>
         allTests
             .Where(test => test.TestType == type)
-            .Select(test => new object[] { test.Id });
+            .Select(test => new object[][] { [test.Id, true], [test.Id, false] })
+            .SelectMany(x => x);
 
     public static IEnumerable<object[]> ValidEventTestIds => SelectTestIds(ConformanceTestType.ValidSingleEvent);
     public static IEnumerable<object[]> InvalidEventTestIds => SelectTestIds(ConformanceTestType.InvalidSingleEvent);
@@ -29,20 +31,21 @@ public class ConformanceTest
     public static IEnumerable<object[]> InvalidBatchTestIds => SelectTestIds(ConformanceTestType.InvalidBatch);
 
     [Theory, MemberData(nameof(ValidEventTestIds))]
-    public void ValidEvent(string testId)
+    public void ValidEvent(string testId, bool useContext)
     {
         var test = GetTestById(testId);
         CloudEvent expected = SampleEvents.FromId(test.SampleId);
         var extensions = test.SampleExtensionAttributes ? SampleEvents.SampleExtensionAttributes : null;
-        CloudEvent actual = new JsonEventFormatter().ConvertFromJsonElement(test.Event, extensions);
+        CloudEvent actual = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+            .ConvertFromJsonElement(test.Event, extensions);
         TestHelpers.AssertCloudEventsEqual(expected, actual, TestHelpers.InstantOnlyTimestampComparer);
     }
 
     [Theory, MemberData(nameof(InvalidEventTestIds))]
-    public void InvalidEvent(string testId)
+    public void InvalidEvent(string testId, bool useContext)
     {
         var test = GetTestById(testId);
-        var formatter = new JsonEventFormatter();
+        var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
         var extensions = test.SampleExtensionAttributes ? SampleEvents.SampleExtensionAttributes : null;
         // Hmm... we throw FormatException in some cases, when ArgumentException would be better.
         // Changing that would be "somewhat breaking"... it's unclear how much we should worry.
@@ -50,7 +53,7 @@ public class ConformanceTest
     }
 
     [Theory, MemberData(nameof(ValidBatchTestIds))]
-    public void ValidBatch(string testId)
+    public void ValidBatch(string testId, bool useContext)
     {
         var test = GetTestById(testId);
         IReadOnlyList<CloudEvent> expected = SampleBatches.FromId(test.SampleId);
@@ -58,15 +61,16 @@ public class ConformanceTest
         // We don't have a convenience method for batches, so serialize the array back to JSON.
         var json = test.Batch.ToString();
         var body = Encoding.UTF8.GetBytes(json);
-        IReadOnlyList<CloudEvent> actual = new JsonEventFormatter().DecodeBatchModeMessage(body, contentType: null, extensions);
+        IReadOnlyList<CloudEvent> actual = (useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter())
+            .DecodeBatchModeMessage(body, contentType: null, extensions);
         TestHelpers.AssertBatchesEqual(expected, actual, TestHelpers.InstantOnlyTimestampComparer);
     }
 
     [Theory, MemberData(nameof(InvalidBatchTestIds))]
-    public void InvalidBatch(string testId)
+    public void InvalidBatch(string testId, bool useContext)
     {
         var test = GetTestById(testId);
-        var formatter = new JsonEventFormatter();
+        var formatter = useContext ? new JsonEventFormatter(GeneratedJsonContext.Default) : new JsonEventFormatter();
         var extensions = test.SampleExtensionAttributes ? SampleEvents.SampleExtensionAttributes : null;
         // We don't have a convenience method for batches, so serialize the array back to JSON.
         var json = test.Batch.ToString();
