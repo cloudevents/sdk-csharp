@@ -151,7 +151,7 @@ namespace CloudNative.CloudEvents.Http
         /// <returns>A reference to a validated CloudEvent instance.</returns>
         public static CloudEvent ToCloudEvent(this HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, params CloudEventAttribute[]? extensionAttributes) =>
-            ToCloudEvent(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
+            ToCloudEvent(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>?)extensionAttributes);
 
         /// <summary>
         /// Converts this listener request into a CloudEvent object, with the given extension attributes.
@@ -179,7 +179,7 @@ namespace CloudNative.CloudEvents.Http
             }
             else
             {
-                string versionId = httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader];
+                string? versionId = httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader];
                 if (versionId is null)
                 {
                     throw new ArgumentException($"Request does not represent a CloudEvent. It has neither a {HttpUtilities.SpecVersionHttpHeader} header, nor a suitable content type.", nameof(httpListenerRequest));
@@ -191,12 +191,12 @@ namespace CloudNative.CloudEvents.Http
                 var headers = httpListenerRequest.Headers;
                 foreach (var key in headers.AllKeys)
                 {
-                    string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(key);
+                    string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(key!);
                     if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
                     {
                         continue;
                     }
-                    string attributeValue = HttpUtilities.DecodeHeaderValue(headers[key]);
+                    string attributeValue = HttpUtilities.DecodeHeaderValue(headers[key]!);
                     cloudEvent.SetAttributeFromString(attributeName, attributeValue);
                 }
 
@@ -223,7 +223,7 @@ namespace CloudNative.CloudEvents.Http
             this HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter,
             params CloudEventAttribute[]? extensionAttributes) =>
-            ToCloudEventBatchAsync(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>?)extensionAttributes);
+            ToCloudEventBatchAsync(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
 
         /// <summary>
         /// Converts this HTTP request message into a CloudEvent batch.
@@ -263,6 +263,7 @@ namespace CloudNative.CloudEvents.Http
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             ToCloudEventBatchInternalAsync(httpListenerRequest, formatter, extensionAttributes, async: false).GetAwaiter().GetResult();
+
         
         private async static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, bool async)

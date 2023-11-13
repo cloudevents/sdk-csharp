@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Check out our repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -21,7 +21,7 @@ jobs:
     - name: Setup .NET 6.0
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
 
     - name: Build
       run: |

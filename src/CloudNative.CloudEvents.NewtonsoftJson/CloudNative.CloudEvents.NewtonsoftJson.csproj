@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net7.0;net8.0</TargetFrameworks>
     <Description>JSON support for the CNCF CloudEvents SDK, based on Newtonsoft.Json.</Description>
-    <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <PackageTags>cncf;cloudnative;cloudevents;events;json;newtonsoft</PackageTags>
   </PropertyGroup>

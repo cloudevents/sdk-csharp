@@ -5,10 +5,12 @@
 using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -94,6 +96,13 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// </summary>
         protected const string DataPropertyName = "data";
 
+#if NET7_0_OR_GREATER
+        /// <summary>
+        /// Json serialization context used to serialize and enable trimming and AOT.
+        /// </summary>
+        protected readonly JsonSerializerContext? JsonSerializerContext;
+#endif
+
         /// <summary>
         /// The options to use when serializing objects to JSON.
         /// </summary>
@@ -108,9 +117,23 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
         /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
         /// </summary>
+#if NET7_0_OR_GREATER
+        [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
         public JsonEventFormatter() : this(null, default)
         {
         }
+
+#if NET7_0_OR_GREATER
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
+        /// </summary>
+        /// <param name="jsonSerializerContext">The json context used for serializing objects to JSON.</param>
+        public JsonEventFormatter(JsonSerializerContext jsonSerializerContext) : this(default, jsonSerializerContext)
+        {
+        }
+#endif
 
         /// <summary>
         /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializerOptions"/>
@@ -118,11 +141,29 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// </summary>
         /// <param name="serializerOptions">The options to use when serializing objects to JSON. May be null.</param>
         /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+#if NET7_0_OR_GREATER
+        [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
         public JsonEventFormatter(JsonSerializerOptions? serializerOptions, JsonDocumentOptions documentOptions)
         {
             SerializerOptions = serializerOptions;
             DocumentOptions = documentOptions;
         }
+
+#if NET7_0_OR_GREATER
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
+        /// </summary>
+        /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+        /// <param name="jsonSerializerContext">The json context used for serializing objects to JSON.</param>
+        public JsonEventFormatter(JsonDocumentOptions documentOptions, JsonSerializerContext jsonSerializerContext)
+        {
+            Validation.CheckNotNull(jsonSerializerContext, nameof(jsonSerializerContext));
+            DocumentOptions = documentOptions;
+            JsonSerializerContext = jsonSerializerContext;
+        }
+#endif
 
         /// <inheritdoc />
         public override async Task<CloudEvent> DecodeStructuredModeMessageAsync(Stream body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
@@ -533,6 +574,10 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// <param name="cloudEvent">The CloudEvent being encoded, which will have a non-null value for
         /// its <see cref="CloudEvent.Data"/> property.
         /// <param name="writer"/>The writer to serialize the data to. Will not be null.</param>
+#if NET7_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Constructor already annotated.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Constructor already annotated.")]
+#endif
         protected virtual void EncodeStructuredModeData(CloudEvent cloudEvent, Utf8JsonWriter writer)
         {
             // Binary data is encoded using the data_base64 property, regardless of content type.
@@ -548,7 +593,12 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 if (IsJsonMediaType(dataContentType.MediaType))
                 {
                     writer.WritePropertyName(DataPropertyName);
-                    JsonSerializer.Serialize(writer, cloudEvent.Data, SerializerOptions);
+#if NET7_0_OR_GREATER
+                    if (JsonSerializerContext != null)
+                        JsonSerializer.Serialize(writer, cloudEvent.Data, cloudEvent.Data!.GetType(), JsonSerializerContext);
+                    else
+#endif
+                        JsonSerializer.Serialize(writer, cloudEvent.Data, SerializerOptions);
                 }
                 else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
                 {
@@ -564,6 +614,10 @@ namespace CloudNative.CloudEvents.SystemTextJson
         }
 
         /// <inheritdoc />
+#if NET7_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Constructor already annotated.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Constructor already annotated.")]
+#endif
         public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
@@ -584,10 +638,18 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 var encoding = MimeUtilities.GetEncoding(contentType);
                 if (encoding is UTF8Encoding)
                 {
+#if NET7_0_OR_GREATER
+                    if (JsonSerializerContext != null)
+                        return JsonSerializer.SerializeToUtf8Bytes(cloudEvent.Data, cloudEvent.Data.GetType(), JsonSerializerContext);
+#endif
                     return JsonSerializer.SerializeToUtf8Bytes(cloudEvent.Data, SerializerOptions);
                 }
                 else
                 {
+#if NET7_0_OR_GREATER
+                    if (JsonSerializerContext != null)
+                        return MimeUtilities.GetEncoding(contentType).GetBytes(JsonSerializer.Serialize(cloudEvent.Data, cloudEvent.Data.GetType(), JsonSerializerContext));
+#endif
                     return MimeUtilities.GetEncoding(contentType).GetBytes(JsonSerializer.Serialize(cloudEvent.Data, SerializerOptions));
                 }
             }
@@ -654,9 +716,24 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
         /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
         /// </summary>
+#if NET7_0_OR_GREATER
+        [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
         public JsonEventFormatter()
         {
         }
+
+#if NET7_0_OR_GREATER
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the serializer <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
+        /// </summary>
+        /// <param name="jsonSerializerContext">The json context used for serializing objects to JSON.</param>
+        public JsonEventFormatter(JsonSerializerContext jsonSerializerContext)
+            : base(default, jsonSerializerContext)
+        {
+        }
+#endif
 
         /// <summary>
         /// Creates a JsonEventFormatter that uses the serializer <see cref="JsonSerializerOptions"/>
@@ -664,12 +741,32 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// </summary>
         /// <param name="serializerOptions">The options to use when serializing and parsing. May be null.</param>
         /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+#if NET7_0_OR_GREATER
+        [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
         public JsonEventFormatter(JsonSerializerOptions serializerOptions, JsonDocumentOptions documentOptions)
             : base(serializerOptions, documentOptions)
         {
         }
 
+#if NET7_0_OR_GREATER
+        /// <summary>
+        /// Creates a JsonEventFormatter that uses the serializer <see cref="JsonSerializerOptions"/>
+        /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
+        /// </summary>
+        /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+        /// <param name="jsonSerializerContext">The json context used for serializing objects to JSON.</param>
+        public JsonEventFormatter(JsonDocumentOptions documentOptions, JsonSerializerContext jsonSerializerContext)
+            : base(documentOptions, jsonSerializerContext)
+        {
+        }
+#endif
+
         /// <inheritdoc />
+#if NET7_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Constructor already annotated.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Constructor already annotated.")]
+#endif
         public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
@@ -679,10 +776,18 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 return Array.Empty<byte>();
             }
             T data = (T)cloudEvent.Data;
+#if NET7_0_OR_GREATER
+            if (JsonSerializerContext != null)
+                return JsonSerializer.SerializeToUtf8Bytes(data, data.GetType(), JsonSerializerContext);
+#endif
             return JsonSerializer.SerializeToUtf8Bytes(data, SerializerOptions);
         }
 
         /// <inheritdoc />
+#if NET7_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Constructor already annotated.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Constructor already annotated.")]
+#endif
         public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent)
         {
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
@@ -692,22 +797,45 @@ namespace CloudNative.CloudEvents.SystemTextJson
                 cloudEvent.Data = null;
                 return;
             }
-            cloudEvent.Data = JsonSerializer.Deserialize<T>(body.Span, SerializerOptions);
+#if NET7_0_OR_GREATER
+            if (JsonSerializerContext != null)
+                cloudEvent.Data = JsonSerializer.Deserialize(body.Span, typeof(T), JsonSerializerContext);
+            else
+#endif
+                cloudEvent.Data = JsonSerializer.Deserialize<T>(body.Span, SerializerOptions);
         }
 
         /// <inheritdoc />
+#if NET7_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Constructor already annotated.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Constructor already annotated.")]
+#endif
         protected override void EncodeStructuredModeData(CloudEvent cloudEvent, Utf8JsonWriter writer)
         {
-            T data = (T)cloudEvent.Data;
+            var data = (T?)cloudEvent.Data;
             writer.WritePropertyName(DataPropertyName);
-            JsonSerializer.Serialize(writer, data, SerializerOptions);
+#if NET7_0_OR_GREATER
+            if (JsonSerializerContext != null)
+                JsonSerializer.Serialize(writer, data, data!.GetType(), JsonSerializerContext);
+            else
+#endif
+                JsonSerializer.Serialize(writer, data, SerializerOptions);
         }
 
         /// <inheritdoc />
-        protected override void DecodeStructuredModeDataProperty(JsonElement dataElement, CloudEvent cloudEvent) =>
-            // Note: this is an inefficient way of doing this.
-            // See https://github.com/dotnet/runtime/issues/31274 - when that's implemented, we can use the new method here.
-            cloudEvent.Data = JsonSerializer.Deserialize<T>(dataElement.GetRawText(), SerializerOptions);
+#if NET7_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Constructor already annotated.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Constructor already annotated.")]
+#endif
+        protected override void DecodeStructuredModeDataProperty(JsonElement dataElement, CloudEvent cloudEvent)
+        {
+#if NET7_0_OR_GREATER
+            if (JsonSerializerContext != null)
+                cloudEvent.Data = JsonSerializer.Deserialize(dataElement, typeof(T), JsonSerializerContext);
+            else
+#endif
+                cloudEvent.Data = JsonSerializer.Deserialize<T>(dataElement.GetRawText(), SerializerOptions);
+        }
 
         // TODO: Consider decoding the base64 data as a byte array, then using DecodeBinaryModeData.
         /// <inheritdoc />

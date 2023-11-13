@@ -32,7 +32,7 @@ namespace CloudNative.CloudEvents.Core
             // It's safe to use memory.GetBuffer() and memory.Position here, as this is a stream
             // we've created using the parameterless constructor.
             var buffer = memory.GetBuffer();
-            return new ReadOnlyMemory<byte>(buffer, 0, (int) memory.Position);
+            return new ReadOnlyMemory<byte>(buffer, 0, (int)memory.Position);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace CloudNative.CloudEvents.Core
         public static MemoryStream AsStream(ReadOnlyMemory<byte> memory)
         {
             var segment = GetArraySegment(memory);
-            return new MemoryStream(segment.Array, segment.Offset, segment.Count, false);
+            return new MemoryStream(segment.Array!, segment.Offset, segment.Count, false);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace CloudNative.CloudEvents.Core
 
             // TODO: If we introduce an additional netstandard2.1 target, we can use encoding.GetString(memory.Span)
             var segment = GetArraySegment(memory);
-            return encoding.GetString(segment.Array, segment.Offset, segment.Count);
+            return encoding.GetString(segment.Array!, segment.Offset, segment.Count);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace CloudNative.CloudEvents.Core
         {
             Validation.CheckNotNull(destination, nameof(destination));
             var segment = GetArraySegment(source);
-            await destination.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(false);
+            await destination.WriteAsync(segment.Array!, segment.Offset, segment.Count).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace CloudNative.CloudEvents.Core
             var segment = GetArraySegment(memory);
             // We probably don't actually need to check the offset: if the count is the same as the length,
             // I can't see how the offset can be non-zero. But it doesn't *hurt* as a check.
-            return segment.Offset == 0 && segment.Count == segment.Array.Length
+            return segment.Array is not null && segment.Offset == 0 && segment.Count == segment.Array.Length
                 ? segment.Array
                 : memory.ToArray();
         }

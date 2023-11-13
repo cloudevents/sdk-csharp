@@ -8,6 +8,7 @@ using Amqp.Types;
 using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Mime;
 
@@ -145,7 +146,7 @@ namespace CloudNative.CloudEvents.Amqp
             }
         }
 
-        private static bool HasCloudEventsContentType(Message message, out string? contentType)
+        private static bool HasCloudEventsContentType(Message message, [NotNullWhen(true)] out string? contentType)
         {
             contentType = message.Properties.ContentType?.ToString();
             return MimeUtilities.IsCloudEventsContentType(contentType);
@@ -250,3 +251,22 @@ namespace CloudNative.CloudEvents.Amqp
         }
     }
 }
+
+#if NETSTANDARD2_0
+namespace System.Diagnostics.CodeAnalysis
+{
+    /// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
+    [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
+    internal sealed class NotNullWhenAttribute : Attribute
+    {
+        /// <summary>Initializes the attribute with the specified return value condition.</summary>
+        /// <param name="returnValue">
+        /// The return value condition. If the method returns this value, the associated parameter will not be null.
+        /// </param>
+        public NotNullWhenAttribute(bool returnValue) => ReturnValue = returnValue;
+
+        /// <summary>Gets the return value condition.</summary>
+        public bool ReturnValue { get; }
+    }
+}
+#endif

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="docopt.net" Version="0.8.1" />
+		<ProjectReference Include="..\..\src\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
+		<ProjectReference Include="..\..\src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj" />
+	</ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<SelfContained>true</SelfContained>
+		<PublishAot>true</PublishAot>
+		<DebugType>None</DebugType>
+		<DebugSymbols>False</DebugSymbols>
+	</PropertyGroup>
+</Project>
