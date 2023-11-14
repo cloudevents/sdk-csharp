@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation.
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -22,7 +22,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="stream">The stream to read from. Must not be null.</param>
         /// <returns>The content of the stream (from its original position), as a read-only memory segment.</returns>
-        public async static Task<ReadOnlyMemory<byte>> ToReadOnlyMemoryAsync(Stream stream)
+        public static async Task<ReadOnlyMemory<byte>> ToReadOnlyMemoryAsync(Stream stream)
         {
             Validation.CheckNotNull(stream, nameof(stream));
             // TODO: Optimize if it's already a MemoryStream? Will only work in some cases,

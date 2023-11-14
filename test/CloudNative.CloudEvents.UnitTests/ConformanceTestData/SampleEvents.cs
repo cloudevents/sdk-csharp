@@ -1,4 +1,4 @@
-﻿// Copyright 2023 Cloud Native Foundation.
+// Copyright 2023 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -10,9 +10,9 @@ namespace CloudNative.CloudEvents.UnitTests.ConformanceTestData;
 
 internal static class SampleEvents
 {
-    private static ConcurrentDictionary<string, CloudEvent> eventsById = new ConcurrentDictionary<string, CloudEvent>();
+    private static readonly ConcurrentDictionary<string, CloudEvent> eventsById = new ConcurrentDictionary<string, CloudEvent>();
 
-    private static IReadOnlyList<CloudEventAttribute> allExtensionAttributes = new List<CloudEventAttribute>()
+    private static readonly IReadOnlyList<CloudEventAttribute> allExtensionAttributes = new List<CloudEventAttribute>()
     {
         CloudEventAttribute.CreateExtension("extinteger", CloudEventAttributeType.Integer),
         CloudEventAttribute.CreateExtension("extboolean", CloudEventAttributeType.Boolean),

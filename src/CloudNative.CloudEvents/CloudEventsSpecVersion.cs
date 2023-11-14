@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -89,7 +89,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public CloudEventAttribute TypeAttribute { get; }
 
-        private Dictionary<string, CloudEventAttribute> attributesByName;
+        private readonly Dictionary<string, CloudEventAttribute> attributesByName;
 
         // TODO: What's the compatibility story? What might be in 1.1, and how would we handle that in 1.0?
 
