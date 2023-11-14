@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -44,7 +44,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public bool IsExtension { get; }
 
-        private Action<object>? validator;
+        private readonly Action<object>? validator;
 
         // TODO: Have a "mode" of Required/Optional/Extension?
 

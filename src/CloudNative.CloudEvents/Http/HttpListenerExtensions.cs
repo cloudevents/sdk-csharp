@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation.
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -138,7 +138,7 @@ namespace CloudNative.CloudEvents.Http
         /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
         /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
         /// <returns>A reference to a validated CloudEvent instance.</returns>
-        public async static Task<CloudEvent> ToCloudEventAsync(this HttpListenerRequest httpListenerRequest,
+        public static async Task<CloudEvent> ToCloudEventAsync(this HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             await ToCloudEventAsyncImpl(httpListenerRequest, formatter, extensionAttributes, async: true).ConfigureAwait(false);
 
@@ -164,7 +164,7 @@ namespace CloudNative.CloudEvents.Http
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             ToCloudEventAsyncImpl(httpListenerRequest, formatter, extensionAttributes, async: false).GetAwaiter().GetResult();
 
-        private async static Task<CloudEvent> ToCloudEventAsyncImpl(HttpListenerRequest httpListenerRequest,
+        private static async Task<CloudEvent> ToCloudEventAsyncImpl(HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, bool async)
         {
             Validation.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));
@@ -264,7 +264,7 @@ namespace CloudNative.CloudEvents.Http
             IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             ToCloudEventBatchInternalAsync(httpListenerRequest, formatter, extensionAttributes, async: false).GetAwaiter().GetResult();
 
-        private async static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpListenerRequest httpListenerRequest,
+        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, bool async)
         {
             Validation.CheckNotNull(httpListenerRequest, nameof(httpListenerRequest));

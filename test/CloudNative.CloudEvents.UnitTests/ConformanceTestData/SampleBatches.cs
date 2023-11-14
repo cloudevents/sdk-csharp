@@ -1,4 +1,4 @@
-﻿// Copyright 2023 Cloud Native Foundation.
+// Copyright 2023 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -11,7 +11,7 @@ namespace CloudNative.CloudEvents.UnitTests.ConformanceTestData;
 
 public static class SampleBatches
 {
-    private static ConcurrentDictionary<string, IReadOnlyList<CloudEvent>> batchesById = new ConcurrentDictionary<string, IReadOnlyList<CloudEvent>>();
+    private static readonly ConcurrentDictionary<string, IReadOnlyList<CloudEvent>> batchesById = new ConcurrentDictionary<string, IReadOnlyList<CloudEvent>>();
 
     private static readonly IReadOnlyList<CloudEvent> empty = Register("empty");
     private static readonly IReadOnlyList<CloudEvent> minimal = Register("minimal", SampleEvents.Minimal);

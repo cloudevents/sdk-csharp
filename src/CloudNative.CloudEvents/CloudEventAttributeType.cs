@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -105,16 +105,16 @@ namespace CloudNative.CloudEvents
             {
             }
 
-            public override sealed object Parse(string value) => ParseImpl(Validation.CheckNotNull(value, nameof(value)));
+            public sealed override object Parse(string value) => ParseImpl(Validation.CheckNotNull(value, nameof(value)));
 
-            public override sealed string Format(object value)
+            public sealed override string Format(object value)
             {
                 Validate(value);
                 // TODO: Avoid the double cast.
                 return FormatImpl((T) value);
             }
 
-            public override sealed void Validate(object value)
+            public sealed override void Validate(object value)
             {
                 Validation.CheckNotNull(value, nameof(value));
                 if (!ClrType.IsInstanceOfType(value))

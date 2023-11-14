@@ -1,4 +1,4 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -17,7 +17,7 @@ namespace HttpSend
 {
     // This application uses the McMaster.Extensions.CommandLineUtils library for parsing the command
     // line and calling the application code. The [Option] attributes designate the parameters.
-    class Program
+    internal class Program
     {
         [Option(Description = "CloudEvents 'source' (default: urn:example-com:mysource:abc)", LongName = "source", ShortName = "s")]
         private string Source { get; } = "urn:example-com:mysource:abc";
