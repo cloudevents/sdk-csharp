@@ -223,7 +223,7 @@ namespace CloudNative.CloudEvents.Http
             this HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter,
             params CloudEventAttribute[]? extensionAttributes) =>
-            ToCloudEventBatchAsync(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>?)extensionAttributes);
+            ToCloudEventBatchAsync(httpListenerRequest, formatter, (IEnumerable<CloudEventAttribute>?) extensionAttributes);
 
         /// <summary>
         /// Converts this HTTP request message into a CloudEvent batch.
@@ -263,7 +263,7 @@ namespace CloudNative.CloudEvents.Http
             CloudEventFormatter formatter,
             IEnumerable<CloudEventAttribute>? extensionAttributes) =>
             ToCloudEventBatchInternalAsync(httpListenerRequest, formatter, extensionAttributes, async: false).GetAwaiter().GetResult();
-        
+
         private async static Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpListenerRequest httpListenerRequest,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, bool async)
         {

@@ -76,7 +76,7 @@ namespace CloudNative.CloudEvents.Mqtt.UnitTests
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
         }
     }
 }

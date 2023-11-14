@@ -98,7 +98,7 @@ namespace CloudNative.CloudEvents
         /// or null if no such version is known.
         /// </summary>
         /// <param name="versionId">The version ID to check. May be null, in which case the result will be null.</param>
-        [return:NotNullIfNotNull(nameof(VersionId))]
+        [return: NotNullIfNotNull(nameof(VersionId))]
         public static CloudEventsSpecVersion? FromVersionId(string? versionId) =>
             allVersions.FirstOrDefault(version => version.VersionId == versionId);
 
@@ -159,7 +159,7 @@ namespace CloudNative.CloudEvents
 
         private static void NonEmptyString(object value)
         {
-            string text = (string)value;
+            string text = (string) value;
             if (text.Length == 0)
             {
                 throw new ArgumentException("Value must be non-empty");
@@ -179,7 +179,7 @@ namespace CloudNative.CloudEvents
         {
             try
             {
-                _ = new ContentType((string)value);
+                _ = new ContentType((string) value);
             }
             catch
             {

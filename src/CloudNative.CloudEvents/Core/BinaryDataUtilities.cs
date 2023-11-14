@@ -51,7 +51,7 @@ namespace CloudNative.CloudEvents.Core
             // It's safe to use memory.GetBuffer() and memory.Position here, as this is a stream
             // we've created using the parameterless constructor.
             var buffer = memory.GetBuffer();
-            return new ReadOnlyMemory<byte>(buffer, 0, (int)memory.Position);
+            return new ReadOnlyMemory<byte>(buffer, 0, (int) memory.Position);
         }
 
         /// <summary>

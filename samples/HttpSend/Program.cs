@@ -25,7 +25,7 @@ namespace HttpSend
         [Option(Description = "CloudEvents 'type' (default: com.example.myevent)", LongName = "type", ShortName = "t")]
         private string Type { get; } = "com.example.myevent";
 
-        [Required,Option(Description = "HTTP(S) address to send the event to", LongName = "url", ShortName = "u"),]
+        [Required, Option(Description = "HTTP(S) address to send the event to", LongName = "url", ShortName = "u"),]
         private Uri Url { get; }
 
         public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);

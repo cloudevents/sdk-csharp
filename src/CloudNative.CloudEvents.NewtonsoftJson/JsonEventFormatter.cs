@@ -211,7 +211,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 throw new ArgumentException($"Structured mode content does not represent a CloudEvent");
             }
             var specVersion = CloudEventsSpecVersion.FromVersionId((string?) specVersionToken)
-                ?? throw new ArgumentException($"Unsupported CloudEvents spec version '{(string?)specVersionToken}'");
+                ?? throw new ArgumentException($"Unsupported CloudEvents spec version '{(string?) specVersionToken}'");
 
             var cloudEvent = new CloudEvent(specVersion, extensionAttributes);
             PopulateAttributesFromStructuredEvent(cloudEvent, jObject);
@@ -247,10 +247,10 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
 
                 string? attributeValue = value.Type switch
                 {
-                    JTokenType.String => (string?)value,
-                    JTokenType.Boolean => CloudEventAttributeType.Boolean.Format((bool)value),
+                    JTokenType.String => (string?) value,
+                    JTokenType.Boolean => CloudEventAttributeType.Boolean.Format((bool) value),
                     JTokenType.Null => null,
-                    JTokenType.Integer => CloudEventAttributeType.Integer.Format((int)value),
+                    JTokenType.Integer => CloudEventAttributeType.Integer.Format((int) value),
                     _ => throw new ArgumentException($"Invalid token type '{value.Type}' for CloudEvent attribute")
                 };
                 if (attributeValue is null)
@@ -345,7 +345,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 throw new ArgumentException($"Structured mode property '{DataBase64PropertyName}' must be a string, when present.");
             }
-            cloudEvent.Data = Convert.FromBase64String((string?)dataBase64Token);
+            cloudEvent.Data = Convert.FromBase64String((string?) dataBase64Token);
         }
 
         /// <summary>
@@ -696,7 +696,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// <inheritdoc />
         protected override void EncodeStructuredModeData(CloudEvent cloudEvent, JsonWriter writer)
         {
-            T data = (T)cloudEvent.Data;
+            T data = (T) cloudEvent.Data;
             writer.WritePropertyName(DataPropertyName);
             Serializer.Serialize(writer, data);
         }

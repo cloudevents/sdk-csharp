@@ -26,7 +26,7 @@ public class ConformanceTestFile
             test.TestType ??= testFile.TestType;
         }
         return testFile;
-    }    
+    }
 }
 
 public class JsonConformanceTest
@@ -43,7 +43,7 @@ public class JsonConformanceTest
 }
 
 public enum ConformanceTestType
-{    
+{
     ValidSingleEvent,
     ValidBatch,
     InvalidSingleEvent,

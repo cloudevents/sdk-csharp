@@ -33,8 +33,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var event1 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
             var event2 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
 
-            JObject data1 = (JObject)event1.Data!;
-            JObject data2 = (JObject)event2.Data!;
+            JObject data1 = (JObject) event1.Data!;
+            JObject data2 = (JObject) event2.Data!;
 
             var property1 = data1.Properties().Single();
             var property2 = data2.Properties().Single();
@@ -49,8 +49,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var event1 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
             var event2 = formatter.DecodeStructuredModeMessage(CreateJsonStream(), null, null);
 
-            JObject data1 = (JObject)event1.Data!;
-            JObject data2 = (JObject)event2.Data!;
+            JObject data1 = (JObject) event1.Data!;
+            JObject data2 = (JObject) event2.Data!;
 
             var property1 = data1.Properties().Single();
             var property2 = data2.Properties().Single();

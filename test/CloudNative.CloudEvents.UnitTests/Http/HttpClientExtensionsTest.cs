@@ -216,7 +216,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 };
 
                 await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Binary, new JsonEventFormatter());
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
             });
 
             var httpClient = new HttpClient();
@@ -283,7 +283,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
                 // The non-ASCII attribute value should have been correctly URL-decoded.
                 Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
-                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+                context.Response.StatusCode = (int) HttpStatusCode.NoContent;
                 return Task.CompletedTask;
             });
 
@@ -314,7 +314,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
                 };
 
                 await cloudEvent.CopyToHttpListenerResponseAsync(context.Response, ContentMode.Structured, new JsonEventFormatter());
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
             });
 
             var httpClient = new HttpClient();
@@ -384,7 +384,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
                 Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
                 Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
-                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+                context.Response.StatusCode = (int) HttpStatusCode.NoContent;
                 return Task.CompletedTask;
             });
 

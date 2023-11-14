@@ -57,7 +57,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 Data = "<much wow=\"xml\"/>",
                 ["comexampleextension1"] = "value"
             };
-       
+
             var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, new JsonEventFormatter());
 
             Assert.True(message.IsCloudEvent());
@@ -79,7 +79,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -126,7 +126,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
             Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
 
-            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
         }
 
         [Theory]
@@ -176,8 +176,8 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
             Assert.Equal(contentType, receivedCloudEvent.DataContentType);
             Assert.Equal(expectedDecodedResult, receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", (string?)receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
-            Assert.Equal("value", (string?)receivedCloudEvent["comexampleextension1"]);
+            Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
+            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -207,12 +207,12 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 {
                     return null;
                 }
-                else 
+                else
                 {
                     var surrogate = serializer.Deserialize<List<Header>>(reader)!;
                     var headers = new Headers();
 
-                    foreach(var header in surrogate)
+                    foreach (var header in surrogate)
                     {
                         headers.Add(header.Key, header.GetValueBytes());
                     }
@@ -247,7 +247,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
 
             public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
             {
-                var header = (IHeader)value!;
+                var header = (IHeader) value!;
                 var container = new HeaderContainer { Key = header.Key, Value = header.GetValueBytes() };
                 serializer.Serialize(writer, container);
             }

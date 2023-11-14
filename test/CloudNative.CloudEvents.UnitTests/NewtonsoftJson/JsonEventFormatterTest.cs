@@ -1176,7 +1176,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             string text = BinaryDataUtilities.GetString(data, Encoding.UTF8);
             var serializer = new JsonSerializer
             {
-                DateParseHandling = DateParseHandling.None                
+                DateParseHandling = DateParseHandling.None
             };
             return serializer.Deserialize<T>(new JsonTextReader(new StringReader(text)))!;
         }

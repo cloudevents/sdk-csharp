@@ -183,7 +183,7 @@ namespace CloudNative.CloudEvents
                 Validation.CheckNotNull(attributeName, nameof(attributeName));
                 Validation.CheckArgument(attributeName != CloudEventsSpecVersion.SpecVersionAttributeName, nameof(attributeName), () => Strings.ErrorCannotIndexBySpecVersionAttribute);
                 return attributeValues.GetValueOrDefault(Validation.CheckNotNull(attributeName, nameof(attributeName)));
-            }            
+            }
             set
             {
                 Validation.CheckNotNull(attributeName, nameof(attributeName));
@@ -229,7 +229,7 @@ namespace CloudNative.CloudEvents
         public string? DataContentType
         {
             // TODO: Guard against a version that doesn't have this attribute?
-            get => (string?)this[SpecVersion.DataContentTypeAttribute];
+            get => (string?) this[SpecVersion.DataContentTypeAttribute];
             set => this[SpecVersion.DataContentTypeAttribute] = value;
         }
 
@@ -239,7 +239,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public string? Id
         {
-            get => (string?)this[SpecVersion.IdAttribute];
+            get => (string?) this[SpecVersion.IdAttribute];
             set => this[SpecVersion.IdAttribute] = value;
         }
 
@@ -250,7 +250,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public Uri? DataSchema
         {
-            get => (Uri?)this[SpecVersion.DataSchemaAttribute];
+            get => (Uri?) this[SpecVersion.DataSchemaAttribute];
             set => this[SpecVersion.DataSchemaAttribute] = value;
         }
 
@@ -262,7 +262,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public Uri? Source
         {
-            get => (Uri?)this[SpecVersion.SourceAttribute];
+            get => (Uri?) this[SpecVersion.SourceAttribute];
             set => this[SpecVersion.SourceAttribute] = value;
         }
 
@@ -280,7 +280,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public string? Subject
         {
-            get => (string?)this[SpecVersion.SubjectAttribute];
+            get => (string?) this[SpecVersion.SubjectAttribute];
             set => this[SpecVersion.SubjectAttribute] = value;
         }
 
@@ -290,7 +290,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public DateTimeOffset? Time
         {
-            get => (DateTimeOffset?)this[SpecVersion.TimeAttribute];
+            get => (DateTimeOffset?) this[SpecVersion.TimeAttribute];
             set => this[SpecVersion.TimeAttribute] = value;
         }
 
@@ -301,7 +301,7 @@ namespace CloudNative.CloudEvents
         /// </summary>
         public string? Type
         {
-            get => (string?)this[SpecVersion.TypeAttribute];
+            get => (string?) this[SpecVersion.TypeAttribute];
             set => this[SpecVersion.TypeAttribute] = value;
         }
 

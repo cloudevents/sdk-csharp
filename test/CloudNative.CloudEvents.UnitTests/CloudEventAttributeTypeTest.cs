@@ -74,9 +74,9 @@ namespace CloudNative.CloudEvents.UnitTests
             [Theory]
             [InlineData("")]
             // Examples from https://en.wikipedia.org/wiki/Base64
-            [InlineData("TWFu", (byte) 77, (byte)97, (byte) 110)]
-            [InlineData("TWE=", (byte)77, (byte)97)]
-            [InlineData("TQ==", (byte)77)]
+            [InlineData("TWFu", (byte) 77, (byte) 97, (byte) 110)]
+            [InlineData("TWE=", (byte) 77, (byte) 97)]
+            [InlineData("TQ==", (byte) 77)]
             public void ParseAndFormat_Valid(string text, params byte[] bytes)
             {
                 var parsedBytes = CloudEventAttributeType.Binary.Parse(text);
@@ -199,7 +199,7 @@ namespace CloudNative.CloudEvents.UnitTests
             [InlineData(0x20, 0xd800)] // High surrogate at end of string
             public void InvalidSurrogates(int first, int second)
             {
-                string text = $"{(char)first}{(char)second}";
+                string text = $"{(char) first}{(char) second}";
                 Assert.Throws<ArgumentException>(() => CloudEventAttributeType.String.Validate(text));
             }
         }

@@ -122,7 +122,7 @@ namespace CloudNative.CloudEvents
                     throw new ArgumentException($"Value of type {value.GetType()} is incompatible with expected type {ClrType}", nameof(value));
                 }
 
-                ValidateImpl((T)Validation.CheckNotNull(value, nameof(value)));
+                ValidateImpl((T) Validation.CheckNotNull(value, nameof(value)));
             }
 
             protected abstract T ParseImpl(string value);
@@ -168,12 +168,12 @@ namespace CloudNative.CloudEvents
                     // Directly from the spec
                     if (c <= 0x1f || (c >= 0x7f && c <= 0x9f))
                     {
-                        throw new ArgumentException($"Control character U+{(ushort)c:x4} is not permitted in string attributes");
+                        throw new ArgumentException($"Control character U+{(ushort) c:x4} is not permitted in string attributes");
                     }
                     // First two ranges in http://www.unicode.org/faq/private_use.html#noncharacters
                     if (c >= 0xfffe || (c >= 0xfdd0 && c <= 0xfdef))
                     {
-                        throw new ArgumentException($"Noncharacter U+{(ushort)c:x4} is not permitted in string attributes");
+                        throw new ArgumentException($"Noncharacter U+{(ushort) c:x4} is not permitted in string attributes");
                     }
 
                     // Handle surrogate pairs, based on this character and whether the last character was a high surrogate.
@@ -185,7 +185,7 @@ namespace CloudNative.CloudEvents
                         {
                             if (lastCharWasHighSurrogate)
                             {
-                                throw new ArgumentException($"High surrogate character U+{(ushort)value[i - 1]:x4} must be followed by a low surrogate character");
+                                throw new ArgumentException($"High surrogate character U+{(ushort) value[i - 1]:x4} must be followed by a low surrogate character");
                             }
                             lastCharWasHighSurrogate = true;
                         }
@@ -193,7 +193,7 @@ namespace CloudNative.CloudEvents
                         {
                             if (!lastCharWasHighSurrogate)
                             {
-                                throw new ArgumentException($"Low surrogate character U+{(ushort)c:x4} must be preceded by a high surrogate character");
+                                throw new ArgumentException($"Low surrogate character U+{(ushort) c:x4} must be preceded by a high surrogate character");
                             }
                             // Convert the surrogate pair to validate it's not a non-character.
                             // This is the third rule in http://www.unicode.org/faq/private_use.html#noncharacters
@@ -208,12 +208,12 @@ namespace CloudNative.CloudEvents
                     }
                     else if (lastCharWasHighSurrogate)
                     {
-                        throw new ArgumentException($"High surrogate character U+{(ushort)value[i - 1]:x4} must be followed by a low surrogate character");
+                        throw new ArgumentException($"High surrogate character U+{(ushort) value[i - 1]:x4} must be followed by a low surrogate character");
                     }
                 }
                 if (lastCharWasHighSurrogate)
                 {
-                    throw new ArgumentException($"String must not end with high surrogate character U+{(ushort)value[value.Length - 1]:x4}");
+                    throw new ArgumentException($"String must not end with high surrogate character U+{(ushort) value[value.Length - 1]:x4}");
                 }
             }
         }

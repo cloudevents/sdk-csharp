@@ -92,7 +92,7 @@ namespace CloudNative.CloudEvents.Avro
             {
                 throw new ArgumentException($"Record has no '{AttributeName}' field");
             }
-            IDictionary<string, object> recordAttributes = (IDictionary<string, object>)attrObj;
+            IDictionary<string, object> recordAttributes = (IDictionary<string, object>) attrObj;
 
             if (!recordAttributes.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var versionId) ||
                 !(versionId is string versionIdString))
@@ -131,7 +131,7 @@ namespace CloudNative.CloudEvents.Avro
                 }
                 else if (value is string)
                 {
-                    cloudEvent.SetAttributeFromString(key, (string)value);
+                    cloudEvent.SetAttributeFromString(key, (string) value);
                 }
                 else
                 {
