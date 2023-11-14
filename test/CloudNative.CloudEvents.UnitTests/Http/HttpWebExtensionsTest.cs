@@ -56,11 +56,11 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
                 Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
                 Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
-                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+                context.Response.StatusCode = (int) HttpStatusCode.NoContent;
                 return Task.CompletedTask;
             });
 
-            var result = (HttpWebResponse)await httpWebRequest.GetResponseAsync();
+            var result = (HttpWebResponse) await httpWebRequest.GetResponseAsync();
             var content = new StreamReader(result.GetResponseStream()).ReadToEnd();
             Assert.True(result.StatusCode == HttpStatusCode.NoContent, content);
         }
@@ -100,7 +100,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
 
                 Assert.Equal("value", receivedCloudEvent["comexampleextension1"]);
                 Assert.Equal("æøå", receivedCloudEvent["utf8examplevalue"]);
-                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+                context.Response.StatusCode = (int) HttpStatusCode.NoContent;
                 return Task.CompletedTask;
             });
 

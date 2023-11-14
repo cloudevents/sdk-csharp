@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation.
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -229,7 +229,7 @@ namespace CloudNative.CloudEvents.Protobuf
                     // Note: impossible to cover in tests
                     throw new ArgumentException($"Unhandled protobuf attribute case: {pair.Value.AttrCase}", paramName);
                 }
-                
+
                 // If we've already got an extension attribute specified for this name,
                 // we validate against it and require the value in the proto to have the right
                 // type. Otherwise, we create a new extension attribute of the correct type.
@@ -254,7 +254,7 @@ namespace CloudNative.CloudEvents.Protobuf
                     throw new ArgumentException(
                         $"Attribute '{attr.Name}' was specified with type '{attr.Type}', but has type '{attrTypeFromProto}' in the protobuf representation.");
                 }
-                
+
                 // Note: the indexer performs validation.
                 cloudEvent[attr] = pair.Value.AttrCase switch
                 {

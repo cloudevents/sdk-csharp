@@ -51,7 +51,7 @@ namespace CloudNative.CloudEvents.Extensions
 
         private static void PositiveInteger(object value)
         {
-            if ((int)value <= 0)
+            if ((int) value <= 0)
             {
                 throw new ArgumentOutOfRangeException("Sampled rate must be positive.");
             }

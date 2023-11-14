@@ -27,7 +27,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, null, null);
 
-            var model = (AttributedModel)cloudEvent.Data!;
+            var model = (AttributedModel) cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
@@ -41,7 +41,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, new ContentType("text/plain"), null);
 
-            var model = (AttributedModel)cloudEvent.Data!;
+            var model = (AttributedModel) cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
@@ -77,7 +77,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var cloudEvent = new CloudEvent();
             formatter.DecodeBinaryModeEventData(bytes, cloudEvent);
 
-            var model = (AttributedModel)cloudEvent.Data!;
+            var model = (AttributedModel) cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 

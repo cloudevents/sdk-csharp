@@ -26,7 +26,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, null, null);
 
-            var model = (AttributedModel)cloudEvent.Data!;
+            var model = (AttributedModel) cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
@@ -40,7 +40,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var formatter = CreateFormatter<AttributedModel>();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, new ContentType("text/plain"), null);
 
-            var model = (AttributedModel)cloudEvent.Data!;
+            var model = (AttributedModel) cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
@@ -76,7 +76,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var cloudEvent = new CloudEvent();
             formatter.DecodeBinaryModeEventData(bytes, cloudEvent);
 
-            var model = (AttributedModel)cloudEvent.Data!;
+            var model = (AttributedModel) cloudEvent.Data!;
             Assert.Equal("test", model.AttributedProperty);
         }
 
@@ -98,7 +98,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             var body = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
             var jobject = JsonEventFormatterTest.ParseJson(body);
             Assert.False(jobject.ContainsKey("data_base64"));
-            var data = (JObject)jobject["data"]!;
+            var data = (JObject) jobject["data"]!;
 
             new JTokenAsserter
             {

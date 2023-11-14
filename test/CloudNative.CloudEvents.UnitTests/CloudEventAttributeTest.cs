@@ -59,7 +59,7 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             var attr = CloudEventsSpecVersion.V1_0.TimeAttribute;
             Assert.Equal("time", attr.Name);
-            Assert.Equal("time", attr.ToString()); 
+            Assert.Equal("time", attr.ToString());
             Assert.Equal(CloudEventAttributeType.Timestamp, attr.Type);
             Assert.False(attr.IsRequired);
             Assert.False(attr.IsExtension);
@@ -152,7 +152,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
         private void ValidateNonNegative(object value)
         {
-            if ((int)value < 0)
+            if ((int) value < 0)
             {
                 throw new Exception("Custom validation message");
             }

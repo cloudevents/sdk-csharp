@@ -61,9 +61,9 @@ namespace CloudNative.CloudEvents.Avro.UnitTests
             Assert.Equal(MediaTypeNames.Text.Xml, cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
-            Assert.Equal("value", (string?)cloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?) cloudEvent["comexampleextension1"]);
         }
-        
+
         [Fact]
         public void StructuredParseWithExtensionsSuccess()
         {

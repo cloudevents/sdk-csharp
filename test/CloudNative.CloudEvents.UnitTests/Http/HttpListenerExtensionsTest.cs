@@ -305,7 +305,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             {
                 executed = true;
                 result = await handler(context);
-                context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+                context.Response.StatusCode = (int) HttpStatusCode.NoContent;
             };
 
             var httpClient = new HttpClient();

@@ -30,7 +30,7 @@ namespace CloudNative.CloudEvents.Amqp.UnitTests
         {
             // The AMQPNetLite library is factored such that we don't need to do a wire test here.
             var cloudEvent = CreateSampleCloudEvent();
-            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, new JsonEventFormatter());            
+            var message = cloudEvent.ToAmqpMessage(ContentMode.Binary, new JsonEventFormatter());
             Assert.True(message.IsCloudEvent());
             var encodedAmqpMessage = message.Encode();
 

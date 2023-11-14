@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -158,7 +158,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             {
                 if (cloudEvent.DataContentType == TextBinaryContentType && dataBase64Token.Type == JTokenType.String)
                 {
-                    cloudEvent.Data = Encoding.UTF8.GetString(Convert.FromBase64String((string)dataBase64Token!));
+                    cloudEvent.Data = Encoding.UTF8.GetString(Convert.FromBase64String((string) dataBase64Token!));
                 }
                 else
                 {
@@ -170,7 +170,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
             {
                 if (cloudEvent.DataContentType == GuidContentType && dataToken.Type == JTokenType.String)
                 {
-                    string text = (string)dataToken!;
+                    string text = (string) dataToken!;
                     if (!text.StartsWith(GuidPrefix))
                     {
                         throw new ArgumentException("Invalid GUID text data");

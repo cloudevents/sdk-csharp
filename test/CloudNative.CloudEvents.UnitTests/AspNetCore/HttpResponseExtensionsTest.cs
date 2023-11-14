@@ -29,7 +29,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             var formatter = new JsonEventFormatter();
             var response = CreateResponse();
             await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter);
-            
+
             var content = GetContent(response);
             Assert.Equal("text/plain", response.ContentType);
             Assert.Equal("plain text", Encoding.UTF8.GetString(content.Span));
@@ -76,7 +76,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             var formatter = new JsonEventFormatter();
             var response = CreateResponse();
-            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => cloudEvent.CopyToHttpResponseAsync(response, (ContentMode)100, formatter));
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => cloudEvent.CopyToHttpResponseAsync(response, (ContentMode) 100, formatter));
         }
 
         [Fact]
@@ -117,7 +117,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             var parsedBatch = new JsonEventFormatter().DecodeBatchModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
             AssertBatchesEqual(batch, parsedBatch);
         }
-        
+
         private static HttpResponse CreateResponse() => new DefaultHttpResponse(new DefaultHttpContext()) { Body = new MemoryStream() };
         private static ReadOnlyMemory<byte> GetContent(HttpResponse response)
         {

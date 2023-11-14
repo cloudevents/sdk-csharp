@@ -37,7 +37,7 @@ namespace CloudNative.CloudEvents.UnitTests
             Assert.Equal(MediaTypeNames.Text.Xml, cloudEvent.DataContentType);
             Assert.Equal("<much wow=\"xml\"/>", cloudEvent.Data);
 
-            Assert.Equal("value", (string?)cloudEvent["comexampleextension1"]);
+            Assert.Equal("value", (string?) cloudEvent["comexampleextension1"]);
         }
 
         [Fact]
@@ -47,7 +47,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
             var cloudEvent = new CloudEvent(new[] { extension })
             {
-                Type =  "com.github.pull.create",
+                Type = "com.github.pull.create",
                 Id = "A234-1234-1234",
                 Time = sampleTimestamp,
                 [extension] = 10
@@ -263,10 +263,10 @@ namespace CloudNative.CloudEvents.UnitTests
         public void Indexer_NullKey_Throws()
         {
             var cloudEvent = new CloudEvent();
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string)null!]);
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute)null!]);
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string)null!] = "text");
-            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute)null!] = "text");
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string) null!]);
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute) null!]);
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(string) null!] = "text");
+            Assert.Throws<ArgumentNullException>(() => cloudEvent[(CloudEventAttribute) null!] = "text");
         }
 
         [Fact]

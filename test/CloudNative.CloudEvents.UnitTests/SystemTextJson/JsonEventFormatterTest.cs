@@ -435,7 +435,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var array = BinaryDataUtilities.AsArray(data);
             Assert.Equal(array, SampleBinaryData);
         }
-        
+
         // Note: batch mode testing is restricted to the batch aspects; we assume that the
         // per-CloudEvent implementation is shared with structured mode, so we rely on
         // structured mode testing for things like custom serialization.
@@ -469,7 +469,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
             var array = ParseJson(bytes).EnumerateArray().ToList();
             Assert.Equal(2, array.Count);
-            
+
             var asserter1 = new JsonElementAsserter
             {
                 { "specversion", JsonValueKind.String, "1.0" },
@@ -672,10 +672,10 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
             var formatter = new JsonEventFormatter();
             var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, s_jsonCloudEventContentType, AllTypesExtensions);
             Assert.Equal(SampleBinaryData, cloudEvent["binary"]);
-            Assert.True((bool)cloudEvent["boolean"]!);
+            Assert.True((bool) cloudEvent["boolean"]!);
             Assert.Equal(10, cloudEvent["integer"]);
             Assert.Equal("text", cloudEvent["string"]);
-            AssertTimestampsEqual(SampleTimestamp, (DateTimeOffset)cloudEvent["timestamp"]!);
+            AssertTimestampsEqual(SampleTimestamp, (DateTimeOffset) cloudEvent["timestamp"]!);
             Assert.Equal(SampleUri, cloudEvent["uri"]);
             Assert.Equal(SampleUriReference, cloudEvent["urireference"]);
         }

@@ -56,7 +56,7 @@ public class ConformanceTest
         // We don't have a convenience method for batches, so serialize the array back to JSON.
         var json = test.Batch.ToString();
         var body = Encoding.UTF8.GetBytes(json);
-        IReadOnlyList<CloudEvent> actual = new JsonEventFormatter().DecodeBatchModeMessage(body, contentType: null, extensions);        
+        IReadOnlyList<CloudEvent> actual = new JsonEventFormatter().DecodeBatchModeMessage(body, contentType: null, extensions);
         TestHelpers.AssertBatchesEqual(expected, actual, TestHelpers.InstantOnlyTimestampComparer);
     }
 

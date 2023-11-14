@@ -51,7 +51,7 @@ namespace CloudNative.CloudEvents
         {
             // TODO: Check this and add a test
             Validation.CheckNotNull(input, nameof(input));
-            
+
             if (input.Length < MinLength) // "yyyy-MM-ddTHH:mm:ssZ" is the shortest possible value.
             {
                 result = default;

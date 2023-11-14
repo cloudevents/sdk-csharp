@@ -56,7 +56,7 @@ public class JsonConformanceTest
 }
 
 public enum ConformanceTestType
-{    
+{
     ValidSingleEvent,
     ValidBatch,
     InvalidSingleEvent,

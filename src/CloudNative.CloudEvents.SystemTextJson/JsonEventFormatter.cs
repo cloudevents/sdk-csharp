@@ -331,7 +331,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
             {
                 // If no content type has been specified, default to application/json
                 cloudEvent.DataContentType ??= JsonMediaType;
-                
+
                 DecodeStructuredModeDataProperty(dataElement, cloudEvent);
             }
         }
@@ -677,7 +677,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
             {
                 return Array.Empty<byte>();
             }
-            T data = (T)cloudEvent.Data;
+            T data = (T) cloudEvent.Data;
             return JsonSerializer.SerializeToUtf8Bytes(data, SerializerOptions);
         }
 
@@ -697,7 +697,7 @@ namespace CloudNative.CloudEvents.SystemTextJson
         /// <inheritdoc />
         protected override void EncodeStructuredModeData(CloudEvent cloudEvent, Utf8JsonWriter writer)
         {
-            T data = (T)cloudEvent.Data;
+            T data = (T) cloudEvent.Data;
             writer.WritePropertyName(DataPropertyName);
             JsonSerializer.Serialize(writer, data, SerializerOptions);
         }

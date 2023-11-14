@@ -185,7 +185,7 @@ namespace CloudNative.CloudEvents
         /// <param name="cloudEvent">The CloudEvent to get or infer the data content type from. Must not be null.</param>
         /// <returns>The data content type of the CloudEvent, or null for no data content type.</returns>
         public virtual string? GetOrInferDataContentType(CloudEvent cloudEvent)
-        {                     
+        {
             Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
             return cloudEvent.DataContentType is string dataContentType ? dataContentType
                 : cloudEvent.Data is not object data ? null

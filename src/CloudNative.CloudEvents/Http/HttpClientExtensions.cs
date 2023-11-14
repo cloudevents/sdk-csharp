@@ -60,7 +60,7 @@ namespace CloudNative.CloudEvents.Http
             Validation.CheckNotNull(httpRequestMessage, nameof(httpRequestMessage));
             return HasCloudEventsBatchContentType(httpRequestMessage.Content);
         }
-        
+
         /// <summary>
         /// Indicates whether this <see cref="HttpResponseMessage"/> holds a batch of CloudEvents.
         /// </summary>
