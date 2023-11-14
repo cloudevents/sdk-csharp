@@ -2,8 +2,8 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-using CloudNative.CloudEvents.Http;
 using CloudNative.CloudEvents.Core;
+using CloudNative.CloudEvents.Http;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
