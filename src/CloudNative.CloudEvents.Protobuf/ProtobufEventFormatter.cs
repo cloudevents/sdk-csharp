@@ -12,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Text;
-using System.Threading.Tasks;
 using static CloudNative.CloudEvents.V1.CloudEvent;
 using static CloudNative.CloudEvents.V1.CloudEvent.Types;
 using static CloudNative.CloudEvents.V1.CloudEvent.Types.CloudEventAttributeValue;

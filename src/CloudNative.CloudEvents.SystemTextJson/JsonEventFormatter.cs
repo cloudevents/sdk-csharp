@@ -10,7 +10,6 @@ using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace CloudNative.CloudEvents.SystemTextJson
 {

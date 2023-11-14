@@ -3,7 +3,6 @@
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.NewtonsoftJson;
-using System.Text;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 

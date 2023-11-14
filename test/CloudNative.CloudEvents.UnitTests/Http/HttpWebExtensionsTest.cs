@@ -6,7 +6,6 @@ using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Mime;
 using System.Threading.Tasks;

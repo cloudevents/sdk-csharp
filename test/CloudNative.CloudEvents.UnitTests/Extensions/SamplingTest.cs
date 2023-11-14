@@ -4,7 +4,6 @@
 
 using CloudNative.CloudEvents.NewtonsoftJson;
 using System;
-using System.Text;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 

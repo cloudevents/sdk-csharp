@@ -3,8 +3,8 @@
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.AspNetCoreSample;
-using CloudNative.CloudEvents.NewtonsoftJson;
 using CloudNative.CloudEvents.Http;
+using CloudNative.CloudEvents.NewtonsoftJson;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System;
 using System.Net;
