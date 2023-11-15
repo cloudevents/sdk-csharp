@@ -185,7 +185,7 @@ namespace CloudNative.CloudEvents.Avro
             // will fail and that's okay since the type is useless without the proper schema.
             using var sr = new StreamReader(typeof(AvroEventFormatter)
                 .Assembly
-                .GetManifestResourceStream("CloudNative.CloudEvents.Avro.AvroSchema.json"));
+                .GetManifestResourceStream("CloudNative.CloudEvents.Avro.AvroSchema.json")!);
 
             return (RecordSchema) Schema.Parse(sr.ReadToEnd());
         }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -345,7 +345,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             {
                 throw new ArgumentException($"Structured mode property '{DataBase64PropertyName}' must be a string, when present.");
             }
-            cloudEvent.Data = Convert.FromBase64String((string?) dataBase64Token);
+            cloudEvent.Data = Convert.FromBase64String((string) dataBase64Token!);
         }
 
         /// <summary>
@@ -498,7 +498,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
         /// </summary>
         /// <param name="data">The CloudEvent to infer the data content from. Must not be null.</param>
         /// <returns>The inferred data content type, or null if no inference is performed.</returns>
-        protected override string? InferDataContentType(object data) => data is byte[]? null : JsonMediaType;
+        protected override string? InferDataContentType(object data) => data is byte[] ? null : JsonMediaType;
 
         /// <summary>
         /// Encodes structured mode data within a CloudEvent, writing it to the specified <see cref="JsonWriter"/>.
@@ -524,7 +524,14 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             }
             else
             {
-                ContentType dataContentType = new ContentType(GetOrInferDataContentType(cloudEvent));
+                string? dataContentTypeText = GetOrInferDataContentType(cloudEvent);
+                // This would only happen in a derived class which overrides GetOrInferDataContentType further...
+                // This class infers application/json for anything other than byte arrays.
+                if (dataContentTypeText is null)
+                {
+                    throw new ArgumentException("Data content type cannot be inferred");
+                }
+                ContentType dataContentType = new ContentType(dataContentTypeText);
                 if (IsJsonMediaType(dataContentType.MediaType))
                 {
                     writer.WritePropertyName(DataPropertyName);

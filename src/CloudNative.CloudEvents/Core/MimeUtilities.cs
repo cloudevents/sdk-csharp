@@ -1,8 +1,9 @@
-﻿// Copyright 2021 Cloud Native Foundation.
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
@@ -57,7 +58,7 @@ namespace CloudNative.CloudEvents.Core
             var header = new MediaTypeHeaderValue(contentType.MediaType);
             foreach (string parameterName in contentType.Parameters.Keys)
             {
-                header.Parameters.Add(new NameValueHeaderValue(parameterName, contentType.Parameters[parameterName].ToString()));
+                header.Parameters.Add(new NameValueHeaderValue(parameterName, contentType.Parameters[parameterName]));
             }
             return header;
         }
@@ -76,7 +77,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="contentType">The content type to check. May be null, in which case the result is false.</param>
         /// <returns>true if the given content type denotes a (non-batch) CloudEvent; false otherwise</returns>
-        public static bool IsCloudEventsContentType(string? contentType) =>
+        public static bool IsCloudEventsContentType([NotNullWhen(true)] string? contentType) =>
             contentType is string &&
             contentType.StartsWith(MediaType, StringComparison.InvariantCultureIgnoreCase) &&
             !contentType.StartsWith(BatchMediaType, StringComparison.InvariantCultureIgnoreCase);
@@ -86,7 +87,7 @@ namespace CloudNative.CloudEvents.Core
         /// </summary>
         /// <param name="contentType">The content type to check. May be null, in which case the result is false.</param>
         /// <returns>true if the given content type represents a CloudEvent batch; false otherwise</returns>
-        public static bool IsCloudEventsBatchContentType(string? contentType) =>
+        public static bool IsCloudEventsBatchContentType([NotNullWhen(true)] string? contentType) =>
             contentType is string && contentType.StartsWith(BatchMediaType, StringComparison.InvariantCultureIgnoreCase);
     }
 }

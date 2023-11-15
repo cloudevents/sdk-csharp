@@ -1,10 +1,11 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -130,7 +131,7 @@ namespace CloudNative.CloudEvents.Http
             return ToCloudEventInternalAsync(httpRequestMessage.Headers, httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
         }
 
-        private static async Task<CloudEvent> ToCloudEventInternalAsync(HttpHeaders headers, HttpContent content,
+        private static async Task<CloudEvent> ToCloudEventInternalAsync(HttpHeaders headers, HttpContent? content,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
         {
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -142,7 +143,7 @@ namespace CloudNative.CloudEvents.Http
             }
             else
             {
-                string? versionId = MaybeGetVersionId(headers) ?? MaybeGetVersionId(content.Headers);
+                string? versionId = MaybeGetVersionId(headers) ?? MaybeGetVersionId(content?.Headers);
                 if (versionId is null)
                 {
                     throw new ArgumentException($"Request does not represent a CloudEvent. It has neither a {HttpUtilities.SpecVersionHttpHeader} header, nor a suitable content type.", nameof(paramName));
@@ -151,7 +152,8 @@ namespace CloudNative.CloudEvents.Http
                     ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", paramName);
 
                 var cloudEvent = new CloudEvent(version, extensionAttributes);
-                foreach (var header in headers.Concat(content.Headers))
+                var allHeaders = content is null ? headers : headers.Concat(content.Headers);
+                foreach (var header in allHeaders)
                 {
                     string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(header.Key);
                     if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
@@ -231,7 +233,7 @@ namespace CloudNative.CloudEvents.Http
             return ToCloudEventBatchInternalAsync(httpRequestMessage.Content, formatter, extensionAttributes, nameof(httpRequestMessage));
         }
 
-        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpContent content,
+        private static async Task<IReadOnlyList<CloudEvent>> ToCloudEventBatchInternalAsync(HttpContent? content,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
         {
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -331,16 +333,16 @@ namespace CloudNative.CloudEvents.Http
         }
 
         private static ByteArrayContent ToByteArrayContent(ReadOnlyMemory<byte> content) =>
-            MemoryMarshal.TryGetArray(content, out var segment)
+            MemoryMarshal.TryGetArray(content, out var segment) && segment.Array is not null
             ? new ByteArrayContent(segment.Array, segment.Offset, segment.Count)
             // TODO: Just throw?
             : new ByteArrayContent(content.ToArray());
 
         // TODO: This would include "application/cloudeventsarerubbish" for example...
-        private static bool HasCloudEventsContentType(HttpContent content) =>
+        private static bool HasCloudEventsContentType([NotNullWhen(true)] HttpContent? content) =>
             MimeUtilities.IsCloudEventsContentType(content?.Headers?.ContentType?.MediaType);
 
-        private static bool HasCloudEventsBatchContentType(HttpContent content) =>
+        private static bool HasCloudEventsBatchContentType([NotNullWhen(true)] HttpContent? content) =>
             MimeUtilities.IsCloudEventsBatchContentType(content?.Headers?.ContentType?.MediaType);
 
         private static string? MaybeGetVersionId(HttpHeaders? headers) =>

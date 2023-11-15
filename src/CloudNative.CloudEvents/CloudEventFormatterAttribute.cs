@@ -56,7 +56,7 @@ namespace CloudNative.CloudEvents
                 throw new ArgumentException($"The {nameof(CloudEventFormatterAttribute)} on type {targetType} has no converter type specified.", nameof(targetType));
             }
 
-            object instance;
+            object? instance;
             try
             {
                 instance = Activator.CreateInstance(formatterType);

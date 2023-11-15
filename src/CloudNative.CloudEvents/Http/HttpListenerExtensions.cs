@@ -179,7 +179,7 @@ namespace CloudNative.CloudEvents.Http
             }
             else
             {
-                string versionId = httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader];
+                string? versionId = httpListenerRequest.Headers[HttpUtilities.SpecVersionHttpHeader];
                 if (versionId is null)
                 {
                     throw new ArgumentException($"Request does not represent a CloudEvent. It has neither a {HttpUtilities.SpecVersionHttpHeader} header, nor a suitable content type.", nameof(httpListenerRequest));
@@ -191,12 +191,18 @@ namespace CloudNative.CloudEvents.Http
                 var headers = httpListenerRequest.Headers;
                 foreach (var key in headers.AllKeys)
                 {
+                    // It would be highly unusual for either the key or the value to be null, but
+                    // the contract claims it's possible. Skip it if so.
+                    if (key is null || headers[key] is not string headerValue)
+                    {
+                        continue;
+                    }
                     string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(key);
                     if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
                     {
                         continue;
                     }
-                    string attributeValue = HttpUtilities.DecodeHeaderValue(headers[key]);
+                    string attributeValue = HttpUtilities.DecodeHeaderValue(headerValue);
                     cloudEvent.SetAttributeFromString(attributeName, attributeValue);
                 }
 
