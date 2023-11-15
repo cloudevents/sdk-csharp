@@ -65,7 +65,7 @@ namespace CloudNative.CloudEvents.Core
         public static MemoryStream AsStream(ReadOnlyMemory<byte> memory)
         {
             var segment = GetArraySegment(memory);
-            return new MemoryStream(segment.Array, segment.Offset, segment.Count, false);
+            return new MemoryStream(segment.Array!, segment.Offset, segment.Count, false);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace CloudNative.CloudEvents.Core
 
             // TODO: If we introduce an additional netstandard2.1 target, we can use encoding.GetString(memory.Span)
             var segment = GetArraySegment(memory);
-            return encoding.GetString(segment.Array, segment.Offset, segment.Count);
+            return encoding.GetString(segment.Array!, segment.Offset, segment.Count);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace CloudNative.CloudEvents.Core
         {
             Validation.CheckNotNull(destination, nameof(destination));
             var segment = GetArraySegment(source);
-            await destination.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(false);
+            await destination.WriteAsync(segment.Array!, segment.Offset, segment.Count).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -108,13 +108,14 @@ namespace CloudNative.CloudEvents.Core
             var segment = GetArraySegment(memory);
             // We probably don't actually need to check the offset: if the count is the same as the length,
             // I can't see how the offset can be non-zero. But it doesn't *hurt* as a check.
-            return segment.Offset == 0 && segment.Count == segment.Array.Length
+            return segment.Offset == 0 && segment.Count == segment.Array!.Length
                 ? segment.Array
                 : memory.ToArray();
         }
 
+        // Note: when this returns, the Array property of the returned segment is guaranteed not to be null.
         private static ArraySegment<byte> GetArraySegment(ReadOnlyMemory<byte> memory) =>
-            MemoryMarshal.TryGetArray(memory, out var segment)
+            MemoryMarshal.TryGetArray(memory, out var segment) && segment.Array is not null
                 ? segment
                 : new ArraySegment<byte>(memory.ToArray());
     }
