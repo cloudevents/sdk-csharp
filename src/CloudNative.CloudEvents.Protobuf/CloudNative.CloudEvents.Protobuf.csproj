@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+	<TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
 	<Description>Support for the Protobuf event format in for CloudNative.CloudEvents</Description>
 	<PackageTags>cncf;cloudnative;cloudevents;events;protobuf</PackageTags>
 	<LangVersion>10.0</LangVersion>
