@@ -2,20 +2,20 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+using CloudNative.CloudEvents.AspNetCoreSample;
+using Microsoft.AspNetCore.Builder;
+using CloudNative.CloudEvents.NewtonsoftJson;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace CloudNative.CloudEvents.AspNetCoreSample
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers(opts =>
 {
-    public static class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateWebHostBuilder(args).Build().Run();
-        }
+    opts.InputFormatters.Insert(0, new CloudEventJsonInputFormatter(new JsonEventFormatter()));
+});
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
-    }
-}
+var app = builder.Build();
+
+app.MapControllers();
+
+app.Run();
