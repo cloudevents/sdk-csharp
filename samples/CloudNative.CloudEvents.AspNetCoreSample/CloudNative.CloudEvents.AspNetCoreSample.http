@@ -10,3 +10,7 @@ CE-Id: "c457b7c5-c038-4be9-98b9-938cb64a4fbf"
 {
     "message": "Hello world!"
 }
+
+###
+
+GET {{HostAddress}}/api/events/generate
