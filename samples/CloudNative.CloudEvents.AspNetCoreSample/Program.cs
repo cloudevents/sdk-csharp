@@ -17,3 +17,7 @@ var app = builder.Build();
 app.MapControllers();
 
 app.Run();
+
+// Generated `Program` class when using top-level statements
+// is internal by default. Make this `public` here for tests.
+public partial class Program { }

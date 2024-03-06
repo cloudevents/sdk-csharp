@@ -13,11 +13,11 @@ using Xunit;
 
 namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
 {
-    public class CloudEventControllerTests : IClassFixture<WebApplicationFactory<Startup>>
+    public class CloudEventControllerTests : IClassFixture<WebApplicationFactory<Program>>
     {
-        private readonly WebApplicationFactory<Startup> _factory;
+        private readonly WebApplicationFactory<Program> _factory;
 
-        public CloudEventControllerTests(WebApplicationFactory<Startup> factory)
+        public CloudEventControllerTests(WebApplicationFactory<Program> factory)
         {
             _factory = factory;
         }
