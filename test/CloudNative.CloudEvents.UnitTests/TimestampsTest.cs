@@ -89,7 +89,6 @@ namespace CloudNative.CloudEvents.UnitTests
         }
 
         [Theory]
-        [InlineData(null)]
         [InlineData("")]
         [InlineData("garbage")]
         [InlineData("garbage that is long enough")]
@@ -122,6 +121,13 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             Assert.False(Timestamps.TryParse(text, out _));
             Assert.Throws<FormatException>(() => Timestamps.Parse(text));
+        }
+
+        [Fact]
+        public void Parse_Null()
+        {
+            Assert.Throws<ArgumentNullException>(() => Timestamps.TryParse(null!, out _));
+            Assert.Throws<ArgumentNullException>(() => Timestamps.Parse(null!));
         }
 
         /// <summary>

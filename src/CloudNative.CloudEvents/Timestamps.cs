@@ -47,13 +47,9 @@ namespace CloudNative.CloudEvents
         /// <param name="input">A string to be parsed as a <see cref="DateTimeOffset"/>.</param>
         /// <param name="result">A <see cref="DateTimeOffset"/> parsed from the <paramref name="input"/>.</param>
         /// <returns><see langword="true"/> if <paramref name="input"/> was parsed successfully, <see langword="false"/> otherwise.</returns>
-        public static bool TryParse(string input, out DateTimeOffset result)
+        internal static bool TryParse(string input, out DateTimeOffset result)
         {
-            if (string.IsNullOrEmpty(input))
-            {
-                result = default;
-                return false;
-            }
+            Validation.CheckNotNull(input, nameof(input));
 
             if (input.Length < MinLength) // "yyyy-MM-ddTHH:mm:ssZ" is the shortest possible value.
             {
