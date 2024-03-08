@@ -1,4 +1,4 @@
-// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -121,6 +121,13 @@ namespace CloudNative.CloudEvents.UnitTests
         {
             Assert.False(Timestamps.TryParse(text, out _));
             Assert.Throws<FormatException>(() => Timestamps.Parse(text));
+        }
+
+        [Fact]
+        public void Parse_Null()
+        {
+            Assert.Throws<ArgumentNullException>(() => Timestamps.TryParse(null!, out _));
+            Assert.Throws<ArgumentNullException>(() => Timestamps.Parse(null!));
         }
 
         /// <summary>

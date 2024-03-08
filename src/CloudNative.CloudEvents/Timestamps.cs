@@ -44,12 +44,11 @@ namespace CloudNative.CloudEvents
         /// <summary>
         /// Attempts to parse a string as an RFC-3339-formatted date/time and UTC offset.
         /// </summary>
-        /// <param name="input"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static bool TryParse(string input, out DateTimeOffset result)
+        /// <param name="input">A string to be parsed as a <see cref="DateTimeOffset"/>.</param>
+        /// <param name="result">A <see cref="DateTimeOffset"/> parsed from the <paramref name="input"/>.</param>
+        /// <returns><see langword="true"/> if <paramref name="input"/> was parsed successfully, <see langword="false"/> otherwise.</returns>
+        internal static bool TryParse(string input, out DateTimeOffset result)
         {
-            // TODO: Check this and add a test
             Validation.CheckNotNull(input, nameof(input));
 
             if (input.Length < MinLength) // "yyyy-MM-ddTHH:mm:ssZ" is the shortest possible value.
