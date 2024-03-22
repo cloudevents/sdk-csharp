@@ -2,9 +2,10 @@
   <PropertyGroup>
     <!-- 
       - We use the same version number for all stable
-      - packages. See PROCESSES.md for details.
+      - packages. See RELEASING.md for details.
       -->
     <Version>2.7.1</Version>
+    <PackageValidationBaselineVersion>2.7.0</PackageValidationBaselineVersion>
     
     <!-- Make the repository root available for other properties -->
     <RepoRoot>$([System.IO.Path]::GetDirectoryName($([MSBuild]::GetPathOfFileAbove('.gitignore', '$(MSBuildThisFileDirectory)'))))</RepoRoot>
@@ -14,7 +15,9 @@
     <SignAssembly>True</SignAssembly>
     <Deterministic>True</Deterministic>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>    
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <ApiCompatEnableRuleCannotChangeParameterName>true</ApiCompatEnableRuleCannotChangeParameterName>
     
     <!-- Package properties -->
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>

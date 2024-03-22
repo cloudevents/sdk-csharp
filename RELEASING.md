@@ -24,6 +24,8 @@ The normal steps are expected to be:
 - The maintainer who creates and merges this change is also (by default) responsible for manually creating
   the GitHub release and (automatically) a corresponding tag. See below for the format of these.
 - NuGet packages are automatically created and pushed when the release is created.
+- After a minor or major release, the `PackageValidationBaselineVersion` is updated
+  to the new version number as the baseline for a future release to be compatible with.
 
 ## Stable package versioning
 
