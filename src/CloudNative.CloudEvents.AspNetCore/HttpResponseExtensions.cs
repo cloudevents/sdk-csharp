@@ -1,4 +1,4 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -57,8 +57,8 @@ namespace CloudNative.CloudEvents.AspNetCore
 
             // Map headers in either mode.
             // Including the headers in structured mode is optional in the spec (as they're already within the body) but
-            // can be useful.            
-            destination.Headers.Add(HttpUtilities.SpecVersionHttpHeader, HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
+            // can be useful.
+            destination.Headers.Append(HttpUtilities.SpecVersionHttpHeader, HttpUtilities.EncodeHeaderValue(cloudEvent.SpecVersion.VersionId));
             foreach (var attributeAndValue in cloudEvent.GetPopulatedAttributes())
             {
                 var attribute = attributeAndValue.Key;
@@ -67,7 +67,7 @@ namespace CloudNative.CloudEvents.AspNetCore
                 if (attribute != cloudEvent.SpecVersion.DataContentTypeAttribute)
                 {
                     string headerValue = HttpUtilities.EncodeHeaderValue(attribute.Format(value));
-                    destination.Headers.Add(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);
+                    destination.Headers.Append(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);
                 }
             }
 
