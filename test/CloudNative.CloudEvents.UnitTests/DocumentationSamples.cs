@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -6,7 +6,6 @@ using CloudNative.CloudEvents.AspNetCore;
 using CloudNative.CloudEvents.Http;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -156,7 +155,7 @@ namespace CloudNative.CloudEvents.UnitTests
 
         private static async Task<HttpRequest> ConvertHttpRequestMessage(HttpRequestMessage message)
         {
-            var request = new DefaultHttpRequest(new DefaultHttpContext());
+            var request = new DefaultHttpContext().Request;
             foreach (var header in message.Headers)
             {
                 request.Headers[header.Key] = header.Value.Single();

@@ -1,11 +1,10 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using System;
 using System.Collections.Generic;
 using System.Net.Mime;
@@ -130,12 +129,13 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
         }
 
-        private static HttpRequest CreateRequest(ReadOnlyMemory<byte> content, ContentType contentType) =>
-            new DefaultHttpRequest(new DefaultHttpContext())
-            {
-                ContentType = contentType.ToString(),
-                Body = BinaryDataUtilities.AsStream(content)
-            };
+        private static HttpRequest CreateRequest(ReadOnlyMemory<byte> content, ContentType contentType)
+        {
+            var request = new DefaultHttpContext().Request;
+            request.ContentType = contentType.ToString();
+            request.Body = BinaryDataUtilities.AsStream(content);
+            return request;
+        }
 
         private static void CopyHeaders(IDictionary<string, string>? source, HttpRequest target)
         {
@@ -145,7 +145,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             }
             foreach (var header in source)
             {
-                target.Headers.Add(header.Key, header.Value);
+                target.Headers.Append(header.Key, header.Value);
             }
         }
     }
