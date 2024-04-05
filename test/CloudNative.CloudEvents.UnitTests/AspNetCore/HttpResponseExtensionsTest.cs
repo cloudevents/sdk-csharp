@@ -125,6 +125,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             response.Body = new MemoryStream();
             return response;
         }
+
         private static ReadOnlyMemory<byte> GetContent(HttpResponse response)
         {
             response.Body.Position = 0;
