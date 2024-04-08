@@ -1,4 +1,4 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -94,11 +94,12 @@ namespace CloudNative.CloudEvents.AspNetCore
                 foreach (var header in headers)
                 {
                     string? attributeName = HttpUtilities.GetAttributeNameFromHeaderName(header.Key);
-                    if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name)
+                    string? headerValue = header.Value.First();
+                    if (attributeName is null || attributeName == CloudEventsSpecVersion.SpecVersionAttribute.Name || headerValue is null)
                     {
                         continue;
                     }
-                    string attributeValue = HttpUtilities.DecodeHeaderValue(header.Value.First());
+                    string attributeValue = HttpUtilities.DecodeHeaderValue(headerValue);
 
                     cloudEvent.SetAttributeFromString(attributeName, attributeValue);
                 }

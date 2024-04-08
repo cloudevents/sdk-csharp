@@ -1,11 +1,10 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.NewtonsoftJson;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using System;
 using System.IO;
 using System.Net.Mime;
@@ -92,6 +91,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Structured, formatter);
             var content = GetContent(response);
             Assert.Equal(MimeUtilities.MediaType + "+json; charset=utf-8", response.ContentType);
+            Assert.NotNull(response.ContentType);
 
             var parsed = new JsonEventFormatter().DecodeStructuredModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
             AssertCloudEventsEqual(cloudEvent, parsed);
@@ -114,11 +114,18 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
 
             var content = GetContent(response);
             Assert.Equal(MimeUtilities.BatchMediaType + "+json; charset=utf-8", response.ContentType);
+            Assert.NotNull(response.ContentType);
             var parsedBatch = new JsonEventFormatter().DecodeBatchModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
             AssertBatchesEqual(batch, parsedBatch);
         }
 
-        private static HttpResponse CreateResponse() => new DefaultHttpResponse(new DefaultHttpContext()) { Body = new MemoryStream() };
+        private static HttpResponse CreateResponse()
+        {
+            var response = new DefaultHttpContext().Response;
+            response.Body = new MemoryStream();
+            return response;
+        }
+
         private static ReadOnlyMemory<byte> GetContent(HttpResponse response)
         {
             response.Body.Position = 0;
