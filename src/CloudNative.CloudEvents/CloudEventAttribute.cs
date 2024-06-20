@@ -176,5 +176,97 @@ namespace CloudNative.CloudEvents
             }
             return value;
         }
+
+        /// <summary>
+        /// Returns an equality comparer for <see cref="CloudEventAttribute"/> values that just uses the attribute name
+        /// for equality comparisons. Validators, types and kinds (optional, required, extension) are not included in the comparison.
+        /// </summary>
+        public static IEqualityComparer<CloudEventAttribute> NameComparer { get; } = new NameComparerImpl();
+
+        /// <summary>
+        /// Returns an equality comparer for <see cref="CloudEventAttribute"/> values that just uses the attribute name
+        /// and type for equality comparisons. Validators and kinds (optional, required, extension) are not included in the comparison.
+        /// </summary>
+        public static IEqualityComparer<CloudEventAttribute> NameTypeComparer { get; } = new NameTypeComparerImpl();
+
+        /// <summary>
+        /// Returns an equality comparer for <see cref="CloudEventAttribute"/> values that uses the attribute name,
+        /// type and kind (optional, required, extension) for equality comparisons. Validators are not included in the comparison.
+        /// </summary>
+        public static IEqualityComparer<CloudEventAttribute> NameTypeKindComparer { get; } = new NameTypeKindComparerImpl();
+
+        /// <summary>
+        /// Base class for all comparers, just to avoid having to worry about nullity in every implementation.
+        /// </summary>
+        private abstract class ComparerBase : IEqualityComparer<CloudEventAttribute>
+        {
+            public bool Equals(CloudEventAttribute x, CloudEventAttribute y) =>
+                (x is null && y is null) ||
+                (x is not null && y is not null && EqualsImpl(x, y));
+
+            public int GetHashCode(CloudEventAttribute obj)
+            {
+                Validation.CheckNotNull(obj, nameof(obj));
+                return GetHashCodeImpl(obj);
+            }
+
+            protected abstract bool EqualsImpl(CloudEventAttribute x, CloudEventAttribute y);
+            protected abstract int GetHashCodeImpl(CloudEventAttribute obj);
+        }
+
+        private sealed class NameComparerImpl : ComparerBase
+        {
+            protected override bool EqualsImpl(CloudEventAttribute x, CloudEventAttribute y) => x.Name == y.Name;
+
+            protected override int GetHashCodeImpl(CloudEventAttribute obj) => obj.Name.GetHashCode();
+        }
+
+        private sealed class NameTypeComparerImpl : ComparerBase
+        {
+            protected override bool EqualsImpl(CloudEventAttribute x, CloudEventAttribute y) =>
+                x.Name == y.Name &&
+                x.Type == y.Type;
+
+            protected override int GetHashCodeImpl(CloudEventAttribute obj)
+            {
+#if NETSTANDARD2_1_OR_GREATER
+                return HashCode.Combine(obj.Name, obj.Type);
+#else
+                unchecked
+                {
+                    int hash = 19;
+                    hash = hash * 31 + obj.Name.GetHashCode();
+                    hash = hash * 31 + obj.Type.GetHashCode();
+                    return hash;
+                }
+#endif
+            }
+        }
+
+        private sealed class NameTypeKindComparerImpl : ComparerBase
+        {
+            protected override bool EqualsImpl(CloudEventAttribute x, CloudEventAttribute y) =>
+                x.Name == y.Name &&
+                x.Type == y.Type &&
+                x.IsExtension == y.IsExtension &&
+                x.IsRequired == y.IsRequired;
+
+            protected override int GetHashCodeImpl(CloudEventAttribute obj)
+            {
+#if NETSTANDARD2_1_OR_GREATER
+                return HashCode.Combine(obj.Name, obj.Type, obj.IsExtension, obj.IsRequired);
+#else
+                unchecked
+                {
+                    int hash = 19;
+                    hash = hash * 31 + obj.Name.GetHashCode();
+                    hash = hash * 31 + obj.Type.GetHashCode();
+                    hash = hash * 31 + obj.IsExtension.GetHashCode();
+                    hash = hash * 31 + obj.IsRequired.GetHashCode();
+                    return hash;
+                }
+#endif
+            }
+        }
     }
 }
