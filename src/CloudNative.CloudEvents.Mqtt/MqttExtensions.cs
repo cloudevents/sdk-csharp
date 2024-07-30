@@ -1,4 +1,4 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -39,10 +39,10 @@ namespace CloudNative.CloudEvents.Mqtt
             Validation.CheckNotNull(message, nameof(message));
 
             // TODO: Determine if there's a sensible content type we should apply.
-            return formatter.DecodeStructuredModeMessage(message.Payload, contentType: null, extensionAttributes);
+            return formatter.DecodeStructuredModeMessage(message.PayloadSegment, contentType: null, extensionAttributes);
         }
 
-        // TODO: Update to a newer version of MQTTNet and support both binary and structured mode?
+        // TODO: Support both binary and structured mode.
         /// <summary>
         /// Converts a CloudEvent to <see cref="MqttApplicationMessage"/>.
         /// </summary>
@@ -61,7 +61,7 @@ namespace CloudNative.CloudEvents.Mqtt
                     return new MqttApplicationMessage
                     {
                         Topic = topic,
-                        Payload = BinaryDataUtilities.AsArray(formatter.EncodeStructuredModeMessage(cloudEvent, out _))
+                        PayloadSegment = BinaryDataUtilities.GetArraySegment(formatter.EncodeStructuredModeMessage(cloudEvent, out _))
                     };
                 default:
                     throw new ArgumentOutOfRangeException(nameof(contentMode), $"Unsupported content mode: {contentMode}");

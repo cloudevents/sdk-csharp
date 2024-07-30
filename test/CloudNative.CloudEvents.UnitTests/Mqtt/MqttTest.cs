@@ -1,12 +1,10 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.NewtonsoftJson;
 using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Client.Options;
-using MQTTnet.Client.Receiving;
 using MQTTnet.Server;
 using System;
 using System.Net.Mime;
@@ -18,16 +16,17 @@ namespace CloudNative.CloudEvents.Mqtt.UnitTests
 {
     public class MqttTest : IDisposable
     {
-        private readonly IMqttServer mqttServer;
+        private readonly MqttServer mqttServer;
 
         public MqttTest()
         {
             var optionsBuilder = new MqttServerOptionsBuilder()
                 .WithConnectionBacklog(100)
+                .WithDefaultEndpoint()
                 .WithDefaultEndpointPort(52355);
 
-            this.mqttServer = new MqttFactory().CreateMqttServer();
-            mqttServer.StartAsync(optionsBuilder.Build()).GetAwaiter().GetResult();
+            this.mqttServer = new MqttFactory().CreateMqttServer(optionsBuilder.Build());
+            mqttServer.StartAsync().GetAwaiter().GetResult();
         }
 
         public void Dispose()
@@ -55,14 +54,17 @@ namespace CloudNative.CloudEvents.Mqtt.UnitTests
 
             var options = new MqttClientOptionsBuilder()
                 .WithClientId("Client1")
-                .WithTcpServer("localhost", 52355)
+                .WithTcpServer("127.0.0.1", 52355)
                 .WithCleanSession()
                 .Build();
 
             TaskCompletionSource<CloudEvent> tcs = new TaskCompletionSource<CloudEvent>();
             await client.ConnectAsync(options);
-            client.ApplicationMessageReceivedHandler = new MqttApplicationMessageReceivedHandlerDelegate(
-                args => tcs.SetResult(args.ApplicationMessage.ToCloudEvent(jsonEventFormatter)));
+            client.ApplicationMessageReceivedAsync += args =>
+            {
+                tcs.SetResult(args.ApplicationMessage.ToCloudEvent(jsonEventFormatter));
+                return Task.CompletedTask;
+            };
 
             var result = await client.SubscribeAsync("abc");
             await client.PublishAsync(cloudEvent.ToMqttApplicationMessage(ContentMode.Structured, new JsonEventFormatter(), topic: "abc"));
