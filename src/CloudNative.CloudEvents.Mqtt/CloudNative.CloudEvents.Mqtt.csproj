@@ -5,11 +5,14 @@
     <Description>MQTT extensions for CloudNative.CloudEvents</Description>
     <PackageTags>cncf;cloudnative;cloudevents;events;mqtt</PackageTags>
     <LangVersion>8.0</LangVersion>
+    <Version>3.$(MinorVersion).$(PatchVersion)</Version>
+    <!-- After the first release of v3, we'll change the major here to 3. -->
+    <PackageValidationBaselineVersion>2.$(PackageValidationMinor).0</PackageValidationBaselineVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MQTTnet" Version="3.0.15" />
+    <PackageReference Include="MQTTnet" Version="4.3.6.1152" />
     <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 
