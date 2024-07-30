@@ -43,12 +43,19 @@ Within this repository, this is achieved by the following mechanisms:
 
 - Individual csproj files do not specify a version
 - The [Directory.Build.props](src/Directory.Build.props) file has a `<Version>` element
-  specifying the version of all packages
+  specifying the version of all packages which don't need a separate major
 
 A single GitHub release (and tag) will be created for each beta release, to cover all packages.
 
 - Example tag name: "CloudNative.CloudEvents.All-2.0.0"
 - Example release title: "All packages version 2.0.0"
+
+### Exception: new major versions
+
+Sometimes, we need a new major version of a "satellite" package, typically
+to adopt a new major version of a dependency. In this case, the satellite package
+will have its own major version, but keep the minor and patch version of everything
+else.
 
 ## New / unstable package versioning
 
