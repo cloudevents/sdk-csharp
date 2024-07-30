@@ -41,14 +41,27 @@ acts as encouragement to use the latest version of the core package.
 
 Within this repository, this is achieved by the following mechanisms:
 
-- Individual csproj files do not specify a version
+- Most individual csproj files do not specify a version
 - The [Directory.Build.props](src/Directory.Build.props) file has a `<Version>` element
-  specifying the version of all packages
+  specifying the version of all packages which don't need a separate
+  major version
 
-A single GitHub release (and tag) will be created for each beta release, to cover all packages.
+A single GitHub release (and tag) will be created for each release,
+to cover all packages.
 
 - Example tag name: "CloudNative.CloudEvents.All-2.0.0"
 - Example release title: "All packages version 2.0.0"
+
+### Exception: packages with different major versions
+
+For some "satellite" packages, we need a different major version
+number, typically to adopt a new major version of a dependency. In
+this case, the satellite package will have its own major version,
+but keep the minor and patch version of everything else.
+
+For example, in order to take a new major version of the `MQTTnet`
+dependency, `CloudNative.CloudEvents.Mqtt` 3.8.0 was released with
+version 2.8.0 of all other packages.
 
 ## New / unstable package versioning
 
