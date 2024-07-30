@@ -114,7 +114,16 @@ namespace CloudNative.CloudEvents.Core
         }
 
         // Note: when this returns, the Array property of the returned segment is guaranteed not to be null.
-        private static ArraySegment<byte> GetArraySegment(ReadOnlyMemory<byte> memory) =>
+
+        /// <summary>
+        /// Returns the data from <paramref name="memory"/> as a byte array, return the underlying array
+        /// if there is one, or creating a copy otherwise. This method should be used with care, due to the
+        /// "sometimes shared, sometimes not" nature of the result. (It is generally safe to use this with the result
+        /// of encoding a CloudEvent, assuming the same memory is not used elsewhere.)
+        /// </summary>
+        /// <param name="memory">The memory to obtain the data from.</param>
+        /// <returns>The data in <paramref name="memory"/> as an array segment.</returns>
+        public static ArraySegment<byte> GetArraySegment(ReadOnlyMemory<byte> memory) =>
             MemoryMarshal.TryGetArray(memory, out var segment) && segment.Array is not null
                 ? segment
                 : new ArraySegment<byte>(memory.ToArray());
