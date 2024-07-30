@@ -1,11 +1,22 @@
 <Project>
   <PropertyGroup>
     <!-- 
-      - We use the same version number for all stable
-      - packages. See RELEASING.md for details.
+      - We use the same minor/patch version number for all stable
+      - packages, and the same major for most packages.
+      - See RELEASING.md for details.
       -->
-    <Version>2.7.1</Version>
-    <PackageValidationBaselineVersion>2.7.0</PackageValidationBaselineVersion>
+    <MajorVersion>2</MajorVersion>
+    <MinorVersion>7</MinorVersion>
+    <PatchVersion>1</PatchVersion>
+    <PackageValidationMinor>7</PackageValidationMinor>
+    <Version>$(MajorVersion).$(MinorVersion).$(PatchVersion)</Version>
+    <!-- 
+      - The version used for detecting breaking changes.
+      - This is always older than the current version (except when creating a new major)
+      - and is the patch-0 of either the current minor (if the current patch is non-zero)
+      - or the previous minor (if the current patch is zero).
+      -->
+    <PackageValidationBaselineVersion>2.$(PackageValidationMinor).0</PackageValidationBaselineVersion>
     
     <!-- Make the repository root available for other properties -->
     <RepoRoot>$([System.IO.Path]::GetDirectoryName($([MSBuild]::GetPathOfFileAbove('.gitignore', '$(MSBuildThisFileDirectory)'))))</RepoRoot>
