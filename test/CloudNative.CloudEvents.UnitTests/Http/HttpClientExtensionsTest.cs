@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -291,7 +291,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var result = await httpClient.PostAsync(new Uri(ListenerAddress + "ep"), content);
             if (result.StatusCode != HttpStatusCode.NoContent)
             {
-                throw new InvalidOperationException(result.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                throw new InvalidOperationException(await result.Content.ReadAsStringAsync());
             }
         }
 
@@ -392,7 +392,7 @@ namespace CloudNative.CloudEvents.Http.UnitTests
             var result = (await httpClient.PostAsync(new Uri(ListenerAddress + "ep"), content));
             if (result.StatusCode != HttpStatusCode.NoContent)
             {
-                throw new InvalidOperationException(result.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                throw new InvalidOperationException(await result.Content.ReadAsStringAsync());
             }
         }
 

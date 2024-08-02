@@ -1,4 +1,4 @@
-﻿// Copyright 2022 Cloud Native Foundation. 
+// Copyright 2022 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -201,7 +201,7 @@ namespace CloudNative.CloudEvents.Protobuf.UnitTests
         [InlineData("utf-8")]
         [InlineData("iso-8859-1")]
         [InlineData(null)]
-        public void EncodeBinaryModeData_String_TextContentType(string charset)
+        public void EncodeBinaryModeData_String_TextContentType(string? charset)
         {
             string text = "caf\u00e9"; // Valid in both UTF-8 and ISO-8859-1, but with different representations
             var encoding = charset is null ? Encoding.UTF8 : Encoding.GetEncoding(charset);
@@ -552,7 +552,7 @@ namespace CloudNative.CloudEvents.Protobuf.UnitTests
         [InlineData("utf-8")]
         [InlineData("iso-8859-1")]
         [InlineData(null)]
-        public void DecodeBinaryModeEventData_Text(string charset)
+        public void DecodeBinaryModeEventData_Text(string? charset)
         {
             string text = "caf\u00e9"; // Valid in both UTF-8 and ISO-8859-1, but with different representations
             var encoding = charset is null ? Encoding.UTF8 : Encoding.GetEncoding(charset);
@@ -566,7 +566,7 @@ namespace CloudNative.CloudEvents.Protobuf.UnitTests
         [Theory]
         [InlineData("application/json")]
         [InlineData(null)]
-        public void DecodeBinaryModeData_NonTextContentType(string contentType)
+        public void DecodeBinaryModeData_NonTextContentType(string? contentType)
         {
             var bytes = Encoding.UTF8.GetBytes("{}");
             var data = DecodeBinaryModeEventData(bytes, contentType);
@@ -670,7 +670,7 @@ namespace CloudNative.CloudEvents.Protobuf.UnitTests
 
         // Utility methods
 
-        private static object? DecodeBinaryModeEventData(byte[] bytes, string contentType)
+        private static object? DecodeBinaryModeEventData(byte[] bytes, string? contentType)
         {
             var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
             cloudEvent.DataContentType = contentType;

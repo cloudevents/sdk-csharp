@@ -726,7 +726,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         [InlineData("application/json")]
         [InlineData("text/plain")]
         [InlineData("application/binary")]
-        public void DecodeStructuredModeMessage_NoData(string contentType)
+        public void DecodeStructuredModeMessage_NoData(string? contentType)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)
@@ -760,7 +760,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         [InlineData("application/json")]
         [InlineData("text/plain")]
         [InlineData("application/binary")]
-        public void DecodeStructuredModeMessage_Base64(string contentType)
+        public void DecodeStructuredModeMessage_Base64(string? contentType)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)
@@ -788,7 +788,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         [InlineData(null)]
         [InlineData("application/json")]
         [InlineData("application/json; charset=utf-8")]
-        public void DecodeStructuredModeMessage_JsonContentType_JsonStringToken(string contentType)
+        public void DecodeStructuredModeMessage_JsonContentType_JsonStringToken(string? contentType)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)
@@ -807,7 +807,7 @@ namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
         [InlineData("application/json")]
         [InlineData("application/xyz+json")]
         [InlineData("application/xyz+json; charset=utf-8")]
-        public void DecodeStructuredModeMessage_JsonContentType_NonStringValue(string contentType)
+        public void DecodeStructuredModeMessage_JsonContentType_NonStringValue(string? contentType)
         {
             var obj = CreateMinimalValidJObject();
             if (contentType is object)

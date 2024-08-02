@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -13,7 +13,7 @@ namespace CloudNative.CloudEvents.UnitTests
         [InlineData(null)]
         [InlineData("bogus")]
         [InlineData("1")]
-        public void FromVersionId_Unknown(string versionId) =>
+        public void FromVersionId_Unknown(string? versionId) =>
             Assert.Null(CloudEventsSpecVersion.FromVersionId(versionId));
 
         [Theory]
