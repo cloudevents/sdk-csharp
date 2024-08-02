@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -153,7 +153,7 @@ namespace CloudNative.CloudEvents.UnitTests
             }
             if (expected is null || actual is null)
             {
-                Assert.True(false, "Expected both values to be null, or neither to be null");
+                Assert.Fail("Expected both values to be null, or neither to be null");
             }
             AssertTimestampsEqual(expected!.Value, actual!.Value);
         }

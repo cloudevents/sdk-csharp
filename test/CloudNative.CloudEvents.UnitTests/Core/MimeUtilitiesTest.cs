@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -73,7 +73,7 @@ namespace CloudNative.CloudEvents.Core.UnitTests
         [Theory]
         [InlineData(null)]
         [InlineData("text/plain")]
-        public void CreateContentTypeOrNull_WithContentType(string text)
+        public void CreateContentTypeOrNull_WithContentType(string? text)
         {
             ContentType? ct = MimeUtilities.CreateContentTypeOrNull(text);
             Assert.Equal(text, ct?.ToString());
@@ -88,7 +88,7 @@ namespace CloudNative.CloudEvents.Core.UnitTests
         [InlineData("application/cloudeventstrailing", true)]
         [InlineData("application/cloudevents-batch", false)]
         [InlineData("application/cloudevents-batch+json", false)]
-        public void IsCloudEventsContentType(string contentType, bool expectedResult) =>
+        public void IsCloudEventsContentType(string? contentType, bool expectedResult) =>
             Assert.Equal(expectedResult, MimeUtilities.IsCloudEventsContentType(contentType));
 
         [Theory]
@@ -101,7 +101,7 @@ namespace CloudNative.CloudEvents.Core.UnitTests
         // It's not entirely clear that this *should* be true...
         [InlineData("application/cloudevents-batchtrailing", true)]
         [InlineData("application/cloudevents-batch+json", true)]
-        public void IsCloudEventsBatchContentType(string contentType, bool expectedResult) =>
+        public void IsCloudEventsBatchContentType(string? contentType, bool expectedResult) =>
             Assert.Equal(expectedResult, MimeUtilities.IsCloudEventsBatchContentType(contentType));
     }
 }
