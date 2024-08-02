@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.22.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
     
     <!-- Be explicit about not including these files in the package. -->
     <None Include="README.md" />
