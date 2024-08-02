@@ -132,7 +132,7 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
         [Theory]
         [InlineData(MediaTypeNames.Application.Octet, new byte[0])]
         [InlineData(MediaTypeNames.Application.Json, null)]
-        [InlineData(MediaTypeNames.Application.Xml, "")]
+        [InlineData(MediaTypeNames.Application.Xml, new byte[0])]
         [InlineData(MediaTypeNames.Text.Plain, "")]
         [InlineData(null, null)]
         public void KafkaBinaryMessageTombstoneTest(string? contentType, object? expectedDecodedResult)
