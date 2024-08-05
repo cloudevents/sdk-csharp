@@ -1,25 +1,46 @@
 # Version history (from 2.0)
 
+## 2.8.0 (2024-05-08)
+
+- Add explicit .NET 8 target to all packages.
+- Removed dependencies that are already included in the framework, for suitable targets.
+- Use a framework reference to Microsoft.AspNetCore.App instead of package references,
+  for the .NET 8 target
+- Release CloudNative.CloudEvents.Mqtt as 3.8.0, bumping the major
+  version to reflect adopting MQTTnet version 4.3.6.1152.
+  Fixes [#269](https://github.com/cloudevents/sdk-csharp/issues/269).
+- Other dependency updates:
+  - AMQPNetLite and AMQPNetLite.Serialization: 2.4.2 => 2.4.11
+  - Apache.Avro: 1.11.1 => 1.11.3
+  - Newtonsoft.Json: 13.0.2 => 13.0.3
+  - Google.Protobuf: 3.22.0 => 3.27.3
+  - Confluent.Kafka: 1.6.3 => 1.9.3
+    - See [#297](https://github.com/cloudevents/sdk-csharp/issues/297) for
+      consideration of a bump to 2.x.
+  - Only for netstandard2.0 and netstandard2.1 targets:
+    - System.Text.Encodings.Web: 6.0.0 => 8.0.0
+    - System.Text.Json: 5.0.2 => 8.0.4
+
 ## 2.7.1 (2023-09-04)
 
 - Prevent string resource lookup if not required
-  Fixes ([#264](https://github.com/cloudevents/sdk-csharp/issues/264)).
+  Fixes [#264](https://github.com/cloudevents/sdk-csharp/issues/264).
 
 ## 2.7.0 (2023-07-31)
 
 - Add the ability to specify a custom serializer for Avro.
-  Fixes ([#261](https://github.com/cloudevents/sdk-csharp/issues/261)).
+  Fixes [#261](https://github.com/cloudevents/sdk-csharp/issues/261).
 
 ## 2.6.0 (2023-03-07)
 
 - Dependencies: system-level dependencies updated
 - The NuGet package now uses PackageLicenseExpression (but still
   includes the licence file as well).
-  Fixes ([#252](https://github.com/cloudevents/sdk-csharp/issues/252)).
+  Fixes [#252](https://github.com/cloudevents/sdk-csharp/issues/252).
 - Regenerated protobuf schema using the original filename of
   cloudevents.proto instead of ProtoSchema.proto. An additional
   ProtoSchemaReflection class has been added purely for compatibility.
-  Fixes ([#256](https://github.com/cloudevents/sdk-csharp/issues/256)).
+  Fixes [#256](https://github.com/cloudevents/sdk-csharp/issues/256).
 
 ## 2.5.1 (2022-11-10)
 

@@ -6,8 +6,8 @@
       - See RELEASING.md for details.
       -->
     <MajorVersion>2</MajorVersion>
-    <MinorVersion>7</MinorVersion>
-    <PatchVersion>1</PatchVersion>
+    <MinorVersion>8</MinorVersion>
+    <PatchVersion>0</PatchVersion>
     <PackageValidationMinor>7</PackageValidationMinor>
     <Version>$(MajorVersion).$(MinorVersion).$(PatchVersion)</Version>
     <!-- 
