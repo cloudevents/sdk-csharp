@@ -6,8 +6,7 @@
     <PackageTags>cncf;cloudnative;cloudevents;events;mqtt</PackageTags>
     <LangVersion>8.0</LangVersion>
     <Version>3.$(MinorVersion).$(PatchVersion)</Version>
-    <!-- After the first release of v3, we'll change the major here to 3. -->
-    <PackageValidationBaselineVersion>2.$(PackageValidationMinor).0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>3.$(PackageValidationMinor).0</PackageValidationBaselineVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
