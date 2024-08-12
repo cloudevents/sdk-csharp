@@ -29,7 +29,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>    
     <EnablePackageValidation>true</EnablePackageValidation>
     <ApiCompatEnableRuleCannotChangeParameterName>true</ApiCompatEnableRuleCannotChangeParameterName>
-    
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
     <!-- Package properties -->
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
