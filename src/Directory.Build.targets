@@ -8,9 +8,8 @@
     <EmbeddedFiles Include="$(GeneratedAssemblyInfoFile)"/>
   </ItemGroup>
   
-  <!-- Use SourceLink for all production projects, and include the licence file -->
+  <!-- Include the licence file in NuGet packages. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All"/>
     <None Include="$(RepoRoot)/LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>
