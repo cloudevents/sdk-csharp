@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
@@ -9,13 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Apache.Avro" Version="1.11.3" />
+    <PackageReference Include="Apache.Avro" />
     <!-- 
       - Explicit dependency just to avoid a vulnerable version being exposed via Apache.Avro.
       - If Apache.Avro publishes a new version that updates the dependency (to 13.0.1 or higher)
       - we can remove our explicit dependency.
       -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" />
     <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 
@@ -24,3 +24,4 @@
   </ItemGroup>
 
 </Project>
+

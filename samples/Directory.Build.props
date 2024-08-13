@@ -11,7 +11,8 @@
     <SignAssembly>True</SignAssembly>
     <Deterministic>True</Deterministic>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
     <!-- Never pack any sample projects -->
     <IsPackable>False</IsPackable>
   </PropertyGroup>

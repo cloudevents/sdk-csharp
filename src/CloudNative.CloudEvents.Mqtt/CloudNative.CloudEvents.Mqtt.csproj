@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
@@ -11,8 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MQTTnet" Version="4.3.6.1152" />
+    <PackageReference Include="MQTTnet" />
     <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
   </ItemGroup>
 
 </Project>
+
