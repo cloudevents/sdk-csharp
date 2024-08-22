@@ -6,6 +6,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <PackageTags>cloudnative;cloudevents;events</PackageTags>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,5 +30,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
-</Project>
+  <ItemGroup>
+    <None Include="PACKAGE.md" Pack="true" PackagePath="\"/>
+</ItemGroup>
 
+</Project>
