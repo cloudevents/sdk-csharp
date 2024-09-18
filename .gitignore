@@ -333,3 +333,6 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# Jetbrains Rider cache/options directory
+.idea/
