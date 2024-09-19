@@ -6,6 +6,7 @@
         <TargetFrameworks>net8.0;netstandard2.0;netstandard2.1</TargetFrameworks>
         <Description>RabbitMQ extensions for CloudNative.CloudEvents</Description>
         <PackageTags>cncf;cloudnative;cloudevents;events;rabbitmq;amqp</PackageTags>
+        <EnablePackageValidation>false</EnablePackageValidation>
     </PropertyGroup>
 
     <ItemGroup>
