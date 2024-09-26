@@ -37,16 +37,9 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
         public void IsCloudEvent_NoHeaders() =>
             Assert.False(new Message<string?, byte[]>().IsCloudEvent());
 
-        [Fact]
-        public void KafkaStructuredMessageTest()
+        private static CloudEvent CreateTestCloudEvent()
         {
-            // Kafka doesn't provide any way to get to the message transport level to do the test properly
-            // and it doesn't have an embedded version of a server for .Net so the lowest we can get is 
-            // the `Message<T, K>`
-
-            var jsonEventFormatter = new JsonEventFormatter();
-
-            var cloudEvent = new CloudEvent
+            return new CloudEvent
             {
                 Type = "com.github.pull.create",
                 Source = new Uri("https://github.com/cloudevents/spec/pull"),
@@ -55,21 +48,12 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
                 Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
                 DataContentType = MediaTypeNames.Text.Xml,
                 Data = "<much wow=\"xml\"/>",
-                ["comexampleextension1"] = "value"
+                ["comexampleextension1"] = "value",
             };
+        }
 
-            var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, new JsonEventFormatter());
-
-            Assert.True(message.IsCloudEvent());
-
-            // Using serialization to create fully independent copy thus simulating message transport.
-            // The real transport will work in a similar way.
-            var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
-            var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter())!;
-
-            Assert.True(messageCopy.IsCloudEvent());
-            var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter);
-
+        private static void VerifyTestCloudEvent(CloudEvent receivedCloudEvent)
+        {
             Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
             Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
             Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull"), receivedCloudEvent.Source);
@@ -80,6 +64,108 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
             Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
             Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
+        }
+
+        private static Message<TKey, byte[]>? SimulateMessageTransport<TKey>(Message<TKey, byte[]> message)
+        {
+            // Using serialization to create fully independent copy thus simulating message transport.
+            // The real transport will work in a similar way.
+            var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
+            var messageCopy = JsonConvert.DeserializeObject<Message<TKey, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter())!;
+            return messageCopy;
+        }
+
+        [Fact]
+        public void KafkaStructuredMessageTest()
+        {
+            // Kafka doesn't provide any way to get to the message transport level to do the test properly
+            // and it doesn't have an embedded version of a server for .Net so the lowest we can get is 
+            // the `Message<T, K>`
+
+            var jsonEventFormatter = new JsonEventFormatter();
+            var key = "Test";
+            var cloudEvent = CreateTestCloudEvent();
+            cloudEvent[Partitioning.PartitionKeyAttribute] = key;
+
+            var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, jsonEventFormatter);
+
+            Assert.True(message.IsCloudEvent());
+
+            var messageCopy = SimulateMessageTransport(message);
+
+            Assert.NotNull(messageCopy);
+            Assert.Equal(key, messageCopy.Key);
+            Assert.True(messageCopy.IsCloudEvent());
+            var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, null);
+
+            VerifyTestCloudEvent(receivedCloudEvent);
+        }
+
+        [Fact]
+        public void KafkaBinaryGuidKeyedStructuredMessageTest()
+        {
+            // In order to test the most extreme case of key management we will simulate 
+            // using Guid Keys serialized in their binary form in kafka that are converted
+            // back to their string representation in the cloudEvent.
+            var partitionKeyAdapter = new PartitionKeyAdapters.BinaryGuidPartitionKeyAdapter();
+            var jsonEventFormatter = new JsonEventFormatter();
+            var key = Guid.NewGuid();
+            var cloudEvent = CreateTestCloudEvent();
+            cloudEvent[Partitioning.PartitionKeyAttribute] = key.ToString();
+
+            var message = cloudEvent.ToKafkaMessage<byte[]?>(
+                ContentMode.Structured,
+                jsonEventFormatter,
+                partitionKeyAdapter);
+
+            Assert.True(message.IsCloudEvent());
+
+            var messageCopy = SimulateMessageTransport(message);
+
+            Assert.NotNull(messageCopy);
+            Assert.True(messageCopy.IsCloudEvent());
+
+            var receivedCloudEvent = messageCopy.ToCloudEvent<byte[]?>(
+                jsonEventFormatter,
+                null,
+                partitionKeyAdapter);
+
+            Assert.NotNull(message.Key);
+            // The key should be the original Guid in the binary representation.
+            Assert.Equal(key, new Guid(messageCopy.Key!));
+            VerifyTestCloudEvent(receivedCloudEvent);
+        }
+
+        [Fact]
+        public void KafkaNullKeyedStructuredMessageTest()
+        {
+            // It will test the serialization using Confluent's Confluent.Kafka.Null type for the key.
+            var partitionKeyAdapter = new PartitionKeyAdapters.NullPartitionKeyAdapter<Confluent.Kafka.Null>();
+            var jsonEventFormatter = new JsonEventFormatter();
+            var cloudEvent = CreateTestCloudEvent();
+            // Even if the key is established in the cloud event it won't flow.
+            cloudEvent[Partitioning.PartitionKeyAttribute] = "Test";
+
+            var message = cloudEvent.ToKafkaMessage<Confluent.Kafka.Null>(
+                ContentMode.Structured,
+                jsonEventFormatter,
+                partitionKeyAdapter);
+
+            Assert.True(message.IsCloudEvent());
+
+            var messageCopy = SimulateMessageTransport(message);
+
+            Assert.NotNull(messageCopy);
+            Assert.True(messageCopy.IsCloudEvent());
+
+            var receivedCloudEvent = messageCopy.ToCloudEvent<Confluent.Kafka.Null>(
+                jsonEventFormatter,
+                null,
+                partitionKeyAdapter);
+
+            //The Message  key will continue to be null.
+            Assert.Null(message.Key);
+            VerifyTestCloudEvent(receivedCloudEvent);
         }
 
         [Fact]

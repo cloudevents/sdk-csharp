@@ -1,9 +1,10 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
 using CloudNative.CloudEvents.Core;
 using CloudNative.CloudEvents.Extensions;
+using CloudNative.CloudEvents.Kafka.PartitionKeyAdapters;
 using Confluent.Kafka;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ namespace CloudNative.CloudEvents.Kafka
         internal const string KafkaContentTypeAttributeName = "content-type";
         private const string SpecVersionKafkaHeader = KafkaHeaderPrefix + "specversion";
 
+
         /// <summary>
         /// Indicates whether this message holds a single CloudEvent.
         /// </summary>
@@ -32,7 +34,18 @@ namespace CloudNative.CloudEvents.Kafka
         /// </remarks>
         /// <param name="message">The message to check for the presence of a CloudEvent. Must not be null.</param>
         /// <returns>true, if the request is a CloudEvent</returns>
-        public static bool IsCloudEvent(this Message<string?, byte[]> message) =>
+        public static bool IsCloudEvent(this Message<string?, byte[]> message) => IsCloudEvent<string?>(message);
+
+        /// <summary>
+        /// Indicates whether this message holds a single CloudEvent.
+        /// </summary>
+        /// <remarks>
+        /// This method returns false for batch requests, as they need to be parsed differently.
+        /// </remarks>
+        /// <param name="message">The message to check for the presence of a CloudEvent. Must not be null.</param>
+        /// <typeparam name="TKey">The type of key of the Kafka message.</typeparam>
+        /// <returns>true, if the request is a CloudEvent</returns>
+        public static bool IsCloudEvent<TKey>(this Message<TKey, byte[]> message) =>
             GetHeaderValue(message, SpecVersionKafkaHeader) is object ||
             MimeUtilities.IsCloudEventsContentType(GetHeaderValue(message, KafkaContentTypeAttributeName));
 
@@ -56,6 +69,21 @@ namespace CloudNative.CloudEvents.Kafka
         /// <returns>A reference to a validated CloudEvent instance.</returns>
         public static CloudEvent ToCloudEvent(this Message<string?, byte[]> message,
             CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes)
+        {
+            return ToCloudEvent(message, formatter, extensionAttributes, new StringPartitionKeyAdapter());
+        }
+
+        /// <summary>
+        /// Converts this Kafka message into a CloudEvent object.
+        /// </summary>
+        /// <param name="message">The Kafka message to convert. Must not be null.</param>
+        /// <param name="formatter">The event formatter to use to parse the CloudEvent. Must not be null.</param>
+        /// <param name="extensionAttributes">The extension attributes to use when parsing the CloudEvent. May be null.</param>
+        /// <param name="partitionKeyAdapter">The PartitionKey Adapter responsible for determining wether to set the partitionKey attribute and its value.</param>
+        /// <typeparam name="TKey">The type of key of the Kafka message.</typeparam>
+        /// <returns>A reference to a validated CloudEvent instance.</returns>
+        public static CloudEvent ToCloudEvent<TKey>(this Message<TKey, byte[]> message,
+            CloudEventFormatter formatter, IEnumerable<CloudEventAttribute>? extensionAttributes, IPartitionKeyAdapter<TKey> partitionKeyAdapter)
         {
             Validation.CheckNotNull(message, nameof(message));
             Validation.CheckNotNull(formatter, nameof(formatter));
@@ -109,16 +137,11 @@ namespace CloudNative.CloudEvents.Kafka
                 formatter.DecodeBinaryModeEventData(message.Value, cloudEvent);
             }
 
-            InitPartitioningKey(message, cloudEvent);
-            return Validation.CheckCloudEventArgument(cloudEvent, nameof(message));
-        }
-
-        private static void InitPartitioningKey(Message<string?, byte[]> message, CloudEvent cloudEvent)
-        {
-            if (!string.IsNullOrEmpty(message.Key))
+            if (partitionKeyAdapter.ConvertKeyToPartitionKeyAttributeValue(message.Key, out var partitionKeyAttributeValue))
             {
-                cloudEvent[Partitioning.PartitionKeyAttribute] = message.Key;
+                cloudEvent[Partitioning.PartitionKeyAttribute] = partitionKeyAttributeValue;
             }
+            return Validation.CheckCloudEventArgument(cloudEvent, nameof(message));
         }
 
         /// <summary>
@@ -136,12 +159,22 @@ namespace CloudNative.CloudEvents.Kafka
         /// <param name="contentMode">Content mode. Structured or binary.</param>
         /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
         public static Message<string?, byte[]> ToKafkaMessage(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter)
+            => ToKafkaMessage(cloudEvent, contentMode, formatter, new StringPartitionKeyAdapter());
+
+        /// <summary>
+        /// Converts a CloudEvent to a Kafka message.
+        /// </summary>
+        /// <param name="cloudEvent">The CloudEvent to convert. Must not be null, and must be a valid CloudEvent.</param>
+        /// <param name="contentMode">Content mode. Structured or binary.</param>
+        /// <param name="formatter">The formatter to use within the conversion. Must not be null.</param>
+        /// <param name="partitionKeyAdapter">The partition key adapter responsible for transforming the cloud event partitioning key into the desired Kafka key type.</param>
+        /// <typeparam name="TKey">The Kafka Key type to be used </typeparam>
+        public static Message<TKey, byte[]> ToKafkaMessage<TKey>(this CloudEvent cloudEvent, ContentMode contentMode, CloudEventFormatter formatter, IPartitionKeyAdapter<TKey> partitionKeyAdapter)
         {
             Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
             Validation.CheckNotNull(formatter, nameof(formatter));
 
             var headers = MapHeaders(cloudEvent);
-            string? key = (string?) cloudEvent[Partitioning.PartitionKeyAttribute];
             byte[] value;
             string? contentTypeHeaderValue;
 
@@ -163,12 +196,17 @@ namespace CloudNative.CloudEvents.Kafka
             {
                 headers.Add(KafkaContentTypeAttributeName, Encoding.UTF8.GetBytes(contentTypeHeaderValue));
             }
-            return new Message<string?, byte[]>
+            var message = new Message<TKey, byte[]>
             {
                 Headers = headers,
-                Value = value,
-                Key = key
+                Value = value
             };
+            if (partitionKeyAdapter.ConvertPartitionKeyAttributeValueToKey((string?)cloudEvent[Partitioning.PartitionKeyAttribute], out var keyValue)
+                && keyValue != null)
+            {
+                message.Key = keyValue;
+            }
+            return message;
         }
 
         private static Headers MapHeaders(CloudEvent cloudEvent)
