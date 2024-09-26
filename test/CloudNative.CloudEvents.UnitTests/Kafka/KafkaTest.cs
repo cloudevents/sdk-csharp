@@ -140,7 +140,6 @@ namespace CloudNative.CloudEvents.Kafka.UnitTests
         public void KafkaNullKeyedStructuredMessageTest()
         {
             // It will test the serialization using Confluent's Confluent.Kafka.Null type for the key.
-            // As the default behavior without adapter is to skip the key it will work properly.
             var partitionKeyAdapter = new PartitionKeyAdapters.NullPartitionKeyAdapter<Confluent.Kafka.Null>();
             var jsonEventFormatter = new JsonEventFormatter();
             var cloudEvent = CreateTestCloudEvent();

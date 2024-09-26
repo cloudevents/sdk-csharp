@@ -25,6 +25,7 @@ namespace CloudNative.CloudEvents.Kafka
         internal const string KafkaContentTypeAttributeName = "content-type";
         private const string SpecVersionKafkaHeader = KafkaHeaderPrefix + "specversion";
 
+
         /// <summary>
         /// Indicates whether this message holds a single CloudEvent.
         /// </summary>
@@ -32,6 +33,17 @@ namespace CloudNative.CloudEvents.Kafka
         /// This method returns false for batch requests, as they need to be parsed differently.
         /// </remarks>
         /// <param name="message">The message to check for the presence of a CloudEvent. Must not be null.</param>
+        /// <returns>true, if the request is a CloudEvent</returns>
+        public static bool IsCloudEvent(this Message<string?, byte[]> message) => IsCloudEvent<string?>(message);
+
+        /// <summary>
+        /// Indicates whether this message holds a single CloudEvent.
+        /// </summary>
+        /// <remarks>
+        /// This method returns false for batch requests, as they need to be parsed differently.
+        /// </remarks>
+        /// <param name="message">The message to check for the presence of a CloudEvent. Must not be null.</param>
+        /// <typeparam name="TKey">The type of key of the Kafka message.</typeparam>
         /// <returns>true, if the request is a CloudEvent</returns>
         public static bool IsCloudEvent<TKey>(this Message<TKey, byte[]> message) =>
             GetHeaderValue(message, SpecVersionKafkaHeader) is object ||
