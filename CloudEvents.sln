@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		appveyor.yml = appveyor.yml
 		LICENSE = LICENSE
+		nuget.config = nuget.config
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -71,6 +72,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "xml", "xml", "{4012C753-68D
 		conformance\format\xml\valid-batches.xml = conformance\format\xml\valid-batches.xml
 		conformance\format\xml\valid-events.xml = conformance\format\xml\valid-events.xml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cloudnative.CloudEvents.Pulsar", "Cloudnative.CloudEvents.Pulsar\Cloudnative.CloudEvents.Pulsar.csproj", "{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -238,6 +241,18 @@ Global
 		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|x64.Build.0 = Release|Any CPU
 		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|x86.ActiveCfg = Release|Any CPU
 		{9D82AC2B-0075-4161-AE0E-4A6629C9FF2A}.Release|x86.Build.0 = Release|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Debug|x64.Build.0 = Debug|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Debug|x86.Build.0 = Debug|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Release|x64.ActiveCfg = Release|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Release|x64.Build.0 = Release|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Release|x86.ActiveCfg = Release|Any CPU
+		{41FAAAF0-7E77-4D61-8291-F8CB5F5D2D00}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
