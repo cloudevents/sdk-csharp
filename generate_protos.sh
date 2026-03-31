@@ -4,7 +4,7 @@
 # See LICENSE file in the project root for full license information.
 
 set -e
-PROTOBUF_VERSION=22.0
+PROTOBUF_VERSION=34.0
 
 # Generates the classes for the protobuf event format
 

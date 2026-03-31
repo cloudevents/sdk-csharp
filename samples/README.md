@@ -10,7 +10,7 @@ This directory contains a sample ASP.NET Core application that exposes two endpo
 To run the sample, execute the `dotnet run` command in the `CloudNative.CloudEvents.AspNetCoreSample` directory.
 
 ```shell
-dotnet run --framework net6.0
+dotnet run --framework net8.0
 ```
 
 After running the web service using the command above, there are three strategies for sending requests to the web service.
@@ -20,7 +20,7 @@ After running the web service using the command above, there are three strategie
 The `HttpSend` project provides a CLI tool for sending requests to the `/api/events/receive` endpoint exposed by the service. To use the tool, navigate to the `HttpSend` directory and execute the following command:
 
 ```shell
-dotnet run --framework net6.0 --url https://localhost:5001/api/events/receive
+dotnet run --framework net8.0 --url https://localhost:5001/api/events/receive
 ```
 
 ### Using the `.http` file

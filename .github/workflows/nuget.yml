@@ -17,14 +17,14 @@ jobs:
       with:
         submodules: true
 
-    # Build with .NET 8.0 SDK
-    # Test with .NET 6.0 and 8.0
-    - name: Setup .NET 6.0 and 8.0
-      uses: actions/setup-dotnet@v3
+    # Build with .NET 10.0 SDK
+    # Test with .NET 8.0 and 10.0
+    - name: Setup .NET 8.0 and 10.0
+      uses: actions/setup-dotnet@v5.2.0
       with:
         dotnet-version: |
           8.0.x
-          6.0.x
+          10.0.x
 
     - name: Build
       run: |

@@ -1,4 +1,4 @@
-﻿// Copyright 2023 Cloud Native Foundation.
+// Copyright 2023 Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -49,7 +49,7 @@ internal class TestDataProvider
         var directory = new DirectoryInfo(currentDirectory);
         while (directory != null &&
             (!File.Exists(Path.Combine(directory.FullName, "LICENSE"))
-            || !File.Exists(Path.Combine(directory.FullName, "CloudEvents.sln"))))
+            || !File.Exists(Path.Combine(directory.FullName, "CloudEvents.slnx"))))
         {
             directory = directory.Parent;
         }
