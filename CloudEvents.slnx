@@ -1,0 +1,53 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/conformance/" />
+  <Folder Name="/conformance/format/">
+    <File Path="conformance/format/README.md" />
+  </Folder>
+  <Folder Name="/conformance/format/json/">
+    <File Path="conformance/format/json/invalid-batches.json" />
+    <File Path="conformance/format/json/invalid-events.json" />
+    <File Path="conformance/format/json/README.md" />
+    <File Path="conformance/format/json/valid-batches.json" />
+    <File Path="conformance/format/json/valid-events.json" />
+  </Folder>
+  <Folder Name="/conformance/format/protobuf/">
+    <File Path="conformance/format/protobuf/conformance_tests.proto" />
+    <File Path="conformance/format/protobuf/invalid-batches.json" />
+    <File Path="conformance/format/protobuf/invalid-events.json" />
+    <File Path="conformance/format/protobuf/README.md" />
+    <File Path="conformance/format/protobuf/valid-batches.json" />
+    <File Path="conformance/format/protobuf/valid-events.json" />
+  </Folder>
+  <Folder Name="/conformance/format/xml/">
+    <File Path="conformance/format/xml/invalid-batches.xml" />
+    <File Path="conformance/format/xml/invalid-events.xml" />
+    <File Path="conformance/format/xml/README.md" />
+    <File Path="conformance/format/xml/valid-batches.xml" />
+    <File Path="conformance/format/xml/valid-events.xml" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="appveyor.yml" />
+    <File Path="Directory.Packages.props" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="samples/CloudNative.CloudEvents.AspNetCoreSample/CloudNative.CloudEvents.AspNetCoreSample.csproj" />
+  <Project Path="samples/HttpSend/HttpSend.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.Amqp/CloudNative.CloudEvents.Amqp.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.AspNetCore/CloudNative.CloudEvents.AspNetCore.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.Avro/CloudNative.CloudEvents.Avro.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.Kafka/CloudNative.CloudEvents.Kafka.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.Mqtt/CloudNative.CloudEvents.Mqtt.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.NewtonsoftJson/CloudNative.CloudEvents.NewtonsoftJson.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.Protobuf/CloudNative.CloudEvents.Protobuf.csproj" />
+  <Project Path="src/CloudNative.CloudEvents.SystemTextJson/CloudNative.CloudEvents.SystemTextJson.csproj" />
+  <Project Path="src/CloudNative.CloudEvents/CloudNative.CloudEvents.csproj" />
+  <Project Path="test/CloudNative.CloudEvents.IntegrationTests/CloudNative.CloudEvents.IntegrationTests.csproj" />
+  <Project Path="test/CloudNative.CloudEvents.UnitTests/CloudNative.CloudEvents.UnitTests.csproj" />
+</Solution>

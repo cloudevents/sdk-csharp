@@ -55,6 +55,7 @@ namespace CloudNative.CloudEvents.V1 {
 
   }
   #region Messages
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class CloudEvent : pb::IMessage<CloudEvent>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -188,10 +189,24 @@ namespace CloudNative.CloudEvents.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public pb::ByteString BinaryData {
-      get { return dataCase_ == DataOneofCase.BinaryData ? (pb::ByteString) data_ : pb::ByteString.Empty; }
+      get { return HasBinaryData ? (pb::ByteString) data_ : pb::ByteString.Empty; }
       set {
         data_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
         dataCase_ = DataOneofCase.BinaryData;
+      }
+    }
+    /// <summary>Gets whether the "binary_data" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasBinaryData {
+      get { return dataCase_ == DataOneofCase.BinaryData; }
+    }
+    /// <summary> Clears the value of the oneof if it's currently set to "binary_data" </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearBinaryData() {
+      if (HasBinaryData) {
+        ClearData();
       }
     }
 
@@ -200,10 +215,24 @@ namespace CloudNative.CloudEvents.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public string TextData {
-      get { return dataCase_ == DataOneofCase.TextData ? (string) data_ : ""; }
+      get { return HasTextData ? (string) data_ : ""; }
       set {
         data_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
         dataCase_ = DataOneofCase.TextData;
+      }
+    }
+    /// <summary>Gets whether the "text_data" field is set</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool HasTextData {
+      get { return dataCase_ == DataOneofCase.TextData; }
+    }
+    /// <summary> Clears the value of the oneof if it's currently set to "text_data" </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void ClearTextData() {
+      if (HasTextData) {
+        ClearData();
       }
     }
 
@@ -277,8 +306,8 @@ namespace CloudNative.CloudEvents.V1 {
       if (SpecVersion.Length != 0) hash ^= SpecVersion.GetHashCode();
       if (Type.Length != 0) hash ^= Type.GetHashCode();
       hash ^= Attributes.GetHashCode();
-      if (dataCase_ == DataOneofCase.BinaryData) hash ^= BinaryData.GetHashCode();
-      if (dataCase_ == DataOneofCase.TextData) hash ^= TextData.GetHashCode();
+      if (HasBinaryData) hash ^= BinaryData.GetHashCode();
+      if (HasTextData) hash ^= TextData.GetHashCode();
       if (dataCase_ == DataOneofCase.ProtoData) hash ^= ProtoData.GetHashCode();
       hash ^= (int) dataCase_;
       if (_unknownFields != null) {
@@ -316,11 +345,11 @@ namespace CloudNative.CloudEvents.V1 {
         output.WriteString(Type);
       }
       attributes_.WriteTo(output, _map_attributes_codec);
-      if (dataCase_ == DataOneofCase.BinaryData) {
+      if (HasBinaryData) {
         output.WriteRawTag(50);
         output.WriteBytes(BinaryData);
       }
-      if (dataCase_ == DataOneofCase.TextData) {
+      if (HasTextData) {
         output.WriteRawTag(58);
         output.WriteString(TextData);
       }
@@ -355,11 +384,11 @@ namespace CloudNative.CloudEvents.V1 {
         output.WriteString(Type);
       }
       attributes_.WriteTo(ref output, _map_attributes_codec);
-      if (dataCase_ == DataOneofCase.BinaryData) {
+      if (HasBinaryData) {
         output.WriteRawTag(50);
         output.WriteBytes(BinaryData);
       }
-      if (dataCase_ == DataOneofCase.TextData) {
+      if (HasTextData) {
         output.WriteRawTag(58);
         output.WriteString(TextData);
       }
@@ -390,10 +419,10 @@ namespace CloudNative.CloudEvents.V1 {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Type);
       }
       size += attributes_.CalculateSize(_map_attributes_codec);
-      if (dataCase_ == DataOneofCase.BinaryData) {
+      if (HasBinaryData) {
         size += 1 + pb::CodedOutputStream.ComputeBytesSize(BinaryData);
       }
-      if (dataCase_ == DataOneofCase.TextData) {
+      if (HasTextData) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(TextData);
       }
       if (dataCase_ == DataOneofCase.ProtoData) {
@@ -450,7 +479,11 @@ namespace CloudNative.CloudEvents.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -502,7 +535,11 @@ namespace CloudNative.CloudEvents.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
@@ -553,6 +590,7 @@ namespace CloudNative.CloudEvents.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static partial class Types {
+      [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
       public sealed partial class CloudEventAttributeValue : pb::IMessage<CloudEventAttributeValue>
       #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
           , pb::IBufferMessage
@@ -625,10 +663,24 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public bool CeBoolean {
-          get { return attrCase_ == AttrOneofCase.CeBoolean ? (bool) attr_ : false; }
+          get { return HasCeBoolean ? (bool) attr_ : false; }
           set {
             attr_ = value;
             attrCase_ = AttrOneofCase.CeBoolean;
+          }
+        }
+        /// <summary>Gets whether the "ce_boolean" field is set</summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public bool HasCeBoolean {
+          get { return attrCase_ == AttrOneofCase.CeBoolean; }
+        }
+        /// <summary> Clears the value of the oneof if it's currently set to "ce_boolean" </summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public void ClearCeBoolean() {
+          if (HasCeBoolean) {
+            ClearAttr();
           }
         }
 
@@ -637,10 +689,24 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public int CeInteger {
-          get { return attrCase_ == AttrOneofCase.CeInteger ? (int) attr_ : 0; }
+          get { return HasCeInteger ? (int) attr_ : 0; }
           set {
             attr_ = value;
             attrCase_ = AttrOneofCase.CeInteger;
+          }
+        }
+        /// <summary>Gets whether the "ce_integer" field is set</summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public bool HasCeInteger {
+          get { return attrCase_ == AttrOneofCase.CeInteger; }
+        }
+        /// <summary> Clears the value of the oneof if it's currently set to "ce_integer" </summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public void ClearCeInteger() {
+          if (HasCeInteger) {
+            ClearAttr();
           }
         }
 
@@ -649,10 +715,24 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public string CeString {
-          get { return attrCase_ == AttrOneofCase.CeString ? (string) attr_ : ""; }
+          get { return HasCeString ? (string) attr_ : ""; }
           set {
             attr_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
             attrCase_ = AttrOneofCase.CeString;
+          }
+        }
+        /// <summary>Gets whether the "ce_string" field is set</summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public bool HasCeString {
+          get { return attrCase_ == AttrOneofCase.CeString; }
+        }
+        /// <summary> Clears the value of the oneof if it's currently set to "ce_string" </summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public void ClearCeString() {
+          if (HasCeString) {
+            ClearAttr();
           }
         }
 
@@ -661,10 +741,24 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public pb::ByteString CeBytes {
-          get { return attrCase_ == AttrOneofCase.CeBytes ? (pb::ByteString) attr_ : pb::ByteString.Empty; }
+          get { return HasCeBytes ? (pb::ByteString) attr_ : pb::ByteString.Empty; }
           set {
             attr_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
             attrCase_ = AttrOneofCase.CeBytes;
+          }
+        }
+        /// <summary>Gets whether the "ce_bytes" field is set</summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public bool HasCeBytes {
+          get { return attrCase_ == AttrOneofCase.CeBytes; }
+        }
+        /// <summary> Clears the value of the oneof if it's currently set to "ce_bytes" </summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public void ClearCeBytes() {
+          if (HasCeBytes) {
+            ClearAttr();
           }
         }
 
@@ -673,10 +767,24 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public string CeUri {
-          get { return attrCase_ == AttrOneofCase.CeUri ? (string) attr_ : ""; }
+          get { return HasCeUri ? (string) attr_ : ""; }
           set {
             attr_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
             attrCase_ = AttrOneofCase.CeUri;
+          }
+        }
+        /// <summary>Gets whether the "ce_uri" field is set</summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public bool HasCeUri {
+          get { return attrCase_ == AttrOneofCase.CeUri; }
+        }
+        /// <summary> Clears the value of the oneof if it's currently set to "ce_uri" </summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public void ClearCeUri() {
+          if (HasCeUri) {
+            ClearAttr();
           }
         }
 
@@ -685,10 +793,24 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public string CeUriRef {
-          get { return attrCase_ == AttrOneofCase.CeUriRef ? (string) attr_ : ""; }
+          get { return HasCeUriRef ? (string) attr_ : ""; }
           set {
             attr_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
             attrCase_ = AttrOneofCase.CeUriRef;
+          }
+        }
+        /// <summary>Gets whether the "ce_uri_ref" field is set</summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public bool HasCeUriRef {
+          get { return attrCase_ == AttrOneofCase.CeUriRef; }
+        }
+        /// <summary> Clears the value of the oneof if it's currently set to "ce_uri_ref" </summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+        public void ClearCeUriRef() {
+          if (HasCeUriRef) {
+            ClearAttr();
           }
         }
 
@@ -760,12 +882,12 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public override int GetHashCode() {
           int hash = 1;
-          if (attrCase_ == AttrOneofCase.CeBoolean) hash ^= CeBoolean.GetHashCode();
-          if (attrCase_ == AttrOneofCase.CeInteger) hash ^= CeInteger.GetHashCode();
-          if (attrCase_ == AttrOneofCase.CeString) hash ^= CeString.GetHashCode();
-          if (attrCase_ == AttrOneofCase.CeBytes) hash ^= CeBytes.GetHashCode();
-          if (attrCase_ == AttrOneofCase.CeUri) hash ^= CeUri.GetHashCode();
-          if (attrCase_ == AttrOneofCase.CeUriRef) hash ^= CeUriRef.GetHashCode();
+          if (HasCeBoolean) hash ^= CeBoolean.GetHashCode();
+          if (HasCeInteger) hash ^= CeInteger.GetHashCode();
+          if (HasCeString) hash ^= CeString.GetHashCode();
+          if (HasCeBytes) hash ^= CeBytes.GetHashCode();
+          if (HasCeUri) hash ^= CeUri.GetHashCode();
+          if (HasCeUriRef) hash ^= CeUriRef.GetHashCode();
           if (attrCase_ == AttrOneofCase.CeTimestamp) hash ^= CeTimestamp.GetHashCode();
           hash ^= (int) attrCase_;
           if (_unknownFields != null) {
@@ -786,27 +908,27 @@ namespace CloudNative.CloudEvents.V1 {
         #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
           output.WriteRawMessage(this);
         #else
-          if (attrCase_ == AttrOneofCase.CeBoolean) {
+          if (HasCeBoolean) {
             output.WriteRawTag(8);
             output.WriteBool(CeBoolean);
           }
-          if (attrCase_ == AttrOneofCase.CeInteger) {
+          if (HasCeInteger) {
             output.WriteRawTag(16);
             output.WriteInt32(CeInteger);
           }
-          if (attrCase_ == AttrOneofCase.CeString) {
+          if (HasCeString) {
             output.WriteRawTag(26);
             output.WriteString(CeString);
           }
-          if (attrCase_ == AttrOneofCase.CeBytes) {
+          if (HasCeBytes) {
             output.WriteRawTag(34);
             output.WriteBytes(CeBytes);
           }
-          if (attrCase_ == AttrOneofCase.CeUri) {
+          if (HasCeUri) {
             output.WriteRawTag(42);
             output.WriteString(CeUri);
           }
-          if (attrCase_ == AttrOneofCase.CeUriRef) {
+          if (HasCeUriRef) {
             output.WriteRawTag(50);
             output.WriteString(CeUriRef);
           }
@@ -824,27 +946,27 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-          if (attrCase_ == AttrOneofCase.CeBoolean) {
+          if (HasCeBoolean) {
             output.WriteRawTag(8);
             output.WriteBool(CeBoolean);
           }
-          if (attrCase_ == AttrOneofCase.CeInteger) {
+          if (HasCeInteger) {
             output.WriteRawTag(16);
             output.WriteInt32(CeInteger);
           }
-          if (attrCase_ == AttrOneofCase.CeString) {
+          if (HasCeString) {
             output.WriteRawTag(26);
             output.WriteString(CeString);
           }
-          if (attrCase_ == AttrOneofCase.CeBytes) {
+          if (HasCeBytes) {
             output.WriteRawTag(34);
             output.WriteBytes(CeBytes);
           }
-          if (attrCase_ == AttrOneofCase.CeUri) {
+          if (HasCeUri) {
             output.WriteRawTag(42);
             output.WriteString(CeUri);
           }
-          if (attrCase_ == AttrOneofCase.CeUriRef) {
+          if (HasCeUriRef) {
             output.WriteRawTag(50);
             output.WriteString(CeUriRef);
           }
@@ -862,22 +984,22 @@ namespace CloudNative.CloudEvents.V1 {
         [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
         public int CalculateSize() {
           int size = 0;
-          if (attrCase_ == AttrOneofCase.CeBoolean) {
+          if (HasCeBoolean) {
             size += 1 + 1;
           }
-          if (attrCase_ == AttrOneofCase.CeInteger) {
+          if (HasCeInteger) {
             size += 1 + pb::CodedOutputStream.ComputeInt32Size(CeInteger);
           }
-          if (attrCase_ == AttrOneofCase.CeString) {
+          if (HasCeString) {
             size += 1 + pb::CodedOutputStream.ComputeStringSize(CeString);
           }
-          if (attrCase_ == AttrOneofCase.CeBytes) {
+          if (HasCeBytes) {
             size += 1 + pb::CodedOutputStream.ComputeBytesSize(CeBytes);
           }
-          if (attrCase_ == AttrOneofCase.CeUri) {
+          if (HasCeUri) {
             size += 1 + pb::CodedOutputStream.ComputeStringSize(CeUri);
           }
-          if (attrCase_ == AttrOneofCase.CeUriRef) {
+          if (HasCeUriRef) {
             size += 1 + pb::CodedOutputStream.ComputeStringSize(CeUriRef);
           }
           if (attrCase_ == AttrOneofCase.CeTimestamp) {
@@ -933,7 +1055,11 @@ namespace CloudNative.CloudEvents.V1 {
         #else
           uint tag;
           while ((tag = input.ReadTag()) != 0) {
-            switch(tag) {
+          if ((tag & 7) == 4) {
+            // Abort on any end group tag.
+            return;
+          }
+          switch(tag) {
               default:
                 _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
                 break;
@@ -981,7 +1107,11 @@ namespace CloudNative.CloudEvents.V1 {
         void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
           uint tag;
           while ((tag = input.ReadTag()) != 0) {
-            switch(tag) {
+          if ((tag & 7) == 4) {
+            // Abort on any end group tag.
+            return;
+          }
+          switch(tag) {
               default:
                 _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
                 break;
@@ -1030,6 +1160,7 @@ namespace CloudNative.CloudEvents.V1 {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class CloudEventBatch : pb::IMessage<CloudEventBatch>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1174,7 +1305,11 @@ namespace CloudNative.CloudEvents.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -1193,7 +1328,11 @@ namespace CloudNative.CloudEvents.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
