@@ -80,6 +80,8 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
     /// </remarks>
     public class JsonEventFormatter : CloudEventFormatter
     {
+        private static readonly Encoding noBomUtf8 = new UTF8Encoding(false);
+
         private static readonly IReadOnlyDictionary<CloudEventAttributeType, JTokenType> expectedTokenTypesForReservedAttributes =
             new Dictionary<CloudEventAttributeType, JTokenType>
             {
@@ -395,7 +397,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 CharSet = Encoding.UTF8.WebName
             };
 
-            var stream = new MemoryStream();
+            var stream = this.GetMemoryStream();
             var writer = CreateJsonTextWriter(stream);
             WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
             writer.Flush();
@@ -425,7 +427,7 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 CharSet = Encoding.UTF8.WebName
             };
 
-            var stream = new MemoryStream();
+            var stream = this.GetMemoryStream();
             var writer = CreateJsonTextWriter(stream);
             writer.WriteStartArray();
             foreach (var cloudEvent in cloudEvents)
@@ -568,13 +570,21 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
             ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
             if (IsJsonMediaType(contentType.MediaType))
             {
-                // TODO: Make this more efficient. We could write to a StreamWriter with a MemoryStream,
-                // but then we end up with a BOM in most cases, which I suspect we don't want.
-                // An alternative is to make sure that contentType.GetEncoding() always returns an encoding
-                // without a preamble (or rewrite StreamWriter...)
-                var stringWriter = new StringWriter();
-                Serializer.Serialize(stringWriter, cloudEvent.Data);
-                return MimeUtilities.GetEncoding(contentType).GetBytes(stringWriter.ToString());
+                var encoding = MimeUtilities.GetEncoding(contentType);
+                if (ReferenceEquals(encoding, Encoding.UTF8))
+                {
+                    using var stream = this.GetMemoryStream();
+                    using var writer = new StreamWriter(stream, noBomUtf8);
+                    Serializer.Serialize(writer, cloudEvent.Data);
+                    writer.Flush();
+                    return stream.ToArray();
+                }
+                else
+                {
+                    var stringWriter = new StringWriter();
+                    Serializer.Serialize(stringWriter, cloudEvent.Data);
+                    return encoding.GetBytes(stringWriter.ToString());
+                }
             }
             if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
             {
@@ -613,6 +623,13 @@ namespace CloudNative.CloudEvents.NewtonsoftJson
                 cloudEvent.Data = body.ToArray();
             }
         }
+
+        /// <summary>
+        /// Creates  a stream that can be written to to provide buffered array data.
+        /// </summary>
+        /// <returns>A memory stream.</returns>
+        protected virtual MemoryStream GetMemoryStream()
+            => new MemoryStream();
 
         /// <summary>
         /// Creates a <see cref="JsonReader"/> for the given stream. This may be overridden in derived classes to
