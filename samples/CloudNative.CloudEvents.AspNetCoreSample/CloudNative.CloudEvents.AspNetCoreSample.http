@@ -1,16 +1,56 @@
 @HostAddress = https://localhost:5001
 
+### Send via Structured mode
+
+POST {{HostAddress}}/api/events/receive
+Content-Type: application/cloudevents+json; charset=utf-8
+
+{
+  "specversion": "1.0",
+  "type":  "com.example.myevent",
+  "source": "urn:example-com:mysource:abc",
+  "id": "{{$guid}}",
+  "data": {
+    "message": "Hello world!"
+  }
+}
+
+### Send via Binary mode
+
 POST {{HostAddress}}/api/events/receive
 Content-Type: application/json
 CE-SpecVersion: 1.0
 CE-Type: "com.example.myevent"
 CE-Source: "urn:example-com:mysource:abc"
-CE-Id: "c457b7c5-c038-4be9-98b9-938cb64a4fbf"
+CE-Id: "{{$guid}}"
 
 {
     "message": "Hello world!"
 }
 
-###
+### Send content-less via Binary mode
+
+POST {{HostAddress}}/api/events/receive
+CE-SpecVersion: 1.0
+CE-Type: "com.example.myevent"
+CE-Source: "urn:example-com:mysource:abc"
+CE-Id: "{{$guid}}"
+
+### Send unsupported media type (XML) via Binary mode
+
+POST {{HostAddress}}/api/events/receive
+Content-Type: text/xml
+CE-SpecVersion: 1.0
+CE-Type: "com.example.myevent"
+CE-Source: "urn:example-com:mysource:abc"
+CE-Id: "{{$guid}}"
+
+<message>Hello world!</message>
+
+### Generate via Structured mode
 
 GET {{HostAddress}}/api/events/generate
+
+### Generate via Binary mode
+
+GET {{HostAddress}}/api/events/generate?contentMode=Binary

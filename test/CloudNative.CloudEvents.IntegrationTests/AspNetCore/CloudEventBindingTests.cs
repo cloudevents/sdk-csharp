@@ -2,9 +2,8 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-using CloudNative.CloudEvents.AspNetCoreSample;
 using CloudNative.CloudEvents.Http;
-using CloudNative.CloudEvents.NewtonsoftJson;
+using CloudNative.CloudEvents.SystemTextJson;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System;
 using System.Net;
@@ -13,11 +12,11 @@ using Xunit;
 
 namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
 {
-    public class CloudEventControllerTests : IClassFixture<WebApplicationFactory<Program>>
+    public class CloudEventBindingTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
 
-        public CloudEventControllerTests(WebApplicationFactory<Program> factory)
+        public CloudEventBindingTests(WebApplicationFactory<Program> factory)
         {
             _factory = factory;
         }
@@ -25,7 +24,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
         [Theory]
         [InlineData(ContentMode.Structured)]
         [InlineData(ContentMode.Binary)]
-        public async Task Controller_WithValidCloudEvent_NoContent_DeserializesUsingPipeline(ContentMode contentMode)
+        public async Task Binding_WithValidCloudEvent_NoContent_DeserializesUsingPipeline(ContentMode contentMode)
         {
             // Arrange
             var expectedExtensionKey = "comexampleextension1";
@@ -50,7 +49,7 @@ namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
             Assert.Equal(HttpStatusCode.OK, result.StatusCode);
             Assert.Contains(cloudEvent.Id, resultContent);
             Assert.Contains(cloudEvent.Type, resultContent);
-            Assert.Contains($"\"{expectedExtensionKey}\": \"{expectedExtensionValue}\"", resultContent);
+            Assert.Contains($"\"{expectedExtensionKey}\":\"{expectedExtensionValue}\"", resultContent);
         }
     }
 }
