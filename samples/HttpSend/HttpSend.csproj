@@ -8,7 +8,7 @@
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" />
     <ProjectReference Include="..\..\src\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
-    <ProjectReference Include="..\..\src\CloudNative.CloudEvents.NewtonsoftJson\CloudNative.CloudEvents.NewtonsoftJson.csproj" />
+    <ProjectReference Include="..\..\src\CloudNative.CloudEvents.SystemTextJson\CloudNative.CloudEvents.SystemTextJson.csproj" />
   </ItemGroup>
 
 </Project>
