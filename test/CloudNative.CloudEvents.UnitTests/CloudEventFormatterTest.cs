@@ -7,78 +7,77 @@ using System.Collections.Generic;
 using System.Net.Mime;
 using Xunit;
 
-namespace CloudNative.CloudEvents.UnitTests
+namespace CloudNative.CloudEvents.UnitTests;
+
+public class CloudEventFormatterTest
 {
-    public class CloudEventFormatterTest
+    [Fact]
+    public void GetOrInferDataContentType_NullCloudEvent()
     {
-        [Fact]
-        public void GetOrInferDataContentType_NullCloudEvent()
-        {
-            var formatter = new ContentTypeInferringFormatter();
-            Assert.Throws<ArgumentNullException>(() => formatter.GetOrInferDataContentType(null!));
-        }
+        var formatter = new ContentTypeInferringFormatter();
+        Assert.Throws<ArgumentNullException>(() => formatter.GetOrInferDataContentType(null!));
+    }
 
-        [Fact]
-        public void GetOrInferDataContentType_NoDataOrDataContentType()
-        {
-            var formatter = new ContentTypeInferringFormatter();
-            var cloudEvent = new CloudEvent();
-            Assert.Null(formatter.GetOrInferDataContentType(cloudEvent));
-        }
+    [Fact]
+    public void GetOrInferDataContentType_NoDataOrDataContentType()
+    {
+        var formatter = new ContentTypeInferringFormatter();
+        var cloudEvent = new CloudEvent();
+        Assert.Null(formatter.GetOrInferDataContentType(cloudEvent));
+    }
 
-        [Fact]
-        public void GetOrInferDataContentType_HasDataContentType()
-        {
-            var formatter = new ContentTypeInferringFormatter();
-            var cloudEvent = new CloudEvent { DataContentType = "test/pass" };
-            Assert.Equal(cloudEvent.DataContentType, formatter.GetOrInferDataContentType(cloudEvent));
-        }
+    [Fact]
+    public void GetOrInferDataContentType_HasDataContentType()
+    {
+        var formatter = new ContentTypeInferringFormatter();
+        var cloudEvent = new CloudEvent { DataContentType = "test/pass" };
+        Assert.Equal(cloudEvent.DataContentType, formatter.GetOrInferDataContentType(cloudEvent));
+    }
 
-        [Fact]
-        public void GetOrInferDataContentType_HasDataButNoContentType_OverriddenInferDataContentType()
-        {
-            var formatter = new ContentTypeInferringFormatter();
-            var cloudEvent = new CloudEvent { Data = "some-data" };
-            Assert.Equal("test/some-data", formatter.GetOrInferDataContentType(cloudEvent));
-        }
+    [Fact]
+    public void GetOrInferDataContentType_HasDataButNoContentType_OverriddenInferDataContentType()
+    {
+        var formatter = new ContentTypeInferringFormatter();
+        var cloudEvent = new CloudEvent { Data = "some-data" };
+        Assert.Equal("test/some-data", formatter.GetOrInferDataContentType(cloudEvent));
+    }
 
-        [Fact]
-        public void GetOrInferDataContentType_DataButNoContentType_DefaultInferDataContentType()
-        {
-            var formatter = new ThrowingEventFormatter();
-            var cloudEvent = new CloudEvent { Data = "some-data" };
-            Assert.Null(formatter.GetOrInferDataContentType(cloudEvent));
-        }
+    [Fact]
+    public void GetOrInferDataContentType_DataButNoContentType_DefaultInferDataContentType()
+    {
+        var formatter = new ThrowingEventFormatter();
+        var cloudEvent = new CloudEvent { Data = "some-data" };
+        Assert.Null(formatter.GetOrInferDataContentType(cloudEvent));
+    }
 
-        private class ContentTypeInferringFormatter : ThrowingEventFormatter
-        {
-            protected override string? InferDataContentType(object data) => $"test/{data}";
-        }
+    private class ContentTypeInferringFormatter : ThrowingEventFormatter
+    {
+        protected override string? InferDataContentType(object data) => $"test/{data}";
+    }
 
-        /// <summary>
-        /// Event formatter that overrides every abstract method to throw NotImplementedException.
-        /// This can be derived from (and further overridden) to easily test concrete methods
-        /// in CloudEventFormatter itself.
-        /// </summary>
-        private class ThrowingEventFormatter : CloudEventFormatter
-        {
-            public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
-                throw new NotImplementedException();
+    /// <summary>
+    /// Event formatter that overrides every abstract method to throw NotImplementedException.
+    /// This can be derived from (and further overridden) to easily test concrete methods
+    /// in CloudEventFormatter itself.
+    /// </summary>
+    private class ThrowingEventFormatter : CloudEventFormatter
+    {
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
+            throw new NotImplementedException();
 
-            public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
-                throw new NotImplementedException();
+        public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
+            throw new NotImplementedException();
 
-            public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
-                throw new NotImplementedException();
+        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
+            throw new NotImplementedException();
 
-            public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType) =>
-                throw new NotImplementedException();
+        public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType) =>
+            throw new NotImplementedException();
 
-            public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
-                throw new NotImplementedException();
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
+            throw new NotImplementedException();
 
-            public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
-                throw new NotImplementedException();
-        }
+        public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
+            throw new NotImplementedException();
     }
 }

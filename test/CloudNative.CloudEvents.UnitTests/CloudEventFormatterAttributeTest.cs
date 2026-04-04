@@ -7,72 +7,71 @@ using System.Collections.Generic;
 using System.Net.Mime;
 using Xunit;
 
-namespace CloudNative.CloudEvents.UnitTests
+namespace CloudNative.CloudEvents.UnitTests;
+
+public class CloudEventFormatterAttributeTest
 {
-    public class CloudEventFormatterAttributeTest
+    [Fact]
+    public void CreateFormatter_NoAttribute() =>
+        Assert.Null(CloudEventFormatterAttribute.CreateFormatter(typeof(NoAttribute)));
+
+    [Fact]
+    public void CreateFormatter_Valid() =>
+        Assert.IsType<SampleCloudEventFormatter>(CloudEventFormatterAttribute.CreateFormatter(typeof(ValidAttribute)));
+
+    [Theory]
+    [InlineData(typeof(NonInstantiableAttribute))]
+    [InlineData(typeof(NonEventFormatterAttribute))]
+    [InlineData(typeof(NullFormatterAttribute))]
+    public void CreateFormatter_Invalid(Type targetType) =>
+        Assert.Throws<ArgumentException>(() => CloudEventFormatterAttribute.CreateFormatter(targetType));
+
+    public class NoAttribute
     {
-        [Fact]
-        public void CreateFormatter_NoAttribute() =>
-            Assert.Null(CloudEventFormatterAttribute.CreateFormatter(typeof(NoAttribute)));
+    }
 
-        [Fact]
-        public void CreateFormatter_Valid() =>
-            Assert.IsType<SampleCloudEventFormatter>(CloudEventFormatterAttribute.CreateFormatter(typeof(ValidAttribute)));
+    [CloudEventFormatter(typeof(AbstractCloudEventFormatter))]
+    public class NonInstantiableAttribute
+    {
+    }
 
-        [Theory]
-        [InlineData(typeof(NonInstantiableAttribute))]
-        [InlineData(typeof(NonEventFormatterAttribute))]
-        [InlineData(typeof(NullFormatterAttribute))]
-        public void CreateFormatter_Invalid(Type targetType) =>
-            Assert.Throws<ArgumentException>(() => CloudEventFormatterAttribute.CreateFormatter(targetType));
+    [CloudEventFormatter(null!)]
+    public class NullFormatterAttribute
+    {
+    }
 
-        public class NoAttribute
-        {
-        }
+    [CloudEventFormatter(typeof(object))]
+    public class NonEventFormatterAttribute
+    {
+    }
 
-        [CloudEventFormatter(typeof(AbstractCloudEventFormatter))]
-        public class NonInstantiableAttribute
-        {
-        }
+    [CloudEventFormatter(typeof(SampleCloudEventFormatter))]
+    public class ValidAttribute
+    {
+    }
 
-        [CloudEventFormatter(null!)]
-        public class NullFormatterAttribute
-        {
-        }
+    public abstract class AbstractCloudEventFormatter : CloudEventFormatter
+    {
+    }
 
-        [CloudEventFormatter(typeof(object))]
-        public class NonEventFormatterAttribute
-        {
-        }
+    public class SampleCloudEventFormatter : CloudEventFormatter
+    {
+        public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
+            throw new NotImplementedException();
 
-        [CloudEventFormatter(typeof(SampleCloudEventFormatter))]
-        public class ValidAttribute
-        {
-        }
+        public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
+            throw new NotImplementedException();
 
-        public abstract class AbstractCloudEventFormatter : CloudEventFormatter
-        {
-        }
+        public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
+            throw new NotImplementedException();
 
-        public class SampleCloudEventFormatter : CloudEventFormatter
-        {
-            public override IReadOnlyList<CloudEvent> DecodeBatchModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
-                throw new NotImplementedException();
+        public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType) =>
+            throw new NotImplementedException();
 
-            public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent) =>
-                throw new NotImplementedException();
+        public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
+            throw new NotImplementedException();
 
-            public override CloudEvent DecodeStructuredModeMessage(ReadOnlyMemory<byte> body, ContentType? contentType, IEnumerable<CloudEventAttribute>? extensionAttributes) =>
-                throw new NotImplementedException();
-
-            public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvents, out ContentType contentType) =>
-                throw new NotImplementedException();
-
-            public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent) =>
-                throw new NotImplementedException();
-
-            public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
-                throw new NotImplementedException();
-        }
+        public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType) =>
+            throw new NotImplementedException();
     }
 }

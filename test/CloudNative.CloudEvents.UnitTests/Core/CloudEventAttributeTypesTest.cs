@@ -5,8 +5,7 @@
 using System;
 using Xunit;
 
-namespace CloudNative.CloudEvents.Core.UnitTests
-{
+namespace CloudNative.CloudEvents.Core.UnitTests;
     public class CloudEventAttributeTypesTest
     {
         public static readonly TheoryData<CloudEventAttributeType> AllTypes = new TheoryData<CloudEventAttributeType>
@@ -29,4 +28,3 @@ namespace CloudNative.CloudEvents.Core.UnitTests
         public void GetOrdinal_NonNullInput(CloudEventAttributeType type) =>
             Assert.Equal(type.Ordinal, CloudEventAttributeTypes.GetOrdinal(type));
     }
-}

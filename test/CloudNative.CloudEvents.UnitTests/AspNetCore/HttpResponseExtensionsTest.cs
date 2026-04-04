@@ -13,123 +13,122 @@ using System.Threading.Tasks;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
-namespace CloudNative.CloudEvents.AspNetCore.UnitTests
+namespace CloudNative.CloudEvents.AspNetCore.UnitTests;
+
+public class HttpResponseExtensionsTest
 {
-    public class HttpResponseExtensionsTest
+    [Fact]
+    public async Task CopyToHttpResponseAsync_BinaryMode()
     {
-        [Fact]
-        public async Task CopyToHttpResponseAsync_BinaryMode()
+        var cloudEvent = new CloudEvent
         {
-            var cloudEvent = new CloudEvent
-            {
-                Data = "plain text",
-                DataContentType = "text/plain"
-            }.PopulateRequiredAttributes();
-            var formatter = new JsonEventFormatter();
-            var response = CreateResponse();
-            await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter);
+            Data = "plain text",
+            DataContentType = "text/plain"
+        }.PopulateRequiredAttributes();
+        var formatter = new JsonEventFormatter();
+        var response = CreateResponse();
+        await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter);
 
-            var content = GetContent(response);
-            Assert.Equal("text/plain", response.ContentType);
-            Assert.Equal("plain text", Encoding.UTF8.GetString(content.Span));
-            Assert.Equal("1.0", response.Headers["ce-specversion"]);
-            Assert.Equal(cloudEvent.Type, response.Headers["ce-type"]);
-            Assert.Equal(cloudEvent.Id, response.Headers["ce-id"]);
-            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers["ce-source"]);
-            // There's no data content type header; the content type itself is used for that.
-            Assert.False(response.Headers.ContainsKey("ce-datacontenttype"));
-        }
+        var content = GetContent(response);
+        Assert.Equal("text/plain", response.ContentType);
+        Assert.Equal("plain text", Encoding.UTF8.GetString(content.Span));
+        Assert.Equal("1.0", response.Headers["ce-specversion"]);
+        Assert.Equal(cloudEvent.Type, response.Headers["ce-type"]);
+        Assert.Equal(cloudEvent.Id, response.Headers["ce-id"]);
+        Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers["ce-source"]);
+        // There's no data content type header; the content type itself is used for that.
+        Assert.False(response.Headers.ContainsKey("ce-datacontenttype"));
+    }
 
-        [Fact]
-        public async Task CopyToHttpResponseAsync_BinaryDataButNoDataContentType()
+    [Fact]
+    public async Task CopyToHttpResponseAsync_BinaryDataButNoDataContentType()
+    {
+        var cloudEvent = new CloudEvent
         {
-            var cloudEvent = new CloudEvent
-            {
-                Data = new byte[10],
-            }.PopulateRequiredAttributes();
-            var formatter = new JsonEventFormatter();
-            var response = CreateResponse();
-            // The formatter doesn't infer the data content type for binary data.
-            await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter));
-        }
+            Data = new byte[10],
+        }.PopulateRequiredAttributes();
+        var formatter = new JsonEventFormatter();
+        var response = CreateResponse();
+        // The formatter doesn't infer the data content type for binary data.
+        await Assert.ThrowsAsync<ArgumentException>(() => cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter));
+    }
 
-        [Fact]
-        public async Task CopyToHttpResponseAsync_NonBinaryDataButNoDataContentType_ContentTypeIsInferred()
+    [Fact]
+    public async Task CopyToHttpResponseAsync_NonBinaryDataButNoDataContentType_ContentTypeIsInferred()
+    {
+        var cloudEvent = new CloudEvent
         {
-            var cloudEvent = new CloudEvent
-            {
-                Data = "plain text",
-            }.PopulateRequiredAttributes();
-            var formatter = new JsonEventFormatter();
-            var response = CreateResponse();
-            await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter);
-            var content = GetContent(response);
-            // The formatter infers that it should encode the string as a JSON value (so it includes the double quotes)
-            Assert.Equal("application/json", response.ContentType);
-            Assert.Equal("\"plain text\"", Encoding.UTF8.GetString(content.Span));
-        }
+            Data = "plain text",
+        }.PopulateRequiredAttributes();
+        var formatter = new JsonEventFormatter();
+        var response = CreateResponse();
+        await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Binary, formatter);
+        var content = GetContent(response);
+        // The formatter infers that it should encode the string as a JSON value (so it includes the double quotes)
+        Assert.Equal("application/json", response.ContentType);
+        Assert.Equal("\"plain text\"", Encoding.UTF8.GetString(content.Span));
+    }
 
-        [Fact]
-        public async Task CopyToHttpResponseAsync_BadContentMode()
+    [Fact]
+    public async Task CopyToHttpResponseAsync_BadContentMode()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        var formatter = new JsonEventFormatter();
+        var response = CreateResponse();
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => cloudEvent.CopyToHttpResponseAsync(response, (ContentMode) 100, formatter));
+    }
+
+    [Fact]
+    public async Task CopyToHttpResponseAsync_StructuredMode()
+    {
+        var cloudEvent = new CloudEvent
         {
-            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
-            var formatter = new JsonEventFormatter();
-            var response = CreateResponse();
-            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => cloudEvent.CopyToHttpResponseAsync(response, (ContentMode) 100, formatter));
-        }
+            Data = "plain text",
+            DataContentType = "text/plain"
+        }.PopulateRequiredAttributes();
+        var formatter = new JsonEventFormatter();
+        var response = CreateResponse();
+        await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Structured, formatter);
+        var content = GetContent(response);
+        Assert.Equal(MimeUtilities.MediaType + "+json; charset=utf-8", response.ContentType);
+        Assert.NotNull(response.ContentType);
 
-        [Fact]
-        public async Task CopyToHttpResponseAsync_StructuredMode()
-        {
-            var cloudEvent = new CloudEvent
-            {
-                Data = "plain text",
-                DataContentType = "text/plain"
-            }.PopulateRequiredAttributes();
-            var formatter = new JsonEventFormatter();
-            var response = CreateResponse();
-            await cloudEvent.CopyToHttpResponseAsync(response, ContentMode.Structured, formatter);
-            var content = GetContent(response);
-            Assert.Equal(MimeUtilities.MediaType + "+json; charset=utf-8", response.ContentType);
-            Assert.NotNull(response.ContentType);
+        var parsed = new JsonEventFormatter().DecodeStructuredModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
+        AssertCloudEventsEqual(cloudEvent, parsed);
 
-            var parsed = new JsonEventFormatter().DecodeStructuredModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
-            AssertCloudEventsEqual(cloudEvent, parsed);
+        // We populate headers even though we don't strictly need to; let's validate that.
+        Assert.Equal("1.0", response.Headers["ce-specversion"]);
+        Assert.Equal(cloudEvent.Type, response.Headers["ce-type"]);
+        Assert.Equal(cloudEvent.Id, response.Headers["ce-id"]);
+        Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers["ce-source"]);
+        // We don't populate the data content type header
+        Assert.False(response.Headers.ContainsKey("ce-datacontenttype"));
+    }
 
-            // We populate headers even though we don't strictly need to; let's validate that.
-            Assert.Equal("1.0", response.Headers["ce-specversion"]);
-            Assert.Equal(cloudEvent.Type, response.Headers["ce-type"]);
-            Assert.Equal(cloudEvent.Id, response.Headers["ce-id"]);
-            Assert.Equal(CloudEventAttributeType.UriReference.Format(cloudEvent.Source!), response.Headers["ce-source"]);
-            // We don't populate the data content type header
-            Assert.False(response.Headers.ContainsKey("ce-datacontenttype"));
-        }
+    [Fact]
+    public async Task CopyToHttpResponseAsync_Batch()
+    {
+        var batch = CreateSampleBatch();
+        var response = CreateResponse();
+        await batch.CopyToHttpResponseAsync(response, new JsonEventFormatter());
 
-        [Fact]
-        public async Task CopyToHttpResponseAsync_Batch()
-        {
-            var batch = CreateSampleBatch();
-            var response = CreateResponse();
-            await batch.CopyToHttpResponseAsync(response, new JsonEventFormatter());
+        var content = GetContent(response);
+        Assert.Equal(MimeUtilities.BatchMediaType + "+json; charset=utf-8", response.ContentType);
+        Assert.NotNull(response.ContentType);
+        var parsedBatch = new JsonEventFormatter().DecodeBatchModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
+        AssertBatchesEqual(batch, parsedBatch);
+    }
 
-            var content = GetContent(response);
-            Assert.Equal(MimeUtilities.BatchMediaType + "+json; charset=utf-8", response.ContentType);
-            Assert.NotNull(response.ContentType);
-            var parsedBatch = new JsonEventFormatter().DecodeBatchModeMessage(content, new ContentType(response.ContentType), extensionAttributes: null);
-            AssertBatchesEqual(batch, parsedBatch);
-        }
+    private static HttpResponse CreateResponse()
+    {
+        var response = new DefaultHttpContext().Response;
+        response.Body = new MemoryStream();
+        return response;
+    }
 
-        private static HttpResponse CreateResponse()
-        {
-            var response = new DefaultHttpContext().Response;
-            response.Body = new MemoryStream();
-            return response;
-        }
-
-        private static ReadOnlyMemory<byte> GetContent(HttpResponse response)
-        {
-            response.Body.Position = 0;
-            return BinaryDataUtilities.ToReadOnlyMemory(response.Body);
-        }
+    private static ReadOnlyMemory<byte> GetContent(HttpResponse response)
+    {
+        response.Body.Position = 0;
+        return BinaryDataUtilities.ToReadOnlyMemory(response.Body);
     }
 }

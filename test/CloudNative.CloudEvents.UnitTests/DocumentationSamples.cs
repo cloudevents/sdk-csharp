@@ -16,161 +16,160 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CloudNative.CloudEvents.UnitTests
+namespace CloudNative.CloudEvents.UnitTests;
+
+/// <summary>
+/// Tests for the code in the docs/ directory.
+/// The code itself is currently copy/pasted from this file, but at least we have some confidence
+/// that it's working code. In the future we can write tooling to extract the code automatically.
+/// </summary>
+public class DocumentationSamples
 {
-    /// <summary>
-    /// Tests for the code in the docs/ directory.
-    /// The code itself is currently copy/pasted from this file, but at least we have some confidence
-    /// that it's working code. In the future we can write tooling to extract the code automatically.
-    /// </summary>
-    public class DocumentationSamples
+    [Fact]
+    public async Task HttpRequestMessageRoundtrip()
     {
-        [Fact]
-        public async Task HttpRequestMessageRoundtrip()
+        var requestMessage = CreateHttpRequestMessage();
+        var request = await ConvertHttpRequestMessage(requestMessage);
+
+        var cloudEvent = await ParseHttpRequestAsync(request);
+        Assert.Equal("event-id", cloudEvent.Id);
+        Assert.Equal("This is CloudEvent data", cloudEvent.Data);
+    }
+
+    private static HttpRequestMessage CreateHttpRequestMessage()
+    {
+        // Sample: guide.md#PopulateHttpRequestMessage
+        CloudEvent cloudEvent = new CloudEvent
         {
-            var requestMessage = CreateHttpRequestMessage();
-            var request = await ConvertHttpRequestMessage(requestMessage);
+            Id = "event-id",
+            Type = "event-type",
+            Source = new Uri("https://cloudevents.io/"),
+            Time = DateTimeOffset.UtcNow,
+            DataContentType = "text/plain",
+            Data = "This is CloudEvent data"
+        };
 
-            var cloudEvent = await ParseHttpRequestAsync(request);
-            Assert.Equal("event-id", cloudEvent.Id);
-            Assert.Equal("This is CloudEvent data", cloudEvent.Data);
-        }
-
-        private static HttpRequestMessage CreateHttpRequestMessage()
+        CloudEventFormatter formatter = new JsonEventFormatter();
+        HttpRequestMessage request = new HttpRequestMessage
         {
-            // Sample: guide.md#PopulateHttpRequestMessage
-            CloudEvent cloudEvent = new CloudEvent
-            {
-                Id = "event-id",
-                Type = "event-type",
-                Source = new Uri("https://cloudevents.io/"),
-                Time = DateTimeOffset.UtcNow,
-                DataContentType = "text/plain",
-                Data = "This is CloudEvent data"
-            };
-
-            CloudEventFormatter formatter = new JsonEventFormatter();
-            HttpRequestMessage request = new HttpRequestMessage
-            {
-                Method = HttpMethod.Post,
-                Content = cloudEvent.ToHttpContent(ContentMode.Structured, formatter)
-            };
-            // End sample
-            return request;
-        }
-
-        private static async Task<CloudEvent> ParseHttpRequestAsync(HttpRequest request)
-        {
-            // Sample: guide.md#ParseHttpRequestMessage
-            CloudEventFormatter formatter = new JsonEventFormatter();
-            CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
-            // End sample
-            return cloudEvent;
-        }
-
-        [Fact]
-        public async Task GameResultRoundtrip1()
-        {
-            var requestMessage = SerializeGameResult();
-            var request = await ConvertHttpRequestMessage(requestMessage);
-            var result = await DeserializeGameResult1(request);
-            Assert.Equal("player1", result.PlayerId);
-            Assert.Equal("game1", result.GameId);
-            Assert.Equal(200, result.Score);
-        }
-
-        [Fact]
-        public async Task GameResultRoundtrip2()
-        {
-            var requestMessage = SerializeGameResult();
-            var request = await ConvertHttpRequestMessage(requestMessage);
-            var result = await DeserializeGameResult2(request);
-            Assert.Equal("player1", result.PlayerId);
-            Assert.Equal("game1", result.GameId);
-            Assert.Equal(200, result.Score);
-        }
-
-        // Sample: guide.md#GameResult
-        public class GameResult
-        {
-            [JsonProperty("playerId")]
-            public string? PlayerId { get; set; }
-
-            [JsonProperty("gameId")]
-            public string? GameId { get; set; }
-
-            [JsonProperty("score")]
-            public int Score { get; set; }
-        }
+            Method = HttpMethod.Post,
+            Content = cloudEvent.ToHttpContent(ContentMode.Structured, formatter)
+        };
         // End sample
+        return request;
+    }
 
-        private static HttpRequestMessage SerializeGameResult()
+    private static async Task<CloudEvent> ParseHttpRequestAsync(HttpRequest request)
+    {
+        // Sample: guide.md#ParseHttpRequestMessage
+        CloudEventFormatter formatter = new JsonEventFormatter();
+        CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
+        // End sample
+        return cloudEvent;
+    }
+
+    [Fact]
+    public async Task GameResultRoundtrip1()
+    {
+        var requestMessage = SerializeGameResult();
+        var request = await ConvertHttpRequestMessage(requestMessage);
+        var result = await DeserializeGameResult1(request);
+        Assert.Equal("player1", result.PlayerId);
+        Assert.Equal("game1", result.GameId);
+        Assert.Equal(200, result.Score);
+    }
+
+    [Fact]
+    public async Task GameResultRoundtrip2()
+    {
+        var requestMessage = SerializeGameResult();
+        var request = await ConvertHttpRequestMessage(requestMessage);
+        var result = await DeserializeGameResult2(request);
+        Assert.Equal("player1", result.PlayerId);
+        Assert.Equal("game1", result.GameId);
+        Assert.Equal(200, result.Score);
+    }
+
+    // Sample: guide.md#GameResult
+    public class GameResult
+    {
+        [JsonProperty("playerId")]
+        public string? PlayerId { get; set; }
+
+        [JsonProperty("gameId")]
+        public string? GameId { get; set; }
+
+        [JsonProperty("score")]
+        public int Score { get; set; }
+    }
+    // End sample
+
+    private static HttpRequestMessage SerializeGameResult()
+    {
+        // Sample: guide.md#SerializeGameResult
+        var result = new GameResult
         {
-            // Sample: guide.md#SerializeGameResult
-            var result = new GameResult
-            {
-                PlayerId = "player1",
-                GameId = "game1",
-                Score = 200
-            };
-            var cloudEvent = new CloudEvent
-            {
-                Id = "result-1",
-                Type = "game.played.v1",
-                Source = new Uri("/game", UriKind.Relative),
-                Time = DateTimeOffset.UtcNow,
-                DataContentType = "application/json",
-                Data = result
-            };
-            var formatter = new JsonEventFormatter();
-            var request = new HttpRequestMessage
-            {
-                Method = HttpMethod.Post,
-                Content = cloudEvent.ToHttpContent(ContentMode.Binary, formatter)
-            };
-            // End sample
-            return request;
+            PlayerId = "player1",
+            GameId = "game1",
+            Score = 200
+        };
+        var cloudEvent = new CloudEvent
+        {
+            Id = "result-1",
+            Type = "game.played.v1",
+            Source = new Uri("/game", UriKind.Relative),
+            Time = DateTimeOffset.UtcNow,
+            DataContentType = "application/json",
+            Data = result
+        };
+        var formatter = new JsonEventFormatter();
+        var request = new HttpRequestMessage
+        {
+            Method = HttpMethod.Post,
+            Content = cloudEvent.ToHttpContent(ContentMode.Binary, formatter)
+        };
+        // End sample
+        return request;
+    }
+
+    private static async Task<GameResult> DeserializeGameResult1(HttpRequest request)
+    {
+        // Sample: guide.md#DeserializeGameResult1
+        CloudEventFormatter formatter = new JsonEventFormatter();
+        CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
+        JObject dataAsJObject = (JObject) cloudEvent.Data!;
+        GameResult result = dataAsJObject.ToObject<GameResult>()!;
+        // End sample
+        return result;
+    }
+
+    private static async Task<GameResult> DeserializeGameResult2(HttpRequest request)
+    {
+        // Sample: guide.md#DeserializeGameResult2
+        CloudEventFormatter formatter = new JsonEventFormatter<GameResult>();
+        CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
+        GameResult result = (GameResult) cloudEvent.Data!;
+        // End sample
+        return result;
+    }
+
+    private static async Task<HttpRequest> ConvertHttpRequestMessage(HttpRequestMessage message)
+    {
+        var request = new DefaultHttpContext().Request;
+        foreach (var header in message.Headers)
+        {
+            request.Headers[header.Key] = header.Value.Single();
         }
-
-        private static async Task<GameResult> DeserializeGameResult1(HttpRequest request)
+        if (message.Content?.Headers is HttpContentHeaders contentHeaders)
         {
-            // Sample: guide.md#DeserializeGameResult1
-            CloudEventFormatter formatter = new JsonEventFormatter();
-            CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
-            JObject dataAsJObject = (JObject) cloudEvent.Data!;
-            GameResult result = dataAsJObject.ToObject<GameResult>()!;
-            // End sample
-            return result;
-        }
-
-        private static async Task<GameResult> DeserializeGameResult2(HttpRequest request)
-        {
-            // Sample: guide.md#DeserializeGameResult2
-            CloudEventFormatter formatter = new JsonEventFormatter<GameResult>();
-            CloudEvent cloudEvent = await request.ToCloudEventAsync(formatter);
-            GameResult result = (GameResult) cloudEvent.Data!;
-            // End sample
-            return result;
-        }
-
-        private static async Task<HttpRequest> ConvertHttpRequestMessage(HttpRequestMessage message)
-        {
-            var request = new DefaultHttpContext().Request;
-            foreach (var header in message.Headers)
+            foreach (var header in contentHeaders)
             {
                 request.Headers[header.Key] = header.Value.Single();
             }
-            if (message.Content?.Headers is HttpContentHeaders contentHeaders)
-            {
-                foreach (var header in contentHeaders)
-                {
-                    request.Headers[header.Key] = header.Value.Single();
-                }
-            }
-
-            var contentBytes = await (message.Content?.ReadAsByteArrayAsync() ?? Task.FromResult(Array.Empty<byte>()));
-            request.Body = new MemoryStream(contentBytes);
-            return request;
         }
+
+        var contentBytes = await (message.Content?.ReadAsByteArrayAsync() ?? Task.FromResult(Array.Empty<byte>()));
+        request.Body = new MemoryStream(contentBytes);
+        return request;
     }
 }

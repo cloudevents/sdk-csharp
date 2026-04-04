@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
-namespace CloudNative.CloudEvents.AspNetCore.UnitTests
+namespace CloudNative.CloudEvents.AspNetCore.UnitTests;
+
+public class HttpRequestExtensionsTest
 {
-    public class HttpRequestExtensionsTest
-    {
-        public static TheoryData<string, string, IDictionary<string, string>?> SingleCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>?>
+    public static TheoryData<string, string, IDictionary<string, string>?> SingleCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>?>
         {
             {
                 "Binary",
@@ -36,7 +36,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             }
         };
 
-        public static TheoryData<string, string, IDictionary<string, string>?> BatchMessages = new TheoryData<string, string, IDictionary<string, string>?>
+    public static TheoryData<string, string, IDictionary<string, string>?> BatchMessages = new TheoryData<string, string, IDictionary<string, string>?>
         {
             {
                 "Batch",
@@ -45,7 +45,7 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             }
         };
 
-        public static TheoryData<string, string, IDictionary<string, string>?> NonCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>?>
+    public static TheoryData<string, string, IDictionary<string, string>?> NonCloudEventMessages = new TheoryData<string, string, IDictionary<string, string>?>
         {
             {
                 "Plain text",
@@ -54,99 +54,98 @@ namespace CloudNative.CloudEvents.AspNetCore.UnitTests
             }
         };
 
-        [Theory]
-        [MemberData(nameof(SingleCloudEventMessages))]
-        public void IsCloudEvent_True(string description, string contentType, IDictionary<string, string>? headers)
-        {
-            // Really only present for display purposes.
-            Assert.NotNull(description);
+    [Theory]
+    [MemberData(nameof(SingleCloudEventMessages))]
+    public void IsCloudEvent_True(string description, string contentType, IDictionary<string, string>? headers)
+    {
+        // Really only present for display purposes.
+        Assert.NotNull(description);
 
-            var request = CreateRequest(new byte[0], new ContentType(contentType));
-            CopyHeaders(headers, request);
-            Assert.True(request.IsCloudEvent());
+        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        CopyHeaders(headers, request);
+        Assert.True(request.IsCloudEvent());
+    }
+
+    [Theory]
+    [MemberData(nameof(BatchMessages))]
+    [MemberData(nameof(NonCloudEventMessages))]
+    public void IsCloudEvent_False(string description, string contentType, IDictionary<string, string>? headers)
+    {
+        // Really only present for display purposes.
+        Assert.NotNull(description);
+
+        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        CopyHeaders(headers, request);
+        Assert.False(request.IsCloudEvent());
+    }
+
+    [Theory]
+    [MemberData(nameof(BatchMessages))]
+    public void IsCloudEventBatch_True(string description, string contentType, IDictionary<string, string>? headers)
+    {
+        // Really only present for display purposes.
+        Assert.NotNull(description);
+
+        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        CopyHeaders(headers, request);
+        Assert.True(request.IsCloudEventBatch());
+    }
+
+    [Theory]
+    [MemberData(nameof(SingleCloudEventMessages))]
+    [MemberData(nameof(NonCloudEventMessages))]
+    public void IsCloudEventBatch_False(string description, string contentType, IDictionary<string, string>? headers)
+    {
+        // Really only present for display purposes.
+        Assert.NotNull(description);
+
+        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        CopyHeaders(headers, request);
+        Assert.False(request.IsCloudEventBatch());
+    }
+
+    // TODO: Non-batch conversion tests
+
+    [Fact]
+    public async Task ToCloudEventBatchAsync_Valid()
+    {
+        var batch = CreateSampleBatch();
+
+        var formatter = new JsonEventFormatter();
+        var contentBytes = formatter.EncodeBatchModeMessage(batch, out var contentType);
+
+        AssertBatchesEqual(batch, await CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+        AssertBatchesEqual(batch, await CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+    }
+
+    [Fact]
+    public async Task ToCloudEventBatchAsync_Invalid()
+    {
+        // Most likely accident: calling ToCloudEventBatchAsync with a single event in structured mode.
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        var formatter = new JsonEventFormatter();
+        var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
+        await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
+        await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
+    }
+
+    private static HttpRequest CreateRequest(ReadOnlyMemory<byte> content, ContentType contentType)
+    {
+        var request = new DefaultHttpContext().Request;
+        request.ContentType = contentType.ToString();
+        request.Body = BinaryDataUtilities.AsStream(content);
+        return request;
+    }
+
+    private static void CopyHeaders(IDictionary<string, string>? source, HttpRequest target)
+    {
+        if (source is null)
+        {
+            return;
         }
-
-        [Theory]
-        [MemberData(nameof(BatchMessages))]
-        [MemberData(nameof(NonCloudEventMessages))]
-        public void IsCloudEvent_False(string description, string contentType, IDictionary<string, string>? headers)
+        foreach (var header in source)
         {
-            // Really only present for display purposes.
-            Assert.NotNull(description);
-
-            var request = CreateRequest(new byte[0], new ContentType(contentType));
-            CopyHeaders(headers, request);
-            Assert.False(request.IsCloudEvent());
-        }
-
-        [Theory]
-        [MemberData(nameof(BatchMessages))]
-        public void IsCloudEventBatch_True(string description, string contentType, IDictionary<string, string>? headers)
-        {
-            // Really only present for display purposes.
-            Assert.NotNull(description);
-
-            var request = CreateRequest(new byte[0], new ContentType(contentType));
-            CopyHeaders(headers, request);
-            Assert.True(request.IsCloudEventBatch());
-        }
-
-        [Theory]
-        [MemberData(nameof(SingleCloudEventMessages))]
-        [MemberData(nameof(NonCloudEventMessages))]
-        public void IsCloudEventBatch_False(string description, string contentType, IDictionary<string, string>? headers)
-        {
-            // Really only present for display purposes.
-            Assert.NotNull(description);
-
-            var request = CreateRequest(new byte[0], new ContentType(contentType));
-            CopyHeaders(headers, request);
-            Assert.False(request.IsCloudEventBatch());
-        }
-
-        // TODO: Non-batch conversion tests
-
-        [Fact]
-        public async Task ToCloudEventBatchAsync_Valid()
-        {
-            var batch = CreateSampleBatch();
-
-            var formatter = new JsonEventFormatter();
-            var contentBytes = formatter.EncodeBatchModeMessage(batch, out var contentType);
-
-            AssertBatchesEqual(batch, await CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
-            AssertBatchesEqual(batch, await CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
-        }
-
-        [Fact]
-        public async Task ToCloudEventBatchAsync_Invalid()
-        {
-            // Most likely accident: calling ToCloudEventBatchAsync with a single event in structured mode.
-            var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
-            var formatter = new JsonEventFormatter();
-            var contentBytes = formatter.EncodeStructuredModeMessage(cloudEvent, out var contentType);
-            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionArray));
-            await Assert.ThrowsAsync<ArgumentException>(() => CreateRequest(contentBytes, contentType).ToCloudEventBatchAsync(formatter, EmptyExtensionSequence));
-        }
-
-        private static HttpRequest CreateRequest(ReadOnlyMemory<byte> content, ContentType contentType)
-        {
-            var request = new DefaultHttpContext().Request;
-            request.ContentType = contentType.ToString();
-            request.Body = BinaryDataUtilities.AsStream(content);
-            return request;
-        }
-
-        private static void CopyHeaders(IDictionary<string, string>? source, HttpRequest target)
-        {
-            if (source is null)
-            {
-                return;
-            }
-            foreach (var header in source)
-            {
-                target.Headers.Append(header.Key, header.Value);
-            }
+            target.Headers.Append(header.Key, header.Value);
         }
     }
 }

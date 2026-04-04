@@ -5,32 +5,31 @@
 using System;
 using Xunit;
 
-namespace CloudNative.CloudEvents.UnitTests
+namespace CloudNative.CloudEvents.UnitTests;
+
+public class CloudEventsSpecVersionTest
 {
-    public class CloudEventsSpecVersionTest
+    [Theory]
+    [InlineData(null)]
+    [InlineData("bogus")]
+    [InlineData("1")]
+    public void FromVersionId_Unknown(string? versionId) =>
+        Assert.Null(CloudEventsSpecVersion.FromVersionId(versionId));
+
+    [Theory]
+    [InlineData("1.0")]
+    public void FromVersionId_Known(string versionId)
     {
-        [Theory]
-        [InlineData(null)]
-        [InlineData("bogus")]
-        [InlineData("1")]
-        public void FromVersionId_Unknown(string? versionId) =>
-            Assert.Null(CloudEventsSpecVersion.FromVersionId(versionId));
+        var version = CloudEventsSpecVersion.FromVersionId(versionId);
+        Assert.NotNull(version);
+        Assert.Equal(versionId, version!.VersionId);
+    }
 
-        [Theory]
-        [InlineData("1.0")]
-        public void FromVersionId_Known(string versionId)
-        {
-            var version = CloudEventsSpecVersion.FromVersionId(versionId);
-            Assert.NotNull(version);
-            Assert.Equal(versionId, version!.VersionId);
-        }
-
-        [Fact]
-        public void V1Source_MustBeNonEmpty()
-        {
-            var attribute = CloudEventsSpecVersion.V1_0.SourceAttribute;
-            var uri = new Uri("", UriKind.RelativeOrAbsolute);
-            Assert.Throws<ArgumentException>(() => attribute.Validate(uri));
-        }
+    [Fact]
+    public void V1Source_MustBeNonEmpty()
+    {
+        var attribute = CloudEventsSpecVersion.V1_0.SourceAttribute;
+        var uri = new Uri("", UriKind.RelativeOrAbsolute);
+        Assert.Throws<ArgumentException>(() => attribute.Validate(uri));
     }
 }
