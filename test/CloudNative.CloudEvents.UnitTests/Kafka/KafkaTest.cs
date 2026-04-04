@@ -14,243 +14,242 @@ using System.Text;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
-namespace CloudNative.CloudEvents.Kafka.UnitTests
+namespace CloudNative.CloudEvents.Kafka.UnitTests;
+
+public class KafkaTest
 {
-    public class KafkaTest
+    [Theory]
+    [InlineData("content-type", "application/cloudevents", true)]
+    [InlineData("content-type", "APPLICATION/CLOUDEVENTS", true)]
+    [InlineData("CONTENT-TYPE", "application/cloudevents", false)]
+    [InlineData("ce_specversion", "1.0", true)]
+    [InlineData("CE_SPECVERSION", "1.0", false)]
+    public void IsCloudEvent(string headerName, string headerValue, bool expectedResult)
     {
-        [Theory]
-        [InlineData("content-type", "application/cloudevents", true)]
-        [InlineData("content-type", "APPLICATION/CLOUDEVENTS", true)]
-        [InlineData("CONTENT-TYPE", "application/cloudevents", false)]
-        [InlineData("ce_specversion", "1.0", true)]
-        [InlineData("CE_SPECVERSION", "1.0", false)]
-        public void IsCloudEvent(string headerName, string headerValue, bool expectedResult)
+        var message = new Message<string?, byte[]>
         {
-            var message = new Message<string?, byte[]>
-            {
-                Headers = new Headers { { headerName, Encoding.UTF8.GetBytes(headerValue) } }
-            };
-            Assert.Equal(expectedResult, message.IsCloudEvent());
+            Headers = new Headers { { headerName, Encoding.UTF8.GetBytes(headerValue) } }
+        };
+        Assert.Equal(expectedResult, message.IsCloudEvent());
+    }
+
+    [Fact]
+    public void IsCloudEvent_NoHeaders() =>
+        Assert.False(new Message<string?, byte[]>().IsCloudEvent());
+
+    [Fact]
+    public void KafkaStructuredMessageTest()
+    {
+        // Kafka doesn't provide any way to get to the message transport level to do the test properly
+        // and it doesn't have an embedded version of a server for .Net so the lowest we can get is 
+        // the `Message<T, K>`
+
+        var jsonEventFormatter = new JsonEventFormatter();
+
+        var cloudEvent = new CloudEvent
+        {
+            Type = "com.github.pull.create",
+            Source = new Uri("https://github.com/cloudevents/spec/pull"),
+            Subject = "123",
+            Id = "A234-1234-1234",
+            Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
+            DataContentType = MediaTypeNames.Text.Xml,
+            Data = "<much wow=\"xml\"/>",
+            ["comexampleextension1"] = "value"
+        };
+
+        var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, new JsonEventFormatter());
+
+        Assert.True(message.IsCloudEvent());
+
+        // Using serialization to create fully independent copy thus simulating message transport.
+        // The real transport will work in a similar way.
+        var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
+        var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter())!;
+
+        Assert.True(messageCopy.IsCloudEvent());
+        var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter);
+
+        Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+        Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+        Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull"), receivedCloudEvent.Source);
+        Assert.Equal("123", receivedCloudEvent.Subject);
+        Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+        AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
+        Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
+        Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
+
+        Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
+    }
+
+    [Fact]
+    public void KafkaBinaryMessageTest()
+    {
+        // Kafka doesn't provide any way to get to the message transport level to do the test properly
+        // and it doesn't have an embedded version of a server for .Net so the lowest we can get is 
+        // the `Message<T, K>`
+
+        var jsonEventFormatter = new JsonEventFormatter();
+        var cloudEvent = new CloudEvent(Partitioning.AllAttributes)
+        {
+            Type = "com.github.pull.create",
+            Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
+            Id = "A234-1234-1234",
+            Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
+            DataContentType = MediaTypeNames.Text.Xml,
+            Data = Encoding.UTF8.GetBytes("<much wow=\"xml\"/>"),
+            ["comexampleextension1"] = "value",
+            [Partitioning.PartitionKeyAttribute] = "hello much wow"
+        };
+
+        var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
+        Assert.True(message.IsCloudEvent());
+
+        // Using serialization to create fully independent copy thus simulating message transport.
+        // The real transport will work in a similar way.
+        var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
+        var settings = new JsonSerializerSettings
+        {
+            Converters = { new HeadersConverter(), new HeaderConverter() }
+        };
+        var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, settings)!;
+
+        Assert.True(messageCopy.IsCloudEvent());
+        var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, Partitioning.AllAttributes);
+
+        Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+        Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+        Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
+        Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+        AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
+        Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
+        Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
+        Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
+
+        Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
+    }
+
+    [Theory]
+    [InlineData(MediaTypeNames.Application.Octet, new byte[0])]
+    [InlineData(MediaTypeNames.Application.Json, null)]
+    [InlineData(MediaTypeNames.Application.Xml, new byte[0])]
+    [InlineData(MediaTypeNames.Text.Plain, "")]
+    [InlineData(null, null)]
+    public void KafkaBinaryMessageTombstoneTest(string? contentType, object? expectedDecodedResult)
+    {
+        var jsonEventFormatter = new JsonEventFormatter();
+        var cloudEvent = new CloudEvent(Partitioning.AllAttributes)
+        {
+            Type = "com.github.pull.create",
+            Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
+            Id = "A234-1234-1234",
+            Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
+            DataContentType = contentType,
+            Data = null,
+            ["comexampleextension1"] = "value",
+            [Partitioning.PartitionKeyAttribute] = "hello much wow"
+        };
+
+        var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
+        Assert.True(message.IsCloudEvent());
+
+        // Sending an empty message is equivalent to a delete (tombstone) for that partition key, when using compacted topics in Kafka.
+        // This is the main use case for empty data messages with Kafka.
+        Assert.Empty(message.Value);
+
+        // Using serialization to create fully independent copy thus simulating message transport.
+        // The real transport will work in a similar way.
+        var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
+        var settings = new JsonSerializerSettings
+        {
+            Converters = { new HeadersConverter(), new HeaderConverter() }
+        };
+        var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, settings)!;
+
+        Assert.True(messageCopy.IsCloudEvent());
+        var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, Partitioning.AllAttributes);
+
+        Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+        Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+        Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
+        Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+        AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
+        Assert.Equal(contentType, receivedCloudEvent.DataContentType);
+        Assert.Equal(expectedDecodedResult, receivedCloudEvent.Data);
+        Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
+        Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
+    }
+
+    [Fact]
+    public void ContentTypeCanBeInferredByFormatter()
+    {
+        var cloudEvent = new CloudEvent
+        {
+            Data = "plain text"
+        }.PopulateRequiredAttributes();
+
+        var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
+        var contentTypeHeader = message.Headers.Single(h => h.Key == KafkaExtensions.KafkaContentTypeAttributeName);
+        var contentTypeValue = Encoding.UTF8.GetString(contentTypeHeader.GetValueBytes());
+        Assert.Equal("application/json", contentTypeValue);
+    }
+
+    private class HeadersConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(Headers);
         }
 
-        [Fact]
-        public void IsCloudEvent_NoHeaders() =>
-            Assert.False(new Message<string?, byte[]>().IsCloudEvent());
-
-        [Fact]
-        public void KafkaStructuredMessageTest()
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            // Kafka doesn't provide any way to get to the message transport level to do the test properly
-            // and it doesn't have an embedded version of a server for .Net so the lowest we can get is 
-            // the `Message<T, K>`
-
-            var jsonEventFormatter = new JsonEventFormatter();
-
-            var cloudEvent = new CloudEvent
+            if (reader.TokenType == JsonToken.Null)
             {
-                Type = "com.github.pull.create",
-                Source = new Uri("https://github.com/cloudevents/spec/pull"),
-                Subject = "123",
-                Id = "A234-1234-1234",
-                Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = MediaTypeNames.Text.Xml,
-                Data = "<much wow=\"xml\"/>",
-                ["comexampleextension1"] = "value"
-            };
-
-            var message = cloudEvent.ToKafkaMessage(ContentMode.Structured, new JsonEventFormatter());
-
-            Assert.True(message.IsCloudEvent());
-
-            // Using serialization to create fully independent copy thus simulating message transport.
-            // The real transport will work in a similar way.
-            var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
-            var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, new HeadersConverter(), new HeaderConverter())!;
-
-            Assert.True(messageCopy.IsCloudEvent());
-            var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter);
-
-            Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
-            Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
-            Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull"), receivedCloudEvent.Source);
-            Assert.Equal("123", receivedCloudEvent.Subject);
-            Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
-            Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
-            Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
-
-            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
-        }
-
-        [Fact]
-        public void KafkaBinaryMessageTest()
-        {
-            // Kafka doesn't provide any way to get to the message transport level to do the test properly
-            // and it doesn't have an embedded version of a server for .Net so the lowest we can get is 
-            // the `Message<T, K>`
-
-            var jsonEventFormatter = new JsonEventFormatter();
-            var cloudEvent = new CloudEvent(Partitioning.AllAttributes)
-            {
-                Type = "com.github.pull.create",
-                Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
-                Id = "A234-1234-1234",
-                Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = MediaTypeNames.Text.Xml,
-                Data = Encoding.UTF8.GetBytes("<much wow=\"xml\"/>"),
-                ["comexampleextension1"] = "value",
-                [Partitioning.PartitionKeyAttribute] = "hello much wow"
-            };
-
-            var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
-            Assert.True(message.IsCloudEvent());
-
-            // Using serialization to create fully independent copy thus simulating message transport.
-            // The real transport will work in a similar way.
-            var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
-            var settings = new JsonSerializerSettings
-            {
-                Converters = { new HeadersConverter(), new HeaderConverter() }
-            };
-            var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, settings)!;
-
-            Assert.True(messageCopy.IsCloudEvent());
-            var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, Partitioning.AllAttributes);
-
-            Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
-            Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
-            Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
-            Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
-            Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
-            Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
-
-            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
-        }
-
-        [Theory]
-        [InlineData(MediaTypeNames.Application.Octet, new byte[0])]
-        [InlineData(MediaTypeNames.Application.Json, null)]
-        [InlineData(MediaTypeNames.Application.Xml, new byte[0])]
-        [InlineData(MediaTypeNames.Text.Plain, "")]
-        [InlineData(null, null)]
-        public void KafkaBinaryMessageTombstoneTest(string? contentType, object? expectedDecodedResult)
-        {
-            var jsonEventFormatter = new JsonEventFormatter();
-            var cloudEvent = new CloudEvent(Partitioning.AllAttributes)
-            {
-                Type = "com.github.pull.create",
-                Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
-                Id = "A234-1234-1234",
-                Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = contentType,
-                Data = null,
-                ["comexampleextension1"] = "value",
-                [Partitioning.PartitionKeyAttribute] = "hello much wow"
-            };
-
-            var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
-            Assert.True(message.IsCloudEvent());
-
-            // Sending an empty message is equivalent to a delete (tombstone) for that partition key, when using compacted topics in Kafka.
-            // This is the main use case for empty data messages with Kafka.
-            Assert.Empty(message.Value);
-
-            // Using serialization to create fully independent copy thus simulating message transport.
-            // The real transport will work in a similar way.
-            var serialized = JsonConvert.SerializeObject(message, new HeaderConverter());
-            var settings = new JsonSerializerSettings
-            {
-                Converters = { new HeadersConverter(), new HeaderConverter() }
-            };
-            var messageCopy = JsonConvert.DeserializeObject<Message<string?, byte[]>>(serialized, settings)!;
-
-            Assert.True(messageCopy.IsCloudEvent());
-            var receivedCloudEvent = messageCopy.ToCloudEvent(jsonEventFormatter, Partitioning.AllAttributes);
-
-            Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
-            Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
-            Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
-            Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
-            Assert.Equal(contentType, receivedCloudEvent.DataContentType);
-            Assert.Equal(expectedDecodedResult, receivedCloudEvent.Data);
-            Assert.Equal("hello much wow", (string?) receivedCloudEvent[Partitioning.PartitionKeyAttribute]);
-            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
-        }
-
-        [Fact]
-        public void ContentTypeCanBeInferredByFormatter()
-        {
-            var cloudEvent = new CloudEvent
-            {
-                Data = "plain text"
-            }.PopulateRequiredAttributes();
-
-            var message = cloudEvent.ToKafkaMessage(ContentMode.Binary, new JsonEventFormatter());
-            var contentTypeHeader = message.Headers.Single(h => h.Key == KafkaExtensions.KafkaContentTypeAttributeName);
-            var contentTypeValue = Encoding.UTF8.GetString(contentTypeHeader.GetValueBytes());
-            Assert.Equal("application/json", contentTypeValue);
-        }
-
-        private class HeadersConverter : JsonConverter
-        {
-            public override bool CanConvert(Type objectType)
-            {
-                return objectType == typeof(Headers);
+                return null;
             }
-
-            public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+            else
             {
-                if (reader.TokenType == JsonToken.Null)
+                var surrogate = serializer.Deserialize<List<Header>>(reader)!;
+                var headers = new Headers();
+
+                foreach (var header in surrogate)
                 {
-                    return null;
+                    headers.Add(header.Key, header.GetValueBytes());
                 }
-                else
-                {
-                    var surrogate = serializer.Deserialize<List<Header>>(reader)!;
-                    var headers = new Headers();
-
-                    foreach (var header in surrogate)
-                    {
-                        headers.Add(header.Key, header.GetValueBytes());
-                    }
-                    return headers;
-                }
-            }
-
-            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
-            {
-                throw new NotImplementedException();
+                return headers;
             }
         }
 
-        private class HeaderConverter : JsonConverter
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-            private class HeaderContainer
-            {
-                public string? Key { get; set; }
-                public byte[]? Value { get; set; }
-            }
+            throw new NotImplementedException();
+        }
+    }
 
-            public override bool CanConvert(Type objectType)
-            {
-                return objectType == typeof(Header) || objectType == typeof(IHeader);
-            }
+    private class HeaderConverter : JsonConverter
+    {
+        private class HeaderContainer
+        {
+            public string? Key { get; set; }
+            public byte[]? Value { get; set; }
+        }
 
-            public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
-            {
-                var headerContainer = serializer.Deserialize<HeaderContainer>(reader)!;
-                return new Header(headerContainer.Key, headerContainer.Value);
-            }
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(Header) || objectType == typeof(IHeader);
+        }
 
-            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
-            {
-                var header = (IHeader) value!;
-                var container = new HeaderContainer { Key = header.Key, Value = header.GetValueBytes() };
-                serializer.Serialize(writer, container);
-            }
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+        {
+            var headerContainer = serializer.Deserialize<HeaderContainer>(reader)!;
+            return new Header(headerContainer.Key, headerContainer.Value);
+        }
+
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+        {
+            var header = (IHeader) value!;
+            var container = new HeaderContainer { Key = header.Key, Value = header.GetValueBytes() };
+            serializer.Serialize(writer, container);
         }
     }
 }

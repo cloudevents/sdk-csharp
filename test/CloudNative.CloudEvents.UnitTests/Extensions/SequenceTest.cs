@@ -7,11 +7,11 @@ using System;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 
-namespace CloudNative.CloudEvents.Extensions.UnitTests
+namespace CloudNative.CloudEvents.Extensions.UnitTests;
+
+public class SequenceTest
 {
-    public class SequenceTest
-    {
-        private static readonly string sampleJson = @"
+    private static readonly string sampleJson = @"
            {
                'specversion' : '1.0',
                'type' : 'com.github.pull.create',
@@ -21,96 +21,95 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
                'sequence' : '25'
            }".Replace('\'', '"');
 
-        [Fact]
-        public void Parse()
+    [Fact]
+    public void Parse()
+    {
+        var jsonFormatter = new JsonEventFormatter();
+        var cloudEvent = jsonFormatter.DecodeStructuredModeText(sampleJson, Sequence.AllAttributes);
+
+        Assert.Equal("Integer", cloudEvent[Sequence.SequenceTypeAttribute]);
+        Assert.Equal("25", cloudEvent[Sequence.SequenceAttribute]);
+    }
+
+    [Fact]
+    public void Transcode()
+    {
+        var jsonFormatter = new JsonEventFormatter();
+        var cloudEvent1 = jsonFormatter.DecodeStructuredModeText(sampleJson);
+        var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent1, out var contentType);
+        var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType, Sequence.AllAttributes);
+
+        Assert.Equal("Integer", cloudEvent[Sequence.SequenceTypeAttribute]);
+        Assert.Equal("25", cloudEvent[Sequence.SequenceAttribute]);
+    }
+
+    [Fact]
+    public void GetSequenceExtensionMethods_Integer()
+    {
+        var cloudEvent = new CloudEvent
         {
-            var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredModeText(sampleJson, Sequence.AllAttributes);
+            ["sequencetype"] = "Integer",
+            ["sequence"] = "25"
+        };
 
-            Assert.Equal("Integer", cloudEvent[Sequence.SequenceTypeAttribute]);
-            Assert.Equal("25", cloudEvent[Sequence.SequenceAttribute]);
-        }
+        Assert.Equal(25, cloudEvent.GetSequenceValue());
+        Assert.Equal("25", cloudEvent.GetSequenceString());
+        Assert.Equal("Integer", cloudEvent.GetSequenceType());
+    }
 
-        [Fact]
-        public void Transcode()
+    [Fact]
+    public void GetSequenceExtensionMethods_Null()
+    {
+        var cloudEvent = new CloudEvent();
+
+        Assert.Null(cloudEvent.GetSequenceValue());
+        Assert.Null(cloudEvent.GetSequenceString());
+        Assert.Null(cloudEvent.GetSequenceType());
+    }
+
+    [Fact]
+    public void GetSequenceExtensionMethods_UnknownType()
+    {
+        var cloudEvent = new CloudEvent
         {
-            var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent1 = jsonFormatter.DecodeStructuredModeText(sampleJson);
-            var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent1, out var contentType);
-            var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType, Sequence.AllAttributes);
+            ["sequencetype"] = "Mystery",
+            ["sequence"] = "xyz"
+        };
 
-            Assert.Equal("Integer", cloudEvent[Sequence.SequenceTypeAttribute]);
-            Assert.Equal("25", cloudEvent[Sequence.SequenceAttribute]);
-        }
+        Assert.Equal("Mystery", cloudEvent.GetSequenceType());
+        Assert.Equal("xyz", cloudEvent.GetSequenceString());
+        Assert.Throws<InvalidOperationException>(() => cloudEvent.GetSequenceValue());
+    }
 
-        [Fact]
-        public void GetSequenceExtensionMethods_Integer()
+    [Fact]
+    public void SetSequence_Null()
+    {
+        var cloudEvent = new CloudEvent
         {
-            var cloudEvent = new CloudEvent
-            {
-                ["sequencetype"] = "Integer",
-                ["sequence"] = "25"
-            };
+            ["sequence"] = "xyz",
+            ["sequencetype"] = "new sequence type"
+        };
+        cloudEvent.SetSequence(null);
 
-            Assert.Equal(25, cloudEvent.GetSequenceValue());
-            Assert.Equal("25", cloudEvent.GetSequenceString());
-            Assert.Equal("Integer", cloudEvent.GetSequenceType());
-        }
-
-        [Fact]
-        public void GetSequenceExtensionMethods_Null()
-        {
-            var cloudEvent = new CloudEvent();
-
-            Assert.Null(cloudEvent.GetSequenceValue());
-            Assert.Null(cloudEvent.GetSequenceString());
-            Assert.Null(cloudEvent.GetSequenceType());
-        }
-
-        [Fact]
-        public void GetSequenceExtensionMethods_UnknownType()
-        {
-            var cloudEvent = new CloudEvent
-            {
-                ["sequencetype"] = "Mystery",
-                ["sequence"] = "xyz"
-            };
-
-            Assert.Equal("Mystery", cloudEvent.GetSequenceType());
-            Assert.Equal("xyz", cloudEvent.GetSequenceString());
-            Assert.Throws<InvalidOperationException>(() => cloudEvent.GetSequenceValue());
-        }
-
-        [Fact]
-        public void SetSequence_Null()
-        {
-            var cloudEvent = new CloudEvent
-            {
-                ["sequence"] = "xyz",
-                ["sequencetype"] = "new sequence type"
-            };
-            cloudEvent.SetSequence(null);
-
-            Assert.Null(cloudEvent["sequence"]);
-            Assert.Null(cloudEvent["sequencetype"]);
-        }
+        Assert.Null(cloudEvent["sequence"]);
+        Assert.Null(cloudEvent["sequencetype"]);
+    }
 
 
-        [Fact]
-        public void SetSequence_Integer()
-        {
-            var cloudEvent = new CloudEvent().SetSequence(15);
+    [Fact]
+    public void SetSequence_Integer()
+    {
+        var cloudEvent = new CloudEvent().SetSequence(15);
 
-            Assert.Equal("15", cloudEvent["sequence"]);
-            Assert.Equal("Integer", cloudEvent["sequencetype"]);
-        }
+        Assert.Equal("15", cloudEvent["sequence"]);
+        Assert.Equal("Integer", cloudEvent["sequencetype"]);
+    }
 
-        [Fact]
-        public void SetSequence_UnknownType()
-        {
-            var cloudEvent = new CloudEvent();
-            var uri = new Uri("https://oddsequencetype");
-            Assert.Throws<ArgumentException>(() => cloudEvent.SetSequence(uri));
-        }
+    [Fact]
+    public void SetSequence_UnknownType()
+    {
+        var cloudEvent = new CloudEvent();
+        var uri = new Uri("https://oddsequencetype");
+        Assert.Throws<ArgumentException>(() => cloudEvent.SetSequence(uri));
     }
 }

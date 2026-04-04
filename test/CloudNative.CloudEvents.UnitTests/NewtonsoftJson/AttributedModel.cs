@@ -4,14 +4,13 @@
 
 using Newtonsoft.Json;
 
-namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests
-{
-    [CloudEventFormatter(typeof(JsonEventFormatter<AttributedModel>))]
-    internal class AttributedModel
-    {
-        public const string JsonPropertyName = "customattribute";
+namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests;
 
-        [JsonProperty(JsonPropertyName)]
-        public string? AttributedProperty { get; set; }
-    }
+[CloudEventFormatter(typeof(JsonEventFormatter<AttributedModel>))]
+internal class AttributedModel
+{
+    public const string JsonPropertyName = "customattribute";
+
+    [JsonProperty(JsonPropertyName)]
+    public string? AttributedProperty { get; set; }
 }

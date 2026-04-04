@@ -6,11 +6,11 @@ using CloudNative.CloudEvents.NewtonsoftJson;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.CloudEventFormatterExtensions;
 
-namespace CloudNative.CloudEvents.Extensions.UnitTests
+namespace CloudNative.CloudEvents.Extensions.UnitTests;
+
+public class PartitioningTest
 {
-    public class PartitioningTest
-    {
-        private static readonly string sampleJson = @"
+    private static readonly string sampleJson = @"
            {
                'specversion' : '1.0',
                'type' : 'com.github.pull.create',
@@ -20,53 +20,52 @@ namespace CloudNative.CloudEvents.Extensions.UnitTests
            }".Replace('\'', '"');
 
 
-        [Fact]
-        public void ParseJson()
+    [Fact]
+    public void ParseJson()
+    {
+        var jsonFormatter = new JsonEventFormatter();
+        var cloudEvent = jsonFormatter.DecodeStructuredModeText(sampleJson);
+        Assert.Equal("abc", cloudEvent["partitionkey"]);
+        Assert.Equal("abc", cloudEvent[Partitioning.PartitionKeyAttribute]);
+        Assert.Equal("abc", cloudEvent.GetPartitionKey());
+    }
+
+    [Fact]
+    public void Transcode()
+    {
+        var jsonFormatter = new JsonEventFormatter();
+        var cloudEvent1 = jsonFormatter.DecodeStructuredModeText(sampleJson);
+        var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent1, out var contentType);
+        var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType, null);
+
+        Assert.Equal("abc", cloudEvent["partitionkey"]);
+        Assert.Equal("abc", cloudEvent[Partitioning.PartitionKeyAttribute]);
+        Assert.Equal("abc", cloudEvent.GetPartitionKey());
+    }
+
+    [Fact]
+    public void SetPartitionKey()
+    {
+        var cloudEvent = new CloudEvent();
+        cloudEvent.SetPartitionKey("xyz");
+        Assert.Equal("xyz", cloudEvent["partitionkey"]);
+        Assert.Equal("xyz", cloudEvent[Partitioning.PartitionKeyAttribute]);
+
+        cloudEvent.SetPartitionKey(null);
+        Assert.Null(cloudEvent["partitionkey"]);
+        Assert.Null(cloudEvent[Partitioning.PartitionKeyAttribute]);
+    }
+
+    [Fact]
+    public void GetPartitionKey()
+    {
+        var cloudEvent = new CloudEvent
         {
-            var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent = jsonFormatter.DecodeStructuredModeText(sampleJson);
-            Assert.Equal("abc", cloudEvent["partitionkey"]);
-            Assert.Equal("abc", cloudEvent[Partitioning.PartitionKeyAttribute]);
-            Assert.Equal("abc", cloudEvent.GetPartitionKey());
-        }
+            ["partitionkey"] = "xyz"
+        };
+        Assert.Equal("xyz", cloudEvent.GetPartitionKey());
 
-        [Fact]
-        public void Transcode()
-        {
-            var jsonFormatter = new JsonEventFormatter();
-            var cloudEvent1 = jsonFormatter.DecodeStructuredModeText(sampleJson);
-            var jsonData = jsonFormatter.EncodeStructuredModeMessage(cloudEvent1, out var contentType);
-            var cloudEvent = jsonFormatter.DecodeStructuredModeMessage(jsonData, contentType, null);
-
-            Assert.Equal("abc", cloudEvent["partitionkey"]);
-            Assert.Equal("abc", cloudEvent[Partitioning.PartitionKeyAttribute]);
-            Assert.Equal("abc", cloudEvent.GetPartitionKey());
-        }
-
-        [Fact]
-        public void SetPartitionKey()
-        {
-            var cloudEvent = new CloudEvent();
-            cloudEvent.SetPartitionKey("xyz");
-            Assert.Equal("xyz", cloudEvent["partitionkey"]);
-            Assert.Equal("xyz", cloudEvent[Partitioning.PartitionKeyAttribute]);
-
-            cloudEvent.SetPartitionKey(null);
-            Assert.Null(cloudEvent["partitionkey"]);
-            Assert.Null(cloudEvent[Partitioning.PartitionKeyAttribute]);
-        }
-
-        [Fact]
-        public void GetPartitionKey()
-        {
-            var cloudEvent = new CloudEvent
-            {
-                ["partitionkey"] = "xyz"
-            };
-            Assert.Equal("xyz", cloudEvent.GetPartitionKey());
-
-            cloudEvent["partitionkey"] = null;
-            Assert.Null(cloudEvent.GetPartitionKey());
-        }
+        cloudEvent["partitionkey"] = null;
+        Assert.Null(cloudEvent.GetPartitionKey());
     }
 }

@@ -12,73 +12,72 @@ using System.Threading.Tasks;
 using Xunit;
 using static CloudNative.CloudEvents.UnitTests.TestHelpers;
 
-namespace CloudNative.CloudEvents.Mqtt.UnitTests
+namespace CloudNative.CloudEvents.Mqtt.UnitTests;
+
+public class MqttTest : IDisposable
 {
-    public class MqttTest : IDisposable
+    private readonly MqttServer mqttServer;
+
+    public MqttTest()
     {
-        private readonly MqttServer mqttServer;
+        var optionsBuilder = new MqttServerOptionsBuilder()
+            .WithConnectionBacklog(100)
+            .WithDefaultEndpoint()
+            .WithDefaultEndpointPort(52355);
 
-        public MqttTest()
+        this.mqttServer = new MqttFactory().CreateMqttServer(optionsBuilder.Build());
+        mqttServer.StartAsync().GetAwaiter().GetResult();
+    }
+
+    public void Dispose()
+    {
+        mqttServer.StopAsync().GetAwaiter().GetResult();
+    }
+
+    [Fact]
+    public async Task MqttSendTest()
+    {
+
+        var jsonEventFormatter = new JsonEventFormatter();
+        var cloudEvent = new CloudEvent
         {
-            var optionsBuilder = new MqttServerOptionsBuilder()
-                .WithConnectionBacklog(100)
-                .WithDefaultEndpoint()
-                .WithDefaultEndpointPort(52355);
+            Type = "com.github.pull.create",
+            Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
+            Id = "A234-1234-1234",
+            Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
+            DataContentType = MediaTypeNames.Text.Xml,
+            Data = "<much wow=\"xml\"/>",
+            ["comexampleextension1"] = "value"
+        };
 
-            this.mqttServer = new MqttFactory().CreateMqttServer(optionsBuilder.Build());
-            mqttServer.StartAsync().GetAwaiter().GetResult();
-        }
+        var client = new MqttFactory().CreateMqttClient();
 
-        public void Dispose()
+        var options = new MqttClientOptionsBuilder()
+            .WithClientId("Client1")
+            .WithTcpServer("127.0.0.1", 52355)
+            .WithCleanSession()
+            .Build();
+
+        TaskCompletionSource<CloudEvent> tcs = new TaskCompletionSource<CloudEvent>();
+        await client.ConnectAsync(options);
+        client.ApplicationMessageReceivedAsync += args =>
         {
-            mqttServer.StopAsync().GetAwaiter().GetResult();
-        }
+            tcs.SetResult(args.ApplicationMessage.ToCloudEvent(jsonEventFormatter));
+            return Task.CompletedTask;
+        };
 
-        [Fact]
-        public async Task MqttSendTest()
-        {
+        var result = await client.SubscribeAsync("abc");
+        await client.PublishAsync(cloudEvent.ToMqttApplicationMessage(ContentMode.Structured, new JsonEventFormatter(), topic: "abc"));
+        var receivedCloudEvent = await tcs.Task;
 
-            var jsonEventFormatter = new JsonEventFormatter();
-            var cloudEvent = new CloudEvent
-            {
-                Type = "com.github.pull.create",
-                Source = new Uri("https://github.com/cloudevents/spec/pull/123"),
-                Id = "A234-1234-1234",
-                Time = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero),
-                DataContentType = MediaTypeNames.Text.Xml,
-                Data = "<much wow=\"xml\"/>",
-                ["comexampleextension1"] = "value"
-            };
+        Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
+        Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
+        Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
+        Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
+        AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
+        Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
+        Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
 
-            var client = new MqttFactory().CreateMqttClient();
-
-            var options = new MqttClientOptionsBuilder()
-                .WithClientId("Client1")
-                .WithTcpServer("127.0.0.1", 52355)
-                .WithCleanSession()
-                .Build();
-
-            TaskCompletionSource<CloudEvent> tcs = new TaskCompletionSource<CloudEvent>();
-            await client.ConnectAsync(options);
-            client.ApplicationMessageReceivedAsync += args =>
-            {
-                tcs.SetResult(args.ApplicationMessage.ToCloudEvent(jsonEventFormatter));
-                return Task.CompletedTask;
-            };
-
-            var result = await client.SubscribeAsync("abc");
-            await client.PublishAsync(cloudEvent.ToMqttApplicationMessage(ContentMode.Structured, new JsonEventFormatter(), topic: "abc"));
-            var receivedCloudEvent = await tcs.Task;
-
-            Assert.Equal(CloudEventsSpecVersion.Default, receivedCloudEvent.SpecVersion);
-            Assert.Equal("com.github.pull.create", receivedCloudEvent.Type);
-            Assert.Equal(new Uri("https://github.com/cloudevents/spec/pull/123"), receivedCloudEvent.Source);
-            Assert.Equal("A234-1234-1234", receivedCloudEvent.Id);
-            AssertTimestampsEqual("2018-04-05T17:31:00Z", receivedCloudEvent.Time!.Value);
-            Assert.Equal(MediaTypeNames.Text.Xml, receivedCloudEvent.DataContentType);
-            Assert.Equal("<much wow=\"xml\"/>", receivedCloudEvent.Data);
-
-            Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
-        }
+        Assert.Equal("value", (string?) receivedCloudEvent["comexampleextension1"]);
     }
 }

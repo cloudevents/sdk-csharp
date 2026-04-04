@@ -4,14 +4,13 @@
 
 using System.Text.Json.Serialization;
 
-namespace CloudNative.CloudEvents.SystemTextJson.UnitTests
-{
-    [CloudEventFormatter(typeof(JsonEventFormatter<AttributedModel>))]
-    internal class AttributedModel
-    {
-        public const string JsonPropertyName = "customattribute";
+namespace CloudNative.CloudEvents.SystemTextJson.UnitTests;
 
-        [JsonPropertyName(JsonPropertyName)]
-        public string? AttributedProperty { get; set; }
-    }
+[CloudEventFormatter(typeof(JsonEventFormatter<AttributedModel>))]
+internal class AttributedModel
+{
+    public const string JsonPropertyName = "customattribute";
+
+    [JsonPropertyName(JsonPropertyName)]
+    public string? AttributedProperty { get; set; }
 }

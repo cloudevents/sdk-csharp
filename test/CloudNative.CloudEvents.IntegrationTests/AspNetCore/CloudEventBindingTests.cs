@@ -10,46 +10,45 @@ using System.Net;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore
+namespace CloudNative.CloudEvents.IntegrationTests.AspNetCore;
+
+public class CloudEventBindingTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    public class CloudEventBindingTests : IClassFixture<WebApplicationFactory<Program>>
+    private readonly WebApplicationFactory<Program> _factory;
+
+    public CloudEventBindingTests(WebApplicationFactory<Program> factory)
     {
-        private readonly WebApplicationFactory<Program> _factory;
+        _factory = factory;
+    }
 
-        public CloudEventBindingTests(WebApplicationFactory<Program> factory)
+    [Theory]
+    [InlineData(ContentMode.Structured)]
+    [InlineData(ContentMode.Binary)]
+    public async Task Binding_WithValidCloudEvent_NoContent_DeserializesUsingPipeline(ContentMode contentMode)
+    {
+        // Arrange
+        var expectedExtensionKey = "comexampleextension1";
+        var expectedExtensionValue = Guid.NewGuid().ToString();
+        var cloudEvent = new CloudEvent
         {
-            _factory = factory;
-        }
+            Type = "test-type-æøå",
+            Source = new Uri("urn:integration-tests"),
+            Id = Guid.NewGuid().ToString(),
+            DataContentType = "application/json",
+            Data = new { key1 = "value1" },
+            [expectedExtensionKey] = expectedExtensionValue
+        };
 
-        [Theory]
-        [InlineData(ContentMode.Structured)]
-        [InlineData(ContentMode.Binary)]
-        public async Task Binding_WithValidCloudEvent_NoContent_DeserializesUsingPipeline(ContentMode contentMode)
-        {
-            // Arrange
-            var expectedExtensionKey = "comexampleextension1";
-            var expectedExtensionValue = Guid.NewGuid().ToString();
-            var cloudEvent = new CloudEvent
-            {
-                Type = "test-type-æøå",
-                Source = new Uri("urn:integration-tests"),
-                Id = Guid.NewGuid().ToString(),
-                DataContentType = "application/json",
-                Data = new { key1 = "value1" },
-                [expectedExtensionKey] = expectedExtensionValue
-            };
+        var httpContent = cloudEvent.ToHttpContent(contentMode, new JsonEventFormatter());
 
-            var httpContent = cloudEvent.ToHttpContent(contentMode, new JsonEventFormatter());
+        // Act
+        var result = await _factory.CreateClient().PostAsync("/api/events/receive", httpContent);
 
-            // Act
-            var result = await _factory.CreateClient().PostAsync("/api/events/receive", httpContent);
-
-            // Assert
-            string resultContent = await result.Content.ReadAsStringAsync();
-            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-            Assert.Contains(cloudEvent.Id, resultContent);
-            Assert.Contains(cloudEvent.Type, resultContent);
-            Assert.Contains($"\"{expectedExtensionKey}\":\"{expectedExtensionValue}\"", resultContent);
-        }
+        // Assert
+        string resultContent = await result.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+        Assert.Contains(cloudEvent.Id, resultContent);
+        Assert.Contains(cloudEvent.Type, resultContent);
+        Assert.Contains($"\"{expectedExtensionKey}\":\"{expectedExtensionValue}\"", resultContent);
     }
 }
