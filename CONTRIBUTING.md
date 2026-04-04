@@ -34,7 +34,11 @@ local development environment. Then add this repository as the upstream.
 git clone https://github.com/mygithuborg/sdk-csharp.git
 cd sdk-csharp
 git remote add upstream https://github.com/cloudevents/sdk-csharp.git
+git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
+
+The final command is optional, but recommended. It makes `git blame` ignore
+mechanical formatting/refactoring commits listed in [.git-blame-ignore-revs](.git-blame-ignore-revs).
 
 ## Branches
 
