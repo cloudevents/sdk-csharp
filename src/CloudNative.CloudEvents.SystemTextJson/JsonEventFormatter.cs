@@ -704,9 +704,7 @@ public class JsonEventFormatter<T> : JsonEventFormatter
 
     /// <inheritdoc />
     protected override void DecodeStructuredModeDataProperty(JsonElement dataElement, CloudEvent cloudEvent) =>
-        // Note: this is an inefficient way of doing this.
-        // See https://github.com/dotnet/runtime/issues/31274 - when that's implemented, we can use the new method here.
-        cloudEvent.Data = JsonSerializer.Deserialize<T>(dataElement.GetRawText(), SerializerOptions);
+        cloudEvent.Data = JsonSerializer.Deserialize<T>(dataElement, SerializerOptions);
 
     // TODO: Consider decoding the base64 data as a byte array, then using DecodeBinaryModeData.
     /// <inheritdoc />
