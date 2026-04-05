@@ -8,6 +8,7 @@ using System;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Xunit;
 
 namespace CloudNative.CloudEvents.SystemTextJson.UnitTests;
@@ -43,6 +44,22 @@ public class GenericJsonEventFormatterTest
 
         var model = (AttributedModel) cloudEvent.Data!;
         Assert.Equal("test", model.AttributedProperty);
+    }
+
+    [Fact]
+    public void DecodeStructuredMode_UsesSerializerOptions()
+    {
+        var obj = JsonEventFormatterTest.CreateMinimalValidJObject();
+        obj["data"] = "10";
+        byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
+
+        var formatter = new JsonEventFormatter<int>(new JsonSerializerOptions
+        {
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
+        }, default);
+        var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, null, null);
+
+        Assert.Equal(10, cloudEvent.Data);
     }
 
     [Fact]
