@@ -19,6 +19,7 @@ unnecessary dependencies. These packages are:
 |[CloudNative.CloudEvents.Kafka](https://www.nuget.org/packages/CloudNative.CloudEvents.Kafka)|Kafka protocol binding using [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka)|
 |[CloudNative.CloudEvents.Mqtt](https://www.nuget.org/packages/CloudNative.CloudEvents.Mqtt)|MQTT protocol binding using [MQTTnet](https://www.nuget.org/packages/MQTTnet)|
 |[CloudNative.CloudEvents.NewtonsoftJson](https://www.nuget.org/packages/CloudNative.CloudEvents.NewtonsoftJson)|JSON event formatter using [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json)|
+|[CloudNative.CloudEvents.Protobuf](https://www.nuget.org/packages/CloudNative.CloudEvents.Protobuf)|Protobuf event formatter using [Google.Protobuf](https://www.nuget.org/packages/Google.Protobuf)|
 |[CloudNative.CloudEvents.SystemTextJson](https://www.nuget.org/packages/CloudNative.CloudEvents.SystemTextJson)|JSON event formatter using [System.Text.Json](https://www.nuget.org/packages/System.Text.Json)|
 
 Note that protocol bindings for HTTP using `HttpRequestMessage`,
@@ -113,7 +114,7 @@ if you write your own extensions:
 
 - Create a static class for all related extension attributes (e.g. the
   `sequence` and `sequencetype` extension attributes are both exposed
-  via the `CloudNative.CloudEvents.Extension.Sequence` class)
+  via the `CloudNative.CloudEvents.Extensions.Sequence` class)
 - Create a static read-only property of type `CloudEventAttribute`
   for each extension attribute
 - Create a static read-only property of type
@@ -145,7 +146,7 @@ methods, typically extracting a CloudEvent from an existing
 transport message, or creating/populating a transport message with
 an existing CloudEvent.
 
-Protocol bindings work with [CloudEvent formatters](#event-formatters) to
+Protocol bindings work with [CloudEvent formatters](#cloudevent-formatters) to
 determine exactly how the CloudEvent is represented within any
 given transport message.
 
@@ -161,7 +162,7 @@ The following table summarizes the protocol bindings available:
 |Protocol binding|Namespace|Types|
 |-|-|-|
 |HTTP (built-in)|CloudNative.CloudEvents.Http|HttpClientExtensions, HttpListenerExtensions, HttpWebExtensions|
-|HTTP (ASP.NET Core)|CloudNative.CloudEvents.AspNetCore|HttpRequestExtensions, CloudEventJsonInputFormatter|
+|HTTP (ASP.NET Core)|CloudNative.CloudEvents.AspNetCore|HttpRequestExtensions, HttpResponseExtensions|
 |AMQP|CloudNative.CloudEvents.Amqp|AmqpExtensions|
 |Kafka|CloudNative.CloudEvents.Kafka|KafkaExtensions|
 |MQTT|CloudNative.CloudEvents.Mqtt|MqttExtensions|
@@ -193,11 +194,12 @@ For structured mode (and batch mode) messages, the way in which the
 CloudEvent (or batch of CloudEvents) is represented is determined by
 the *CloudEvent format* being used. In the .NET SDK, a CloudEvent
 format is represented by concrete types derived from the
-`CloudEventFormatter` abstract base class. Two formats are supported:
+`CloudEventFormatter` abstract base class. Three formats are supported:
 
 - JSON, via the `JsonEventFormatter` types in the `CloudNative.CloudEvents.SystemTextJson` and
   `CloudNative.CloudEvents.NewtonsoftJson` packages
 - Avro, via the `AvroEventFormatter` type in the `CloudNative.CloudEvents.Avro` package
+- Protobuf, via the `ProtobufEventFormatter` type in the `CloudNative.CloudEvents.Protobuf` package
 
 Note that a `CloudEventFormatter` in the .NET SDK has more
 responsibility than a CloudEvent format in the specification, in
