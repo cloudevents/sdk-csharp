@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Check out our repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         submodules: true
 
