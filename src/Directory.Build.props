@@ -42,11 +42,13 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://cloudevents.io</PackageProjectUrl>
     <Copyright>Copyright Cloud Native Foundation</Copyright>
+    <PackageReadmeFile Condition="Exists('$(MSBuildProjectDirectory)\PACKAGE.md')">PACKAGE.md</PackageReadmeFile>
   </PropertyGroup>
   
-  <!-- Package the icon specified in the PackageIcon property -->
+  <!-- Package shared NuGet assets. -->
   <ItemGroup>
     <None Include="$(RepoRoot)\nuget-icon.png" Pack="true" PackagePath=""/>
+    <None Include="$(MSBuildProjectDirectory)\PACKAGE.md" Pack="true" PackagePath="" Link="PACKAGE.md" Condition="Exists('$(MSBuildProjectDirectory)\PACKAGE.md')" />
   </ItemGroup>
 
 </Project>
