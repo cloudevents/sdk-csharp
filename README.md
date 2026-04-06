@@ -8,7 +8,7 @@ This SDK current supports the following versions of CloudEvents:
 
 # sdk-csharp
 
-.NET Standard 2.0 (C#) SDK for CloudEvents
+.NET (C#) SDK for CloudEvents
 
 The `CloudNative.CloudEvents` package provides support for creating, encoding,
 decoding, sending, and receiving [CNCF
