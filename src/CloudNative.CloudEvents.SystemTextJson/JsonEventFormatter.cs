@@ -190,20 +190,23 @@ public class JsonEventFormatter : CloudEventFormatter
     private async Task<JsonDocument> ReadDocumentAsync(Stream data, ContentType? contentType, bool async)
     {
         var encoding = MimeUtilities.GetEncoding(contentType);
-        if (encoding is UTF8Encoding)
+        if (encoding is not UTF8Encoding)
         {
-            return async
-                ? await JsonDocument.ParseAsync(data, DocumentOptions).ConfigureAwait(false)
-                : JsonDocument.Parse(data, DocumentOptions);
-        }
-        else
-        {
+#if NET5_0_OR_GREATER
+            data = Encoding.CreateTranscodingStream(data, encoding, Encoding.UTF8);
+#else
             using var reader = new StreamReader(data, encoding);
             var json = async
                 ? await reader.ReadToEndAsync().ConfigureAwait(false)
                 : reader.ReadToEnd();
+                
             return JsonDocument.Parse(json, DocumentOptions);
+#endif
         }
+
+        return async
+            ? await JsonDocument.ParseAsync(data, DocumentOptions).ConfigureAwait(false)
+            : JsonDocument.Parse(data, DocumentOptions);
     }
 
     private CloudEvent DecodeJsonElement(JsonElement element, IEnumerable<CloudEventAttribute>? extensionAttributes, string paramName)
