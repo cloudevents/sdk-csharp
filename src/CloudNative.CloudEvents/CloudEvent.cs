@@ -195,7 +195,7 @@ public sealed class CloudEvent
             // (It's a simple way of populating extensions after the fact...)
             if (knownAttribute is null)
             {
-                Validation.CheckArgument(value is null || value is string,
+                Validation.CheckArgument(value is null or string,
                     nameof(value), "Cannot assign value of type {0} to unknown attribute '{1}'",
                     value?.GetType(), attributeName);
                 knownAttribute = CloudEventAttribute.CreateExtension(attributeName, CloudEventAttributeType.String);
