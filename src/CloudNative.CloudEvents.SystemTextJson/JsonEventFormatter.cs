@@ -4,6 +4,7 @@
 
 using CloudNative.CloudEvents.Core;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Mime;
@@ -410,8 +411,8 @@ public class JsonEventFormatter : CloudEventFormatter
             CharSet = Encoding.UTF8.WebName
         };
 
-        var stream = new MemoryStream();
-        var writer = CreateUtf8JsonWriter(stream);
+        var bufferWriter = new ArrayBufferWriter<byte>();
+        var writer = CreateUtf8JsonWriter(bufferWriter);
         writer.WriteStartArray();
         foreach (var cloudEvent in cloudEvents)
         {
@@ -419,23 +420,23 @@ public class JsonEventFormatter : CloudEventFormatter
         }
         writer.WriteEndArray();
         writer.Flush();
-        return stream.ToArray();
+        return bufferWriter.WrittenMemory;
     }
 
     /// <inheritdoc />
     public override ReadOnlyMemory<byte> EncodeStructuredModeMessage(CloudEvent cloudEvent, out ContentType contentType)
     {
-        contentType = new ContentType(StructuredMediaType)
-        {
-            CharSet = Encoding.UTF8.WebName
-        };
+        contentType = new ContentType(StructuredMediaType) { CharSet = Encoding.UTF8.WebName };
 
-        var stream = new MemoryStream();
-        var writer = CreateUtf8JsonWriter(stream);
+        var bufferWriter = new ArrayBufferWriter<byte>();
+        using var writer = CreateUtf8JsonWriter(bufferWriter);
+
         WriteCloudEventForBatchOrStructuredMode(writer, cloudEvent);
         writer.Flush();
-        return stream.ToArray();
+
+        return bufferWriter.WrittenMemory;
     }
+
 
     /// <summary>
     /// Converts the given <see cref="CloudEvent"/> to a <see cref="JsonElement"/> containing the structured mode JSON format representation
@@ -468,6 +469,19 @@ public class JsonEventFormatter : CloudEventFormatter
             SkipValidation = false
         };
         return new Utf8JsonWriter(stream, options);
+    }
+
+    private Utf8JsonWriter CreateUtf8JsonWriter(IBufferWriter<byte> bufferWriter)
+    {
+        var options = new JsonWriterOptions
+        {
+            Encoder = SerializerOptions?.Encoder,
+            Indented = SerializerOptions?.WriteIndented ?? false,
+            // TODO: Consider skipping validation in the future for the sake of performance.
+            SkipValidation = false
+        };
+
+        return new Utf8JsonWriter(bufferWriter, options);
     }
 
     private void WriteCloudEventForBatchOrStructuredMode(Utf8JsonWriter writer, CloudEvent cloudEvent)
