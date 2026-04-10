@@ -85,11 +85,6 @@ public static class HttpRequestExtensions
             var version = CloudEventsSpecVersion.FromVersionId(versionId.FirstOrDefault())
                 ?? throw new ArgumentException($"Unknown CloudEvents spec version '{versionId}'", nameof(httpRequest));
 
-            if (version is null)
-            {
-                throw new ArgumentException($"Unsupported CloudEvents spec version '{versionId.First()}'");
-            }
-
             var cloudEvent = new CloudEvent(version, extensionAttributes);
             foreach (var header in headers)
             {

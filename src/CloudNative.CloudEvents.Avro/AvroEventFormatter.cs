@@ -95,15 +95,12 @@ public class AvroEventFormatter : CloudEventFormatter
         IDictionary<string, object> recordAttributes = (IDictionary<string, object>) attrObj;
 
         if (!recordAttributes.TryGetValue(CloudEventsSpecVersion.SpecVersionAttribute.Name, out var versionId) ||
-            !(versionId is string versionIdString))
+            versionId is not string versionIdString)
         {
             throw new ArgumentException("Specification version attribute is missing");
         }
-        CloudEventsSpecVersion? version = CloudEventsSpecVersion.FromVersionId(versionIdString);
-        if (version is null)
-        {
-            throw new ArgumentException($"Unsupported CloudEvents spec version '{versionIdString}'");
-        }
+        var version = CloudEventsSpecVersion.FromVersionId(versionIdString) 
+            ?? throw new ArgumentException($"Unsupported CloudEvents spec version '{versionIdString}'");
 
         var cloudEvent = new CloudEvent(version, extensionAttributes);
         cloudEvent.Data = record.TryGetValue(DataName, out var data) ? data : null;
@@ -125,13 +122,13 @@ public class AvroEventFormatter : CloudEventFormatter
             // The Avro schema allows the value to be a Boolean, integer, string or bytes.
             // Timestamps and URIs are represented as strings, so we just use SetAttributeFromString to handle those.
             // TODO: This does mean that any extensions of these types must have been registered beforehand.
-            if (value is bool || value is int || value is byte[])
+            if (value is bool or int or byte[])
             {
                 cloudEvent[key] = value;
             }
-            else if (value is string)
+            else if (value is string v)
             {
-                cloudEvent.SetAttributeFromString(key, (string) value);
+                cloudEvent.SetAttributeFromString(key, v);
             }
             else
             {
@@ -160,7 +157,7 @@ public class AvroEventFormatter : CloudEventFormatter
             var attribute = keyValuePair.Key;
             var value = keyValuePair.Value;
             // TODO: Create a mapping method in each direction, to have this logic more clearly separated.
-            var avroValue = value is bool || value is int || value is byte[] || value is string
+            var avroValue = value is bool or int or byte[] or string
                 ? value
                 : attribute.Format(value);
             recordAttributes[attribute.Name] = avroValue;
