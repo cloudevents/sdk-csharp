@@ -61,7 +61,7 @@ public class HttpRequestExtensionsTest
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        var request = CreateRequest(Array.Empty<byte>(), new ContentType(contentType));
         CopyHeaders(headers, request);
         Assert.True(request.IsCloudEvent());
     }
@@ -74,7 +74,7 @@ public class HttpRequestExtensionsTest
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        var request = CreateRequest(Array.Empty<byte>(), new ContentType(contentType));
         CopyHeaders(headers, request);
         Assert.False(request.IsCloudEvent());
     }
@@ -86,7 +86,7 @@ public class HttpRequestExtensionsTest
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        var request = CreateRequest(Array.Empty<byte>(), new ContentType(contentType));
         CopyHeaders(headers, request);
         Assert.True(request.IsCloudEventBatch());
     }
@@ -99,7 +99,7 @@ public class HttpRequestExtensionsTest
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = CreateRequest(new byte[0], new ContentType(contentType));
+        var request = CreateRequest(Array.Empty<byte>(), new ContentType(contentType));
         CopyHeaders(headers, request);
         Assert.False(request.IsCloudEventBatch());
     }

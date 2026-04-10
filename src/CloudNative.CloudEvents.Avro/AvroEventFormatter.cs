@@ -86,7 +86,7 @@ public class AvroEventFormatter : CloudEventFormatter
     public override ReadOnlyMemory<byte> EncodeBatchModeMessage(IEnumerable<CloudEvent> cloudEvent, out ContentType contentType) =>
         throw new NotSupportedException("The Avro event formatter does not support batch content mode");
 
-    private CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute>? extensionAttributes)
+    private static CloudEvent DecodeGenericRecord(GenericRecord record, IEnumerable<CloudEventAttribute>? extensionAttributes)
     {
         if (!record.TryGetValue(AttributeName, out var attrObj))
         {

@@ -152,7 +152,7 @@ public class SpecializedFormatterTest
     /// - Content type of "text/binary" is encoded in base64
     /// - Guid with a content type of "application/guid" is encoded as a string with content "guid:base64-data"
     /// </summary>
-    private class SpecializedFormatter : JsonEventFormatter
+    private sealed class SpecializedFormatter : JsonEventFormatter
     {
         protected override void DecodeStructuredModeDataBase64Property(JToken dataBase64Token, CloudEvent cloudEvent)
         {
