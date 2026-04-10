@@ -521,33 +521,28 @@ public class JsonEventFormatter : CloudEventFormatter
         {
             writer.WritePropertyName(DataBase64PropertyName);
             writer.WriteValue(Convert.ToBase64String(binary));
+            return;
         }
-        else
+
+        // Throwing exception only happens in a derived class which overrides GetOrInferDataContentType further...
+        // This class infers application/json for anything other than byte arrays.
+        string? dataContentTypeText = GetOrInferDataContentType(cloudEvent) ?? throw new ArgumentException("Data content type cannot be inferred");
+
+        var dataContentType = new ContentType(dataContentTypeText);
+        if (IsJsonMediaType(dataContentType.MediaType))
         {
-            string? dataContentTypeText = GetOrInferDataContentType(cloudEvent);
-            // This would only happen in a derived class which overrides GetOrInferDataContentType further...
-            // This class infers application/json for anything other than byte arrays.
-            if (dataContentTypeText is null)
-            {
-                throw new ArgumentException("Data content type cannot be inferred");
-            }
-            ContentType dataContentType = new ContentType(dataContentTypeText);
-            if (IsJsonMediaType(dataContentType.MediaType))
-            {
-                writer.WritePropertyName(DataPropertyName);
-                Serializer.Serialize(writer, cloudEvent.Data);
-            }
-            else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
-            {
-                writer.WritePropertyName(DataPropertyName);
-                writer.WriteValue(text);
-            }
-            else
-            {
-                // We assume CloudEvent.Data is not null due to the way this is called.
-                throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
-            }
+            writer.WritePropertyName(DataPropertyName);
+            Serializer.Serialize(writer, cloudEvent.Data);
+            return;
         }
+        if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
+        {
+            writer.WritePropertyName(DataPropertyName);
+            writer.WriteValue(text);
+            return;
+        }
+        // We assume CloudEvent.Data is not null due to the way this is called.
+        throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
     }
 
     /// <inheritdoc />
