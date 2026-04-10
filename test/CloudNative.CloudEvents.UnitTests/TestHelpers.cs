@@ -20,7 +20,7 @@ internal static class TestHelpers
     internal static IEqualityComparer<DateTimeOffset> InstantOnlyTimestampComparer => EqualityComparer<DateTimeOffset>.Default;
     internal static IEqualityComparer<DateTimeOffset> StrictTimestampComparer => StrictTimestampComparerImpl.Instance;
 
-    internal static CloudEventAttribute[] EmptyExtensionArray { get; } = new CloudEventAttribute[0];
+    internal static CloudEventAttribute[] EmptyExtensionArray { get; } = [];
     internal static IEnumerable<CloudEventAttribute> EmptyExtensionSequence { get; } = new List<CloudEventAttribute>().AsReadOnly();
 
     /// <summary>
@@ -217,7 +217,7 @@ internal static class TestHelpers
         return output;
     }
 
-    private class StrictTimestampComparerImpl : IEqualityComparer<DateTimeOffset>
+    private sealed class StrictTimestampComparerImpl : IEqualityComparer<DateTimeOffset>
     {
         internal static StrictTimestampComparerImpl Instance { get; } = new StrictTimestampComparerImpl();
 

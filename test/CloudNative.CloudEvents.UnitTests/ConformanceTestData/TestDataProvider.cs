@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace CloudNative.CloudEvents.UnitTests.ConformanceTestData;
 
-internal class TestDataProvider
+internal sealed class TestDataProvider
 {
     private static readonly string ConformanceTestDataRoot = Path.Combine(FindRepoRoot(), "conformance", "format");
 

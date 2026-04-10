@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests;
 
 [CloudEventFormatter(typeof(JsonEventFormatter<AttributedModel>))]
-internal class AttributedModel
+internal sealed class AttributedModel
 {
     public const string JsonPropertyName = "customattribute";
 

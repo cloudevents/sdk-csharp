@@ -11,7 +11,7 @@ using Xunit;
 
 namespace CloudNative.CloudEvents.SystemTextJson.UnitTests;
 
-internal class JsonElementAsserter : IEnumerable
+internal sealed class JsonElementAsserter : IEnumerable
 {
     private readonly List<(string name, JsonValueKind type, object? value)> expectations = new List<(string, JsonValueKind, object?)>();
 

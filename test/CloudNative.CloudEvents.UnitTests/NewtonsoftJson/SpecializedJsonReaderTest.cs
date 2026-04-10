@@ -58,7 +58,7 @@ public class SpecializedJsonReaderTest
         Assert.Same(property1.Name, property2.Name);
     }
 
-    private Stream CreateJsonStream()
+    private static MemoryStream CreateJsonStream()
     {
         var cloudEvent = new CloudEvent
         {
@@ -68,13 +68,13 @@ public class SpecializedJsonReaderTest
         return BinaryDataUtilities.AsStream(bytes);
     }
 
-    private class CreateJsonReaderExposingFormatter : JsonEventFormatter
+    private sealed class CreateJsonReaderExposingFormatter : JsonEventFormatter
     {
         public JsonReader CreateJsonReaderPublic(Stream stream, Encoding? encoding) =>
             base.CreateJsonReader(stream, encoding);
     }
 
-    private class PropertyNameTableFormatter : JsonEventFormatter
+    private sealed class PropertyNameTableFormatter : JsonEventFormatter
     {
         private readonly DefaultJsonNameTable table;
 
