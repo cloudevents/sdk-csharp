@@ -50,7 +50,7 @@ public class CloudEventFormatterTest
         Assert.Null(formatter.GetOrInferDataContentType(cloudEvent));
     }
 
-    private class ContentTypeInferringFormatter : ThrowingEventFormatter
+    private sealed class ContentTypeInferringFormatter : ThrowingEventFormatter
     {
         protected override string? InferDataContentType(object data) => $"test/{data}";
     }

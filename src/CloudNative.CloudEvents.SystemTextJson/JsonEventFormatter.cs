@@ -227,7 +227,7 @@ public class JsonEventFormatter : CloudEventFormatter
         return Validation.CheckCloudEventArgument(cloudEvent, paramName);
     }
 
-    private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JsonElement element)
+    private static void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JsonElement element)
     {
         foreach (var jsonProperty in element.EnumerateObject())
         {
@@ -274,7 +274,7 @@ public class JsonEventFormatter : CloudEventFormatter
         }
     }
 
-    private void ValidateTokenTypeForAttribute(CloudEventAttribute? attribute, JsonValueKind valueKind)
+    private static void ValidateTokenTypeForAttribute(CloudEventAttribute? attribute, JsonValueKind valueKind)
     {
         // We can't validate unknown attributes, don't check for extension attributes,
         // and null values will be ignored anyway.

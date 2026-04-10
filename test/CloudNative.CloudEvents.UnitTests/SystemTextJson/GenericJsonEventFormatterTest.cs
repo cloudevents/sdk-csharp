@@ -103,7 +103,7 @@ public class GenericJsonEventFormatterTest
     {
         var formatter = CreateFormatter<AttributedModel>();
         var cloudEvent = new CloudEvent { Data = "original" };
-        formatter.DecodeBinaryModeEventData(new byte[0], cloudEvent);
+        formatter.DecodeBinaryModeEventData(Array.Empty<byte>(), cloudEvent);
         Assert.Null(cloudEvent.Data);
     }
 
@@ -184,7 +184,7 @@ public class GenericJsonEventFormatterTest
         return formatter!;
     }
 
-    private class OtherModelClass
+    private sealed class OtherModelClass
     {
         public string? Text { get; set; }
     }

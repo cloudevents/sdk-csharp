@@ -16,7 +16,7 @@ namespace HttpSend;
 
 // This application uses the McMaster.Extensions.CommandLineUtils library for parsing the command
 // line and calling the application code. The [Option] attributes designate the parameters.
-internal class Program
+internal sealed class Program
 {
     [Option(Description = "CloudEvents 'source' (default: urn:example-com:mysource:abc)", LongName = "source", ShortName = "s")]
     private string Source { get; } = "urn:example-com:mysource:abc";

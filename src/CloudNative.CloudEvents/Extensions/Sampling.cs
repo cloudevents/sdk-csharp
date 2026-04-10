@@ -53,7 +53,7 @@ public static class Sampling
     {
         if ((int) value <= 0)
         {
-            throw new ArgumentOutOfRangeException("Sampled rate must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(value), "Sampled rate must be positive.");
         }
     }
 }

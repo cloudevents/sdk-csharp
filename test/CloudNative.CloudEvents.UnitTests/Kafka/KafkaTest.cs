@@ -194,7 +194,7 @@ public class KafkaTest
         Assert.Equal("application/json", contentTypeValue);
     }
 
-    private class HeadersConverter : JsonConverter
+    private sealed class HeadersConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {
@@ -226,9 +226,9 @@ public class KafkaTest
         }
     }
 
-    private class HeaderConverter : JsonConverter
+    private sealed class HeaderConverter : JsonConverter
     {
-        private class HeaderContainer
+        private sealed class HeaderContainer
         {
             public string? Key { get; set; }
             public byte[]? Value { get; set; }
