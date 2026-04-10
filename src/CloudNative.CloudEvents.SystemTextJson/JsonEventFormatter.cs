@@ -540,26 +540,24 @@ public class JsonEventFormatter : CloudEventFormatter
         {
             writer.WritePropertyName(DataBase64PropertyName);
             writer.WriteStringValue(Convert.ToBase64String(binary));
+            return;
         }
-        else
+
+        var dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
+        if (IsJsonMediaType(dataContentType.MediaType))
         {
-            ContentType dataContentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
-            if (IsJsonMediaType(dataContentType.MediaType))
-            {
-                writer.WritePropertyName(DataPropertyName);
-                JsonSerializer.Serialize(writer, cloudEvent.Data, SerializerOptions);
-            }
-            else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
-            {
-                writer.WritePropertyName(DataPropertyName);
-                writer.WriteStringValue(text);
-            }
-            else
-            {
-                // We assume CloudEvent.Data is not null due to the way this is called.
-                throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
-            }
+            writer.WritePropertyName(DataPropertyName);
+            JsonSerializer.Serialize(writer, cloudEvent.Data, SerializerOptions);
+            return;
         }
+        if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
+        {
+            writer.WritePropertyName(DataPropertyName);
+            writer.WriteStringValue(text);
+            return;
+        }
+        // We assume CloudEvent.Data is not null due to the way this is called.
+        throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
     }
 
     /// <inheritdoc />
