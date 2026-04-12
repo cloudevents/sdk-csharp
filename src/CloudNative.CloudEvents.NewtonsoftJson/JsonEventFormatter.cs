@@ -568,13 +568,26 @@ public class JsonEventFormatter : CloudEventFormatter
         ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
         if (IsJsonMediaType(contentType.MediaType))
         {
-            // TODO: Make this more efficient. We could write to a StreamWriter with a MemoryStream,
-            // but then we end up with a BOM in most cases, which I suspect we don't want.
-            // An alternative is to make sure that contentType.GetEncoding() always returns an encoding
-            // without a preamble (or rewrite StreamWriter...)
-            var stringWriter = new StringWriter();
-            Serializer.Serialize(stringWriter, cloudEvent.Data);
-            return MimeUtilities.GetEncoding(contentType).GetBytes(stringWriter.ToString());
+            var encoding = MimeUtilities.GetEncoding(contentType);
+            if (encoding is UTF8Encoding)
+            {
+                using var ms = new MemoryStream();
+                using var writer = new StreamWriter(ms, new UTF8Encoding(false));
+                Serializer.Serialize(writer, cloudEvent.Data);
+                writer.Flush();
+                return ms.ToArray();
+            }
+            else
+            {
+                // TODO: Make this more efficient for non-UTF8 encodings. 
+                // We could write to a StreamWriter with a MemoryStream,
+                // but then we end up with a BOM in most cases, which I suspect we don't want.
+                // An alternative is to make sure that contentType.GetEncoding() always returns an encoding
+                // without a preamble (or rewrite StreamWriter...)
+                var stringWriter = new StringWriter();
+                Serializer.Serialize(stringWriter, cloudEvent.Data);
+                return encoding.GetBytes(stringWriter.ToString());
+            }
         }
         if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
         {
@@ -680,10 +693,12 @@ public class JsonEventFormatter<T> : JsonEventFormatter
             return Array.Empty<byte>();
         }
         T data = (T) cloudEvent.Data;
-        // TODO: Make this more efficient. (See base class implementation for a more detailed comment.)
-        var stringWriter = new StringWriter();
-        Serializer.Serialize(stringWriter, data);
-        return Encoding.UTF8.GetBytes(stringWriter.ToString());
+
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, new UTF8Encoding(false));
+        Serializer.Serialize(writer, data);
+        writer.Flush();
+        return ms.ToArray();
     }
 
     /// <inheritdoc />
