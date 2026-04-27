@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
-using CloudNative.CloudEvents.NewtonsoftJson;
+using CloudNative.CloudEvents.SystemTextJson;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Server;
@@ -17,16 +17,19 @@ namespace CloudNative.CloudEvents.Mqtt.UnitTests;
 public class MqttTest : IDisposable
 {
     private readonly MqttServer mqttServer;
+    private readonly int mqttServerPort;
 
     public MqttTest()
     {
-        var optionsBuilder = new MqttServerOptionsBuilder()
+        var options = new MqttServerOptionsBuilder()
             .WithConnectionBacklog(100)
-            .WithDefaultEndpoint()
-            .WithDefaultEndpointPort(52355);
+            .WithDefaultEndpointPort(0) // 0 means randomly assigning a port during server startup, prevents conflicts with other tests
+            .WithDefaultEndpoint().Build();
 
-        this.mqttServer = new MqttFactory().CreateMqttServer(optionsBuilder.Build());
+        this.mqttServer = new MqttFactory().CreateMqttServer(options);
         mqttServer.StartAsync().GetAwaiter().GetResult();
+
+        this.mqttServerPort = options.DefaultEndpointOptions.Port; // port only gets assigned after the server starts, read it earlier and it stays 0
     }
 
     public void Dispose()
@@ -37,7 +40,6 @@ public class MqttTest : IDisposable
     [Fact]
     public async Task MqttSendTest()
     {
-
         var jsonEventFormatter = new JsonEventFormatter();
         var cloudEvent = new CloudEvent
         {
@@ -54,7 +56,7 @@ public class MqttTest : IDisposable
 
         var options = new MqttClientOptionsBuilder()
             .WithClientId("Client1")
-            .WithTcpServer("127.0.0.1", 52355)
+            .WithTcpServer("127.0.0.1", mqttServerPort)
             .WithCleanSession()
             .Build();
 
