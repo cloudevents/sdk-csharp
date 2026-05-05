@@ -294,7 +294,7 @@ public class ProtobufEventFormatterTest
     public void EncodeBatchModeMessage_Empty()
     {
         var formatter = new ProtobufEventFormatter();
-        var bytes = formatter.EncodeBatchModeMessage(new CloudEvent[0], out var contentType);
+        var bytes = formatter.EncodeBatchModeMessage([], out var contentType);
         Assert.Equal("application/cloudevents-batch+protobuf; charset=utf-8", contentType.ToString());
         var batch = V1.CloudEventBatch.Parser.ParseFrom(bytes.ToArray());
         Assert.Empty(batch.Events);

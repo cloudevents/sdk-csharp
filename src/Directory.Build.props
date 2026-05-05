@@ -25,6 +25,7 @@
     <AssemblyOriginatorKeyFile>$(RepoRoot)/CloudEventsSdk.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>True</SignAssembly>
     <Deterministic>True</Deterministic>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <!-- Keep C# 10 explicit while supporting netstandard2.0/netstandard2.1: older defaults break nullable and file-scoped namespaces. -->
     <LangVersion>10.0</LangVersion>

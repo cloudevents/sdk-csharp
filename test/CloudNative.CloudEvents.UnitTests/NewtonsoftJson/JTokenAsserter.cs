@@ -10,7 +10,7 @@ using Xunit;
 
 namespace CloudNative.CloudEvents.NewtonsoftJson.UnitTests;
 
-internal class JTokenAsserter : IEnumerable
+internal sealed class JTokenAsserter : IEnumerable
 {
     private readonly List<(string name, JTokenType type, object? value)> expectations = new List<(string, JTokenType, object?)>();
 

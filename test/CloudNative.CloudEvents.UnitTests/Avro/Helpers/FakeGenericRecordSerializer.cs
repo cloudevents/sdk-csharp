@@ -10,12 +10,12 @@ using System.IO;
 
 namespace CloudNative.CloudEvents.UnitTests.Avro.Helpers;
 
-internal class FakeGenericRecordSerializer : IGenericRecordSerializer
+internal sealed class FakeGenericRecordSerializer : IGenericRecordSerializer
 {
     public byte[]? SerializeResponse { get; private set; }
     public GenericRecord DeserializeResponse { get; private set; }
-    public int DeserializeCalls { get; private set; } = 0;
-    public int SerializeCalls { get; private set; } = 0;
+    public int DeserializeCalls { get; private set; }
+    public int SerializeCalls { get; private set; }
 
     public FakeGenericRecordSerializer()
     {

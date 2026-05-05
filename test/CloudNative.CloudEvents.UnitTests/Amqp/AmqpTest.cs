@@ -115,7 +115,7 @@ public class AmqpTest
         AssertDecodeThenEqual(cloudEvent, message);
     }
 
-    private void AssertDecodeThenEqual(CloudEvent cloudEvent, Message message)
+    private static void AssertDecodeThenEqual(CloudEvent cloudEvent, Message message)
     {
         var encodedAmqpMessage = message.Encode();
 

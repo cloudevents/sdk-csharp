@@ -443,7 +443,7 @@ public class JsonEventFormatterTest
     [Fact]
     public void EncodeBatchModeMessage_Empty()
     {
-        var cloudEvents = new CloudEvent[0];
+        var cloudEvents = Array.Empty<CloudEvent>();
         var formatter = new JsonEventFormatter();
         var bytes = formatter.EncodeBatchModeMessage(cloudEvents, out var contentType);
         Assert.Equal("application/cloudevents-batch+json; charset=utf-8", contentType.ToString());
@@ -855,14 +855,14 @@ public class JsonEventFormatterTest
     [Fact]
     public void DecodeBinaryModeEventData_EmptyData_JsonContentType()
     {
-        var data = DecodeBinaryModeEventData(new byte[0], "application/json");
+        var data = DecodeBinaryModeEventData([], "application/json");
         Assert.Null(data);
     }
 
     [Fact]
     public void DecodeBinaryModeEventData_EmptyData_TextContentType()
     {
-        var data = DecodeBinaryModeEventData(new byte[0], "text/plain");
+        var data = DecodeBinaryModeEventData([], "text/plain");
         var text = Assert.IsType<string>(data);
         Assert.Equal("", text);
     }
@@ -870,7 +870,7 @@ public class JsonEventFormatterTest
     [Fact]
     public void DecodeBinaryModeEventData_EmptyData_OtherContentType()
     {
-        var data = DecodeBinaryModeEventData(new byte[0], "application/binary");
+        var data = DecodeBinaryModeEventData([], "application/binary");
         var byteArray = Assert.IsType<byte[]>(data);
         Assert.Empty(byteArray);
     }
@@ -1218,7 +1218,7 @@ public class JsonEventFormatterTest
         return formatter.DecodeBatchModeMessage(bytes, s_jsonCloudEventBatchContentType, null);
     }
 
-    private class YearMonthDayConverter : JsonConverter<DateTime>
+    private sealed class YearMonthDayConverter : JsonConverter<DateTime>
     {
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
             DateTime.ParseExact(reader.GetString()!, "yyyy-MM-dd", CultureInfo.InvariantCulture);

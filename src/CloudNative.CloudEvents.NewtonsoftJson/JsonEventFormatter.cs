@@ -219,7 +219,7 @@ public class JsonEventFormatter : CloudEventFormatter
         return Validation.CheckCloudEventArgument(cloudEvent, paramName);
     }
 
-    private void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
+    private static void PopulateAttributesFromStructuredEvent(CloudEvent cloudEvent, JObject jObject)
     {
         foreach (var keyValuePair in jObject)
         {
@@ -264,7 +264,7 @@ public class JsonEventFormatter : CloudEventFormatter
         }
     }
 
-    private void ValidateTokenTypeForAttribute(CloudEventAttribute? attribute, JTokenType tokenType)
+    private static void ValidateTokenTypeForAttribute(CloudEventAttribute? attribute, JTokenType tokenType)
     {
         // We can't validate unknown attributes, don't check for extension attributes,
         // and null values will be ignored anyway.
@@ -521,33 +521,28 @@ public class JsonEventFormatter : CloudEventFormatter
         {
             writer.WritePropertyName(DataBase64PropertyName);
             writer.WriteValue(Convert.ToBase64String(binary));
+            return;
         }
-        else
+
+        // Throwing exception only happens in a derived class which overrides GetOrInferDataContentType further...
+        // This class infers application/json for anything other than byte arrays.
+        string? dataContentTypeText = GetOrInferDataContentType(cloudEvent) ?? throw new ArgumentException("Data content type cannot be inferred");
+
+        var dataContentType = new ContentType(dataContentTypeText);
+        if (IsJsonMediaType(dataContentType.MediaType))
         {
-            string? dataContentTypeText = GetOrInferDataContentType(cloudEvent);
-            // This would only happen in a derived class which overrides GetOrInferDataContentType further...
-            // This class infers application/json for anything other than byte arrays.
-            if (dataContentTypeText is null)
-            {
-                throw new ArgumentException("Data content type cannot be inferred");
-            }
-            ContentType dataContentType = new ContentType(dataContentTypeText);
-            if (IsJsonMediaType(dataContentType.MediaType))
-            {
-                writer.WritePropertyName(DataPropertyName);
-                Serializer.Serialize(writer, cloudEvent.Data);
-            }
-            else if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
-            {
-                writer.WritePropertyName(DataPropertyName);
-                writer.WriteValue(text);
-            }
-            else
-            {
-                // We assume CloudEvent.Data is not null due to the way this is called.
-                throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
-            }
+            writer.WritePropertyName(DataPropertyName);
+            Serializer.Serialize(writer, cloudEvent.Data);
+            return;
         }
+        if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
+        {
+            writer.WritePropertyName(DataPropertyName);
+            writer.WriteValue(text);
+            return;
+        }
+        // We assume CloudEvent.Data is not null due to the way this is called.
+        throw new ArgumentException($"{nameof(JsonEventFormatter)} cannot serialize data of type {cloudEvent.Data!.GetType()} with content type '{cloudEvent.DataContentType}'");
     }
 
     /// <inheritdoc />
@@ -568,13 +563,26 @@ public class JsonEventFormatter : CloudEventFormatter
         ContentType contentType = new ContentType(cloudEvent.DataContentType ?? JsonMediaType);
         if (IsJsonMediaType(contentType.MediaType))
         {
-            // TODO: Make this more efficient. We could write to a StreamWriter with a MemoryStream,
-            // but then we end up with a BOM in most cases, which I suspect we don't want.
-            // An alternative is to make sure that contentType.GetEncoding() always returns an encoding
-            // without a preamble (or rewrite StreamWriter...)
-            var stringWriter = new StringWriter();
-            Serializer.Serialize(stringWriter, cloudEvent.Data);
-            return MimeUtilities.GetEncoding(contentType).GetBytes(stringWriter.ToString());
+            var encoding = MimeUtilities.GetEncoding(contentType);
+            if (encoding is UTF8Encoding)
+            {
+                using var ms = new MemoryStream();
+                using var writer = new StreamWriter(ms, new UTF8Encoding(false));
+                Serializer.Serialize(writer, cloudEvent.Data);
+                writer.Flush();
+                return ms.ToArray();
+            }
+            else
+            {
+                // TODO: Make this more efficient for non-UTF8 encodings. 
+                // We could write to a StreamWriter with a MemoryStream,
+                // but then we end up with a BOM in most cases, which I suspect we don't want.
+                // An alternative is to make sure that contentType.GetEncoding() always returns an encoding
+                // without a preamble (or rewrite StreamWriter...)
+                var stringWriter = new StringWriter();
+                Serializer.Serialize(stringWriter, cloudEvent.Data);
+                return encoding.GetBytes(stringWriter.ToString());
+            }
         }
         if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
         {
@@ -680,10 +688,12 @@ public class JsonEventFormatter<T> : JsonEventFormatter
             return Array.Empty<byte>();
         }
         T data = (T) cloudEvent.Data;
-        // TODO: Make this more efficient. (See base class implementation for a more detailed comment.)
-        var stringWriter = new StringWriter();
-        Serializer.Serialize(stringWriter, data);
-        return Encoding.UTF8.GetBytes(stringWriter.ToString());
+
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, new UTF8Encoding(false));
+        Serializer.Serialize(writer, data);
+        writer.Flush();
+        return ms.ToArray();
     }
 
     /// <inheritdoc />

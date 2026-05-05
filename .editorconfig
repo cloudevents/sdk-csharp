@@ -29,6 +29,12 @@ indent_size = 2
 # Organize usings
 dotnet_sort_system_directives_first = false
 
+# Analyzer categories
+dotnet_analyzer_diagnostic.category-Maintainability.severity = warning
+dotnet_analyzer_diagnostic.category-Security.severity = warning
+dotnet_analyzer_diagnostic.category-Interoperability.severity = warning
+dotnet_analyzer_diagnostic.category-Performance.severity = warning
+
 # this. preferences
 dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
@@ -194,7 +200,7 @@ csharp_space_between_square_brackets = false
 csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
 
-csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_prefer_null_check_over_type_check = true:suggestion
 csharp_style_prefer_local_over_anonymous_function = true:suggestion
 csharp_style_prefer_tuple_swap = true:suggestion

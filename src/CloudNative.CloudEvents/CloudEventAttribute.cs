@@ -16,8 +16,8 @@ namespace CloudNative.CloudEvents;
 /// </summary>
 public class CloudEventAttribute
 {
-    private static readonly IList<string> ReservedNames = new List<string>
-        {
+    private static readonly List<string> ReservedNames = new()
+    {
             CloudEventsSpecVersion.SpecVersionAttributeName,
             "data"
         };
@@ -138,7 +138,7 @@ public class CloudEventAttribute
         }
         catch (Exception e)
         {
-            throw new ArgumentException($"Text for attribute '{Name}' is invalid: {e.Message}", nameof(value), e);
+            throw new ArgumentException($"Text for attribute '{Name}' is invalid: {e.Message}", nameof(text), e);
         }
         return Validate(value);
     }

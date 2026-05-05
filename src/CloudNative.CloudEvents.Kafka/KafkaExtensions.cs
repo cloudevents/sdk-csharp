@@ -77,7 +77,7 @@ public static class KafkaExtensions
         else
         {
             // Binary mode
-            if (!(GetHeaderValue(message, SpecVersionKafkaHeader) is string versionId))
+            if (GetHeaderValue(message, SpecVersionKafkaHeader) is not string versionId)
             {
                 throw new ArgumentException("Request is not a CloudEvent");
             }
