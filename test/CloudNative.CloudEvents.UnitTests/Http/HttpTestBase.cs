@@ -16,8 +16,9 @@ namespace CloudNative.CloudEvents.Http.UnitTests;
 /// </summary>
 public abstract class HttpTestBase : IDisposable
 {
+    private const int MaxListenerStartAttempts = 5;
     internal static readonly DateTimeOffset SampleTimestamp = new DateTimeOffset(2018, 4, 5, 17, 31, 0, TimeSpan.Zero);
-    internal string ListenerAddress { get; }
+    internal string ListenerAddress { get; } = string.Empty;
     internal const string TestContextHeader = "testcontext";
     private readonly HttpListener listener;
     private readonly Task processingTask;
@@ -28,14 +29,36 @@ public abstract class HttpTestBase : IDisposable
 
     public HttpTestBase()
     {
-        var port = GetRandomUnusedPort();
-        ListenerAddress = $"http://localhost:{port}/";
-        listener = new HttpListener()
+        Exception? lastException = null;
+
+        for (int attempt = 0; attempt < MaxListenerStartAttempts; attempt++)
         {
-            AuthenticationSchemes = AuthenticationSchemes.Anonymous,
-            Prefixes = { ListenerAddress }
-        };
-        listener.Start();
+            var port = GetRandomUnusedPort();
+            var candidateListenerAddress = $"http://localhost:{port}/";
+            var candidateListener = new HttpListener
+            {
+                AuthenticationSchemes = AuthenticationSchemes.Anonymous,
+                Prefixes = { candidateListenerAddress }
+            };
+
+            try
+            {
+                candidateListener.Start();
+                listener = candidateListener;
+                ListenerAddress = candidateListenerAddress;
+                break;
+            }
+            catch (HttpListenerException e)
+            {
+                lastException = e;
+            }
+        }
+
+        if (listener == null)
+        {
+            throw new InvalidOperationException($"Unable to start HttpListener after {MaxListenerStartAttempts} attempts.", lastException);
+        }
+        
         processingTask = ProcessRequestsAsync();
     }
 
