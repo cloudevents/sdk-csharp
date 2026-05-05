@@ -2,37 +2,37 @@ name: Push packages to NuGet
 
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
 
   release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       DOTNET_NOLOGO: true
 
     steps:
-    - name: Check out our repo
-      uses: actions/checkout@v6
-      with:
-        submodules: true
+      - name: Check out our repo
+        uses: actions/checkout@v6
+        with:
+          submodules: true
 
-    # Build with .NET 10.0 SDK
-    # Test with .NET 8.0 and 10.0
-    - name: Setup .NET 8.0 and 10.0
-      uses: actions/setup-dotnet@v5.2.0
-      with:
-        dotnet-version: |
-          8.0.x
-          10.0.x
+      # Build with .NET 10.0 SDK
+      # Test with .NET 8.0 and 10.0
+      - name: Setup .NET 8.0 and 10.0
+        uses: actions/setup-dotnet@v5.2.0
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
-    - name: Build
-      run: |
-        dotnet build -c Release -p:ContinuousIntegrationBuild=true
-        dotnet test -c Release
-        mkdir nuget
+      - name: Build
+        run: |
+          dotnet build -c Release -p:ContinuousIntegrationBuild=true
+          dotnet test -c Release
+          mkdir nuget
 
-    - name: Push to NuGet
-      run: |
-        dotnet pack -c Release -p:ContinuousIntegrationBuild=true -o $PWD/nuget
-        for file in nuget/*.nupkg; do dotnet nuget push -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_API_KEY}} $file; done
+      - name: Push to NuGet
+        run: |
+          dotnet pack -c Release -p:ContinuousIntegrationBuild=true -o $PWD/nuget
+          for file in nuget/*.nupkg; do dotnet nuget push -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_API_KEY}} $file; done
