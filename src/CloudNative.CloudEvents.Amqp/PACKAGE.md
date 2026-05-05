@@ -1,6 +1,6 @@
 ## About
 
-This package provides a protocol binding for transporting CloudEvents over AMQP using AMQPNetLite; for an overview of protocol bindings and their types in this SDK, see the [Protocol bindings](https://github.com/cloudevents/sdk-csharp/blob/main/docs/guide.md#protocol-bindings) section of the user guide.
+This package provides a protocol binding for transporting CloudEvents over AMQP using AMQPNetLite.Core; for an overview of protocol bindings and their types in this SDK, see the [Protocol bindings](https://github.com/cloudevents/sdk-csharp/blob/main/docs/guide.md#protocol-bindings) section of the user guide.
 
 ## How to Use
 

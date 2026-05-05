@@ -8,12 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AMQPNetLite" />
-    <PackageReference Include="AMQPNetLite.Serialization" />
+    <PackageReference Include="AMQPNetLite.Core" />
     <ProjectReference Include="..\CloudNative.CloudEvents\CloudNative.CloudEvents.csproj" />
     <!-- Source-only package with nullable reference annotations. -->
     <PackageReference Include="Nullable" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
-

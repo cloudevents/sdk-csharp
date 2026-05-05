@@ -13,7 +13,7 @@ unnecessary dependencies. These packages are:
 |NuGet package|Description|
 |-|-|
 |[CloudNative.CloudEvents](https://www.nuget.org/packages/CloudNative.CloudEvents)|Core SDK|
-|[CloudNative.CloudEvents.Amqp](https://www.nuget.org/packages/CloudNative.CloudEvents.Amqp)|AMQP protocol binding using [AMQPNetLite](https://www.nuget.org/packages/AMQPNetLite)|
+|[CloudNative.CloudEvents.Amqp](https://www.nuget.org/packages/CloudNative.CloudEvents.Amqp)|AMQP protocol binding using [AMQPNetLite.Core](https://www.nuget.org/packages/AMQPNetLite.Core)|
 |[CloudNative.CloudEvents.AspNetCore](https://www.nuget.org/packages/CloudNative.CloudEvents.AspNetCore)|ASP.NET Core support for CloudEvents|
 |[CloudNative.CloudEvents.Avro](https://www.nuget.org/packages/CloudNative.CloudEvents.Avro)|Avro event formatter using [Apache.Avro](https://www.nuget.org/packages/Apache.Avro)|
 |[CloudNative.CloudEvents.Kafka](https://www.nuget.org/packages/CloudNative.CloudEvents.Kafka)|Kafka protocol binding using [Confluent.Kafka](https://www.nuget.org/packages/Confluent.Kafka)|
