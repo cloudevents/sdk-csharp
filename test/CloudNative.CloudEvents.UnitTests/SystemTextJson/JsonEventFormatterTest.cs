@@ -538,6 +538,7 @@ public class JsonEventFormatterTest
 
     [Theory]
     [InlineData("utf-8")]
+    [InlineData("utf-16")]
     [InlineData("iso-8859-1")]
     public void DecodeStructuredModeMessage_Minimal(string charset)
     {
@@ -556,6 +557,31 @@ public class JsonEventFormatterTest
         Assert.Equal("test-type", cloudEvent.Type);
         Assert.Equal("test-id", cloudEvent.Id);
         Assert.Equal(SampleUri, cloudEvent.Source);
+        Assert.Equal(NonAsciiValue, cloudEvent["text"]);
+    }
+
+    [Theory]
+    [InlineData("utf-8")]
+    [InlineData("utf-16")]
+    [InlineData("iso-8859-1")]
+    public async Task DecodeStructuredModeMessage_Minimal_ForcedNonUtf8Fallback(string charset)
+    {
+        var obj = new JObject
+        {
+            ["specversion"] = "1.0",
+            ["type"] = "test-type",
+            ["id"] = "test-id",
+            ["source"] = SampleUriText,
+            ["text"] = NonAsciiValue
+        };
+        var bytes = Encoding.GetEncoding(charset).GetBytes(obj.ToString());
+        var stream = new MemoryStream(bytes);
+        var formatter = new NonTranscodingJsonEventFormatter();
+        var cloudEvent = formatter.DecodeStructuredModeMessage(stream, new ContentType($"application/cloudevents+json; charset={charset}"), null);
+        Assert.Equal("test-type", cloudEvent.Type);
+        Assert.Equal("test-id", cloudEvent.Id);
+        Assert.Equal(SampleUri, cloudEvent.Source);
+        Assert.Equal(NonAsciiValue, cloudEvent["text"]);
     }
 
     [Fact]
@@ -1216,6 +1242,11 @@ public class JsonEventFormatterTest
         var bytes = Encoding.UTF8.GetBytes(array.ToString());
         var formatter = new JsonEventFormatter();
         return formatter.DecodeBatchModeMessage(bytes, s_jsonCloudEventBatchContentType, null);
+    }
+
+    private sealed class NonTranscodingJsonEventFormatter : JsonEventFormatter
+    {
+        protected override bool UseTranscodingStreamForNonUtf8 => false;
     }
 
     private sealed class YearMonthDayConverter : JsonConverter<DateTime>

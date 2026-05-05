@@ -104,6 +104,12 @@ public class JsonEventFormatter : CloudEventFormatter
     protected JsonDocumentOptions DocumentOptions { get; }
 
     /// <summary>
+    /// Whether non-UTF8 JSON should be transcoded to UTF-8 before parsing when the target framework supports it.
+    /// Derived classes may override this to exercise the fallback path.
+    /// </summary>
+    protected virtual bool UseTranscodingStreamForNonUtf8 => true;
+
+    /// <summary>
     /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
     /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
     /// </summary>
@@ -193,15 +199,20 @@ public class JsonEventFormatter : CloudEventFormatter
         if (encoding is not UTF8Encoding)
         {
 #if NET5_0_OR_GREATER
-            data = Encoding.CreateTranscodingStream(data, encoding, Encoding.UTF8);
-#else
-            using var reader = new StreamReader(data, encoding);
-            var json = async
-                ? await reader.ReadToEndAsync().ConfigureAwait(false)
-                : reader.ReadToEnd();
-                
-            return JsonDocument.Parse(json, DocumentOptions);
+            if (UseTranscodingStreamForNonUtf8)
+            {
+                data = Encoding.CreateTranscodingStream(data, encoding, Encoding.UTF8);
+            }
+            else
 #endif
+            {
+                using var reader = new StreamReader(data, encoding);
+                var json = async
+                    ? await reader.ReadToEndAsync().ConfigureAwait(false)
+                    : reader.ReadToEnd();
+
+                return JsonDocument.Parse(json, DocumentOptions);
+            }
         }
 
         return async
