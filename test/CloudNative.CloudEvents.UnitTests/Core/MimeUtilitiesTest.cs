@@ -31,8 +31,8 @@ public class MimeUtilitiesTest
         // This just makes them deterministic.
         void AssertEqualParts(string expected, string actual)
         {
-            expected = string.Join(";", expected.Split(";").OrderBy(x => x));
-            actual = string.Join(";", actual.Split(";").OrderBy(x => x));
+            expected = string.Join(";", expected.Split(';').OrderBy(x => x));
+            actual = string.Join(";", actual.Split(';').OrderBy(x => x));
             Assert.Equal(expected, actual);
         }
     }

@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -99,7 +99,7 @@ public abstract class HttpTestBase : IDisposable
                 var responseContent = Encoding.UTF8.GetBytes($"Error processing request: {e}");
                 response.ContentLength64 = responseContent.Length;
                 response.StatusCode = 500;
-                response.OutputStream.Write(responseContent);
+                response.OutputStream.Write(responseContent, 0, responseContent.Length);
             }
             context.Response.Close();
         }

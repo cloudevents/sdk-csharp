@@ -1,4 +1,4 @@
-﻿// Copyright 2021 Cloud Native Foundation. 
+// Copyright 2021 Cloud Native Foundation. 
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -26,7 +26,7 @@ public class HttpListenerExtensionsTest : HttpTestBase
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+        var request = new HttpRequestMessage(HttpMethod.Post, ListenerAddress) { Content = content };
         HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
         var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEvent()));
         Assert.True(result);
@@ -40,7 +40,7 @@ public class HttpListenerExtensionsTest : HttpTestBase
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+        var request = new HttpRequestMessage(HttpMethod.Post, ListenerAddress) { Content = content };
         HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
         var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEvent()));
         Assert.False(result);
@@ -53,7 +53,7 @@ public class HttpListenerExtensionsTest : HttpTestBase
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+        var request = new HttpRequestMessage(HttpMethod.Post, ListenerAddress) { Content = content };
         HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
         var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEventBatch()));
         Assert.True(result);
@@ -67,7 +67,7 @@ public class HttpListenerExtensionsTest : HttpTestBase
         // Really only present for display purposes.
         Assert.NotNull(description);
 
-        var request = new HttpRequestMessage(HttpMethod.Get, ListenerAddress) { Content = content };
+        var request = new HttpRequestMessage(HttpMethod.Post, ListenerAddress) { Content = content };
         HttpClientExtensionsTest.CopyHeaders(headers, request.Headers);
         var result = await SendRequestAsync(request, context => Task.FromResult(context.Request.IsCloudEventBatch()));
         Assert.False(result);
@@ -80,6 +80,7 @@ public class HttpListenerExtensionsTest : HttpTestBase
     {
         var request = new HttpRequestMessage
         {
+            Method = HttpMethod.Post,
             RequestUri = new Uri(ListenerAddress),
             Headers =
                 {
@@ -121,6 +122,7 @@ public class HttpListenerExtensionsTest : HttpTestBase
         var bytes = new JsonEventFormatter().EncodeStructuredModeMessage(originalCloudEvent, out var contentType);
         var request = new HttpRequestMessage
         {
+            Method = HttpMethod.Post,
             RequestUri = new Uri(ListenerAddress),
             Content = new ByteArrayContent(bytes.ToArray())
             {

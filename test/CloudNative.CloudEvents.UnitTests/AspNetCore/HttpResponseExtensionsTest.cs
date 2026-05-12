@@ -31,7 +31,7 @@ public class HttpResponseExtensionsTest
 
         var content = GetContent(response);
         Assert.Equal("text/plain", response.ContentType);
-        Assert.Equal("plain text", Encoding.UTF8.GetString(content.Span));
+        Assert.Equal("plain text", Encoding.UTF8.GetString(content.Span.ToArray()));
         Assert.Equal("1.0", response.Headers["ce-specversion"]);
         Assert.Equal(cloudEvent.Type, response.Headers["ce-type"]);
         Assert.Equal(cloudEvent.Id, response.Headers["ce-id"]);
@@ -66,7 +66,7 @@ public class HttpResponseExtensionsTest
         var content = GetContent(response);
         // The formatter infers that it should encode the string as a JSON value (so it includes the double quotes)
         Assert.Equal("application/json", response.ContentType);
-        Assert.Equal("\"plain text\"", Encoding.UTF8.GetString(content.Span));
+        Assert.Equal("\"plain text\"", Encoding.UTF8.GetString(content.Span.ToArray()));
     }
 
     [Fact]

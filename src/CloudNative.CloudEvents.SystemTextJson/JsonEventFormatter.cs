@@ -1,4 +1,4 @@
-﻿// Copyright (c) Cloud Native Foundation.
+// Copyright (c) Cloud Native Foundation.
 // Licensed under the Apache 2.0 license.
 // See LICENSE file in the project root for full license information.
 
@@ -198,8 +198,7 @@ public class JsonEventFormatter : CloudEventFormatter
             using var reader = new StreamReader(data, encoding);
             var json = async
                 ? await reader.ReadToEndAsync().ConfigureAwait(false)
-                : reader.ReadToEnd();
-                
+                : reader.ReadToEnd();                
             return JsonDocument.Parse(json, DocumentOptions);
 #endif
         }

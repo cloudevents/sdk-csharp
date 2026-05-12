@@ -492,6 +492,7 @@ public class HttpClientExtensionsTest : HttpTestBase
     internal static HttpRequestMessage CreateRequestMessage(ReadOnlyMemory<byte> content, ContentType contentType) =>
         new HttpRequestMessage
         {
+            Method = HttpMethod.Post,
             Content = new ByteArrayContent(content.ToArray())
             {
                 Headers = { ContentType = MimeUtilities.ToMediaTypeHeaderValue(contentType) }
