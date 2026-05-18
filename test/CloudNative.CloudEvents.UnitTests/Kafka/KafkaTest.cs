@@ -131,8 +131,15 @@ public class KafkaTest
 
     [Theory]
     [InlineData(MediaTypeNames.Application.Octet, new byte[0])]
+#if NET8_0_OR_GREATER
     [InlineData(MediaTypeNames.Application.Json, null)]
     [InlineData(MediaTypeNames.Application.Xml, new byte[0])]
+#else
+    // Equivalent to the above, but those constants don't exist
+    // in .NET Framework
+    [InlineData("application/json", null)]
+    [InlineData("application/xml", new byte[0])]
+#endif
     [InlineData(MediaTypeNames.Text.Plain, "")]
     [InlineData(null, null)]
     public void KafkaBinaryMessageTombstoneTest(string? contentType, object? expectedDecodedResult)
