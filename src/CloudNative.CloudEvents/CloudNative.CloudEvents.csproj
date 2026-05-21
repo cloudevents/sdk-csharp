@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Buffers" />
     <PackageReference Include="System.Memory" Condition="'$(TargetFramework)'=='netstandard2.0'" />
     <!-- Source-only package with nullable reference annotations. -->
     <PackageReference Include="Nullable" PrivateAssets="All" />
