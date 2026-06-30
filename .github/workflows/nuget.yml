@@ -13,14 +13,14 @@ jobs:
 
     steps:
       - name: Check out our repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: true
 
       # Build with .NET 10.0 SDK
       # Test with .NET 8.0 and 10.0
       - name: Setup .NET 8.0 and 10.0
-        uses: actions/setup-dotnet@v5.3.0
+        uses: actions/setup-dotnet@v5.4.0
         with:
           dotnet-version: |
             8.0.x
