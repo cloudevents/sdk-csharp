@@ -1,6 +1,33 @@
 # Version history (from 2.0)
 
-## 2.8.0 (2024-05-08)
+# 2.9.0 (2026-07-04)
+
+- Add explicit .NET 10 target to all packages
+- Remove .NET Standard 2.1 target from all packages
+- Release CloudNative.CloudEvents.Kafka as 3.9.0, bumping the major
+  version to reflect adopting a new major Confluence.Kafka version.
+- Changed CloudEvents.Amqp dependency from AMQPNetLite and
+  AMQPNetLite.Serialization to just AMQPNetLite.Core
+- Performance improvements in both JSON packages
+- Dependency updates:
+  - AMQPNetLite.Core: Effectively 2.4.11 => 2.5.3
+  - Apache.Avro: 1.11.3 => 1.12.1
+  - Confluent.Kafka: 1.93 => 2.14.2
+  - Google.Protobuf: 3.27.3 => 3.35.1
+  - MQTTnet: 4.3.6.1152 => 4.3.7.1207
+  - Newtonsoft.Json: 13.0.3 => 13.0.4
+- Dependencies only for .NET Standard 2.0:
+  - Microsoft.AspNetCore.Http: 2.1.34 => 2.3.11
+  - System.Memory: 4.5.5 => 4.6.3
+  - System.Text.Encodings.Web: 8.0.0 => 10.0.9
+  - System.Text.Json: 8.0.4 => 10.0.9
+
+Note on the removal of .NET Standard 2.1: we don't expect this to break users,
+although it may mean additional dependencies due to falling back to .NET Standard 2.0.
+Please file an issue if this causes problems for you, and we'll consider reinstating
+the target.
+
+## 2.8.0 (2024-08-07)
 
 - Add explicit .NET 8 target to all packages.
 - Removed dependencies that are already included in the framework, for suitable targets.
