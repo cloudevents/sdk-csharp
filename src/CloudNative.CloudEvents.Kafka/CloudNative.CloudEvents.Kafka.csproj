@@ -4,6 +4,9 @@
     <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <Description>Kafka extensions for CloudNative.CloudEvents</Description>
     <PackageTags>cncf;cloudnative;cloudevents;events;kafka</PackageTags>
+    <Version>3.$(MinorVersion).$(PatchVersion)</Version>
+    <!-- Fix this after the first 3.x release -->
+    <PackageValidationBaselineVersion>2.$(PackageValidationMinor).0</PackageValidationBaselineVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
