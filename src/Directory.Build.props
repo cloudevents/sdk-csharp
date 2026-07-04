@@ -8,7 +8,7 @@
     <MajorVersion>2</MajorVersion>
     <MinorVersion>9</MinorVersion>
     <PatchVersion>0</PatchVersion>
-    <PackageValidationMinor>8</PackageValidationMinor>
+    <PackageValidationMinor>9</PackageValidationMinor>
     <Version>$(MajorVersion).$(MinorVersion).$(PatchVersion)</Version>
     <!-- 
       - The version used for detecting breaking changes.
