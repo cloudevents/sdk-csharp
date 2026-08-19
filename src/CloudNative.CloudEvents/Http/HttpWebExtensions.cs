@@ -66,7 +66,8 @@ public static class HttpWebExtensions
         {
             var attribute = attributeAndValue.Key;
             var value = attributeAndValue.Value;
-            if (attribute != cloudEvent.SpecVersion.DataContentTypeAttribute)
+            if (attribute != CloudEventsSpecVersion.SpecVersionAttribute &&
+                attribute != cloudEvent.SpecVersion.DataContentTypeAttribute)
             {
                 string headerValue = HttpUtilities.EncodeHeaderValue(attribute.Format(value));
                 destination.Headers.Add(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);

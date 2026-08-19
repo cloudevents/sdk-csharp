@@ -353,7 +353,8 @@ public class ProtobufEventFormatter : CloudEventFormatter
         {
             var attr = pair.Key;
             // Skip attributes already handled above.
-            if (attr == specVersion.IdAttribute ||
+            if (attr == CloudEventsSpecVersion.SpecVersionAttribute ||
+                attr == specVersion.IdAttribute ||
                 attr == specVersion.SourceAttribute ||
                 attr == specVersion.TypeAttribute)
             {

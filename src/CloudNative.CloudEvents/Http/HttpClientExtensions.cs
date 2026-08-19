@@ -295,6 +295,10 @@ public static class HttpClientExtensions
             string headerName = HttpUtilities.HttpHeaderPrefix + attribute.Name;
             object value = attributeAndValue.Value;
 
+            if (attribute == CloudEventsSpecVersion.SpecVersionAttribute)
+            {
+                continue;
+            }
             // Skip the data content type attribute in binary mode, because it's already in the content type header.
             if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute && contentMode == ContentMode.Binary)
             {

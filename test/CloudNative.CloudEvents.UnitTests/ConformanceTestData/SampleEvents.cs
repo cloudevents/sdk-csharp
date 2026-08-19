@@ -89,7 +89,10 @@ internal static class SampleEvents
         var clone = new CloudEvent(evt.SpecVersion, evt.ExtensionAttributes);
         foreach (var attr in evt.GetPopulatedAttributes())
         {
-            clone[attr.Key] = attr.Value;
+            if (attr.Key != CloudEventsSpecVersion.SpecVersionAttribute)
+            {
+                clone[attr.Key] = attr.Value;
+            }
         }
         // TODO: Deep copy where appropriate?
         clone.Data = evt.Data;

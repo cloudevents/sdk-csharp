@@ -463,6 +463,10 @@ public class JsonEventFormatter : CloudEventFormatter
         {
             var attribute = keyValuePair.Key;
             var value = keyValuePair.Value;
+            if (attribute == CloudEventsSpecVersion.SpecVersionAttribute)
+            {
+                continue;
+            }
             writer.WritePropertyName(attribute.Name);
             switch (CloudEventAttributeTypes.GetOrdinal(attribute.Type))
             {

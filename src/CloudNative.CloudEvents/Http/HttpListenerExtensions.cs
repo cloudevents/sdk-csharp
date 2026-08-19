@@ -63,8 +63,9 @@ public static class HttpListenerExtensions
         {
             var attribute = attributeAndValue.Key;
             var value = attributeAndValue.Value;
-            // The content type is already handled based on the content mode.
-            if (attribute != cloudEvent.SpecVersion.DataContentTypeAttribute)
+            // The spec version and content type are already handled based on the content mode.
+            if (attribute != CloudEventsSpecVersion.SpecVersionAttribute &&
+                attribute != cloudEvent.SpecVersion.DataContentTypeAttribute)
             {
                 string headerValue = HttpUtilities.EncodeHeaderValue(attribute.Format(value));
                 destination.Headers.Add(HttpUtilities.HttpHeaderPrefix + attribute.Name, headerValue);

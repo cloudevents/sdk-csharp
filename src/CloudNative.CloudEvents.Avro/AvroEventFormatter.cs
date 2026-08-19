@@ -156,6 +156,10 @@ public class AvroEventFormatter : CloudEventFormatter
         {
             var attribute = keyValuePair.Key;
             var value = keyValuePair.Value;
+            if (attribute == CloudEventsSpecVersion.SpecVersionAttribute)
+            {
+                continue;
+            }
             // TODO: Create a mapping method in each direction, to have this logic more clearly separated.
             var avroValue = value is bool or int or byte[] or string
                 ? value

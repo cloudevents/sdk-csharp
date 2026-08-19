@@ -180,7 +180,8 @@ public static class KafkaExtensions
         foreach (var pair in cloudEvent.GetPopulatedAttributes())
         {
             var attribute = pair.Key;
-            if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute ||
+            if (attribute == CloudEventsSpecVersion.SpecVersionAttribute ||
+                attribute == cloudEvent.SpecVersion.DataContentTypeAttribute ||
                 attribute.Name == Partitioning.PartitionKeyAttribute.Name)
             {
                 continue;

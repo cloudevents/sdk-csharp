@@ -324,11 +324,13 @@ public sealed class CloudEvent
 
     /// <summary>
     /// Returns a sequence of attributes and their values, for values which are populated in this event.
-    /// This does not include the CloudEvents spec version attribute.
     /// Currently the order in which the attributes is returned is not guaranteed.
     /// </summary>
     public IEnumerable<KeyValuePair<CloudEventAttribute, object>> GetPopulatedAttributes()
     {
+        yield return new KeyValuePair<CloudEventAttribute, object>(
+            CloudEventsSpecVersion.SpecVersionAttribute, SpecVersion.VersionId);
+
         foreach (var pair in attributeValues)
         {
             yield return new KeyValuePair<CloudEventAttribute, object>(GetAttribute(pair.Key)!, pair.Value);

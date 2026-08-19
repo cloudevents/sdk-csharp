@@ -228,8 +228,9 @@ public static class AmqpExtensions
         {
             var attribute = pair.Key;
 
-            // The content type is specified elsewhere.
-            if (attribute == cloudEvent.SpecVersion.DataContentTypeAttribute)
+            // The spec version and content type are specified elsewhere.
+            if (attribute == CloudEventsSpecVersion.SpecVersionAttribute ||
+                attribute == cloudEvent.SpecVersion.DataContentTypeAttribute)
             {
                 continue;
             }

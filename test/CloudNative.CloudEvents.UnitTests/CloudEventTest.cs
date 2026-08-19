@@ -282,9 +282,21 @@ public class CloudEventTest
         cloudEvent[CloudEventsSpecVersion.V1_0.TimeAttribute] = null;
 
         // We only have a single attribute left.
-        var attributeAndValue = Assert.Single(cloudEvent.GetPopulatedAttributes());
+        var attributeAndValue = Assert.Single(cloudEvent.GetPopulatedAttributes()
+            .Where(pair => pair.Key != CloudEventsSpecVersion.SpecVersionAttribute));
         Assert.Equal("type", attributeAndValue.Key.Name);
         Assert.Equal("eventtype", attributeAndValue.Value);
+    }
+
+    [Fact]
+    public void GetPopulatedAttributes_IncludesSpecVersion()
+    {
+        var cloudEvent = new CloudEvent(CloudEventsSpecVersion.V1_0);
+
+        var attributeAndValue = Assert.Single(cloudEvent.GetPopulatedAttributes());
+
+        Assert.Same(CloudEventsSpecVersion.SpecVersionAttribute, attributeAndValue.Key);
+        Assert.Equal("1.0", attributeAndValue.Value);
     }
 
     /// <summary>
