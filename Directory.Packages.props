@@ -1,9 +1,9 @@
 <Project>
   <ItemGroup>
-    <PackageVersion Include="AMQPNetLite.Core" Version="2.5.3" />
+    <PackageVersion Include="AMQPNetLite.Core" Version="2.5.4" />
     <PackageVersion Include="Apache.Avro" Version="1.12.2" />
     <PackageVersion Include="Confluent.Kafka" Version="2.15.0" />
-    <PackageVersion Include="Google.Protobuf" Version="3.36.0" />
+    <PackageVersion Include="Google.Protobuf" Version="3.36.1" />
     <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="5.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.12" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.25" />
