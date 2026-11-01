@@ -5,6 +5,9 @@
 using CloudNative.CloudEvents.Core;
 using System;
 using System.Reflection;
+#if NET8_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace CloudNative.CloudEvents;
 
@@ -21,13 +24,20 @@ public sealed class CloudEventFormatterAttribute : Attribute
     /// <summary>
     /// The type to use for CloudEvent formatting. Must not be null.
     /// </summary>
+#if NET8_0_OR_GREATER
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
     public Type FormatterType { get; }
 
     /// <summary>
     /// Constructs an instance of the attribute for the specified formatter type.
     /// </summary>
     /// <param name="formatterType">The type performing the data conversions.</param>
-    public CloudEventFormatterAttribute(Type formatterType) =>
+    public CloudEventFormatterAttribute(
+#if NET8_0_OR_GREATER
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+        Type formatterType) =>
         FormatterType = formatterType;
 
     /// <summary>
@@ -39,7 +49,11 @@ public sealed class CloudEventFormatterAttribute : Attribute
     /// <exception cref="InvalidOperationException">The target type is decorated with this attribute, but the
     /// type cannot be instantiated or does not derive from <see cref="CloudEventFormatter"/>.</exception>
     /// <returns>A new instance of the specified formatter, or null if the type is not decorated with this attribute.</returns>
-    public static CloudEventFormatter? CreateFormatter(Type targetType)
+    public static CloudEventFormatter? CreateFormatter(
+#if NET8_0_OR_GREATER
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+        Type targetType)
     {
         Validation.CheckNotNull(targetType, nameof(targetType));
         var attribute = targetType.GetCustomAttribute<CloudEventFormatterAttribute>(inherit: true);

@@ -5,6 +5,9 @@
 using CloudNative.CloudEvents.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+#if NET8_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -116,6 +119,10 @@ public class JsonEventFormatter : CloudEventFormatter
     /// <summary>
     /// Creates a JsonEventFormatter that uses a default <see cref="JsonSerializer"/>.
     /// </summary>
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Newtonsoft.Json is a reflection-based serializer and is not AOT compatible.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Newtonsoft.Json is a reflection-based serializer and is not AOT compatible.")]
+#endif
     public JsonEventFormatter() : this(JsonSerializer.CreateDefault())
     {
     }
