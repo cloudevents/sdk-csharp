@@ -217,6 +217,21 @@ public class ProtobufEventFormatterTest
         Assert.Equal(encoding.GetBytes(text), result.ToArray());
     }
 
+    // Media types are case-insensitive: https://www.rfc-editor.org/rfc/rfc2045#section-2
+    [Fact]
+    public void EncodeBinaryModeData_String_TextContentType_CaseInsensitive()
+    {
+        var cloudEvent = new CloudEvent
+        {
+            Data = "some text",
+            DataContentType = "TEXT/Plain"
+        }.PopulateRequiredAttributes();
+
+        var formatter = new ProtobufEventFormatter();
+        var result = formatter.EncodeBinaryModeEventData(cloudEvent);
+        Assert.Equal(Encoding.UTF8.GetBytes("some text"), result.ToArray());
+    }
+
     [Fact]
     public void EncodeBinaryModeData_String_NonTextContentType()
     {
@@ -561,6 +576,14 @@ public class ProtobufEventFormatterTest
         var data = DecodeBinaryModeEventData(bytes, contentType);
         string actualText = Assert.IsType<string>(data);
         Assert.Equal(text, actualText);
+    }
+
+    [Fact]
+    public void DecodeBinaryModeEventData_Text_CaseInsensitive()
+    {
+        var bytes = Encoding.UTF8.GetBytes("some text");
+        var data = DecodeBinaryModeEventData(bytes, "TEXT/Plain");
+        Assert.Equal("some text", Assert.IsType<string>(data));
     }
 
     [Theory]

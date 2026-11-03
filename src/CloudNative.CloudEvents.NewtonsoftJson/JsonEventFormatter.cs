@@ -535,7 +535,7 @@ public class JsonEventFormatter : CloudEventFormatter
             Serializer.Serialize(writer, cloudEvent.Data);
             return;
         }
-        if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/"))
+        if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase))
         {
             writer.WritePropertyName(DataPropertyName);
             writer.WriteValue(text);
@@ -584,7 +584,7 @@ public class JsonEventFormatter : CloudEventFormatter
                 return encoding.GetBytes(stringWriter.ToString());
             }
         }
-        if (contentType.MediaType.StartsWith("text/") && cloudEvent.Data is string text)
+        if (contentType.MediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) && cloudEvent.Data is string text)
         {
             return MimeUtilities.GetEncoding(contentType).GetBytes(text);
         }
@@ -612,7 +612,7 @@ public class JsonEventFormatter : CloudEventFormatter
                 cloudEvent.Data = null;
             }
         }
-        else if (contentType.MediaType.StartsWith("text/") == true)
+        else if (contentType.MediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) == true)
         {
             cloudEvent.Data = BinaryDataUtilities.GetString(body, encoding);
         }
@@ -648,11 +648,12 @@ public class JsonEventFormatter : CloudEventFormatter
     /// <summary>
     /// Determines whether the given media type should be handled as JSON.
     /// The default implementation treats anything ending with "/json" or "+json"
+    /// (compared case-insensitively)
     /// as JSON.
     /// </summary>
     /// <param name="mediaType">The media type to check for JSON. Will not be null.</param>
     /// <returns>Whether or not <paramref name="mediaType"/> indicates JSON data.</returns>
-    protected virtual bool IsJsonMediaType(string mediaType) => mediaType.EndsWith("/json") || mediaType.EndsWith("+json");
+    protected virtual bool IsJsonMediaType(string mediaType) => mediaType.EndsWith("/json", StringComparison.OrdinalIgnoreCase) || mediaType.EndsWith("+json", StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>

@@ -121,7 +121,7 @@ public class ProtobufEventFormatter : CloudEventFormatter
     public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent)
     {
         Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
-        if (cloudEvent.DataContentType is string dataContentType && dataContentType.StartsWith("text/"))
+        if (cloudEvent.DataContentType is string dataContentType && dataContentType.StartsWith("text/", StringComparison.OrdinalIgnoreCase))
         {
             Encoding encoding = MimeUtilities.GetEncoding(new ContentType(dataContentType));
             cloudEvent.Data = BinaryDataUtilities.GetString(body, encoding);
@@ -164,7 +164,7 @@ public class ProtobufEventFormatter : CloudEventFormatter
         {
             return Array.Empty<byte>();
         }
-        if (cloudEvent.DataContentType is string dataContentType && dataContentType.StartsWith("text/") && cloudEvent.Data is string text)
+        if (cloudEvent.DataContentType is string dataContentType && dataContentType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) && cloudEvent.Data is string text)
         {
             ContentType contentType = new ContentType(dataContentType);
             return MimeUtilities.GetEncoding(contentType).GetBytes(text);
