@@ -911,6 +911,79 @@ public class JsonEventFormatterTest
         Assert.Equal(bytes, data);
     }
 
+    // Media types are case-insensitive: https://www.rfc-editor.org/rfc/rfc2045#section-2
+    [Theory]
+    [InlineData("application/JSON")]
+    [InlineData("Application/Json")]
+    [InlineData("application/vnd.example+JSON")]
+    public void EncodeStructuredModeMessage_JsonDataType_CaseInsensitive(string contentType)
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = new { Text = "some text" };
+        cloudEvent.DataContentType = contentType;
+        JsonElement element = EncodeAndParseStructured(cloudEvent);
+        JsonElement data = element.GetProperty("data");
+        Assert.Equal("some text", data.GetProperty("Text").GetString());
+    }
+
+    [Fact]
+    public void EncodeStructuredModeMessage_TextType_CaseInsensitive()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = "some text";
+        cloudEvent.DataContentType = "TEXT/Plain";
+        JsonElement element = EncodeAndParseStructured(cloudEvent);
+        Assert.Equal("some text", element.GetProperty("data").GetString());
+    }
+
+    [Fact]
+    public void EncodeBinaryModeEventData_JsonDataType_CaseInsensitive()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = new { Text = "some text" };
+        cloudEvent.DataContentType = "Application/JSON";
+        var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+        Assert.Equal("{\"Text\":\"some text\"}", BinaryDataUtilities.GetString(bytes, Encoding.UTF8));
+    }
+
+    [Fact]
+    public void EncodeBinaryModeEventData_TextType_CaseInsensitive()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = "some text";
+        cloudEvent.DataContentType = "TEXT/Plain";
+        var bytes = new JsonEventFormatter().EncodeBinaryModeEventData(cloudEvent);
+        Assert.Equal("some text", BinaryDataUtilities.GetString(bytes, Encoding.UTF8));
+    }
+
+    [Fact]
+    public void DecodeStructuredModeMessage_JsonContentType_CaseInsensitive()
+    {
+        var obj = CreateMinimalValidJObject();
+        obj["datacontenttype"] = "Application/JSON";
+        obj["data"] = new JObject { ["test"] = "some text" };
+        var cloudEvent = DecodeStructuredModeMessage(obj);
+        var element = Assert.IsType<JsonElement>(cloudEvent.Data);
+        Assert.Equal("some text", element.GetProperty("test").GetString());
+    }
+
+    [Fact]
+    public void DecodeBinaryModeEventData_Json_CaseInsensitive()
+    {
+        var bytes = Encoding.UTF8.GetBytes(new JObject { ["test"] = "some text" }.ToString());
+        var data = DecodeBinaryModeEventData(bytes, "Application/JSON");
+        var element = Assert.IsType<JsonElement>(data);
+        Assert.Equal("some text", element.GetProperty("test").GetString());
+    }
+
+    [Fact]
+    public void DecodeBinaryModeEventData_Text_CaseInsensitive()
+    {
+        var bytes = Encoding.UTF8.GetBytes("some text");
+        var data = DecodeBinaryModeEventData(bytes, "TEXT/Plain");
+        Assert.Equal("some text", Assert.IsType<string>(data));
+    }
+
     [Fact]
     public void DecodeBatchMode_NotArray()
     {
