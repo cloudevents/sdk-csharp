@@ -147,6 +147,24 @@ public class JsonEventFormatterTest
     }
 
     [Fact]
+    public void EncodeStructuredModeMessage_JsonDataType_UsesSerializerContext()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = new AttributedModel { AttributedProperty = "simple text" };
+        cloudEvent.DataContentType = "application/json";
+
+        var formatter = new JsonEventFormatter(new AttributedModelContext(), default);
+        var encoded = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+        JsonElement element = ParseJson(encoded);
+        JsonElement dataProperty = element.GetProperty("data");
+        var asserter = new JsonElementAsserter
+            {
+                { AttributedModel.JsonPropertyName, JsonValueKind.String, "simple text" }
+            };
+        asserter.AssertProperties(dataProperty, assertCount: true);
+    }
+
+    [Fact]
     public void EncodeStructuredModeMessage_JsonDataType_AttributedModel()
     {
         var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
@@ -314,6 +332,33 @@ public class JsonEventFormatterTest
                 { "DateValue", JsonValueKind.String, "2021-02-19" }
             };
         asserter.AssertProperties(data, assertCount: true);
+    }
+
+    [Fact]
+    public void EncodeBinaryModeEventData_JsonDataType_UsesSerializerContext()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = new AttributedModel { AttributedProperty = "simple text" };
+        cloudEvent.DataContentType = "application/json";
+        var formatter = new JsonEventFormatter(new AttributedModelContext(), default);
+        var bytes = formatter.EncodeBinaryModeEventData(cloudEvent);
+        JsonElement data = ParseJson(bytes);
+        var asserter = new JsonElementAsserter
+            {
+                { AttributedModel.JsonPropertyName, JsonValueKind.String, "simple text" }
+            };
+        asserter.AssertProperties(data, assertCount: true);
+    }
+
+    [Fact]
+    public void EncodeBinaryModeEventData_JsonDataType_ContextWithoutDataType()
+    {
+        // The data type is not registered in the context, so serialization must fail.
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = new AttributedModel { AttributedProperty = "simple text" };
+        cloudEvent.DataContentType = "application/json";
+        var formatter = new JsonEventFormatter(new EmptyContext(), default);
+        Assert.Throws<InvalidOperationException>(() => formatter.EncodeBinaryModeEventData(cloudEvent));
     }
 
     [Fact]

@@ -5,10 +5,12 @@
 using CloudNative.CloudEvents.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace CloudNative.CloudEvents.SystemTextJson;
@@ -99,6 +101,12 @@ public class JsonEventFormatter : CloudEventFormatter
     protected JsonSerializerOptions? SerializerOptions { get; }
 
     /// <summary>
+    /// The <see cref="JsonSerializerContext"/> to use when serializing objects to JSON,
+    /// or null if the formatter was created using <see cref="JsonSerializerOptions"/>.
+    /// </summary>
+    protected JsonSerializerContext? SerializerContext { get; }
+
+    /// <summary>
     /// The options to use when parsing JSON documents.
     /// </summary>
     protected JsonDocumentOptions DocumentOptions { get; }
@@ -107,7 +115,10 @@ public class JsonEventFormatter : CloudEventFormatter
     /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
     /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
     /// </summary>
-    public JsonEventFormatter() : this(null, default)
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
+    public JsonEventFormatter() : this((JsonSerializerOptions?) null, default)
     {
     }
 
@@ -117,9 +128,24 @@ public class JsonEventFormatter : CloudEventFormatter
     /// </summary>
     /// <param name="serializerOptions">The options to use when serializing objects to JSON. May be null.</param>
     /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
     public JsonEventFormatter(JsonSerializerOptions? serializerOptions, JsonDocumentOptions documentOptions)
     {
         SerializerOptions = serializerOptions;
+        DocumentOptions = documentOptions;
+    }
+
+    /// <summary>
+    /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializerContext"/>
+    /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
+    /// </summary>
+    /// <param name="serializerContext">The serializer context to use when serializing objects to JSON. Must not be null.</param>
+    /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+    public JsonEventFormatter(JsonSerializerContext serializerContext, JsonDocumentOptions documentOptions)
+    {
+        SerializerContext = Validation.CheckNotNull(serializerContext, nameof(serializerContext));
         DocumentOptions = documentOptions;
     }
 
@@ -472,6 +498,42 @@ public class JsonEventFormatter : CloudEventFormatter
         return new Utf8JsonWriter(stream, options);
     }
 
+    // Serialize data using the JsonSerializerContext if one was provided,
+    // otherwise using the JsonSerializerOptions (or the default options if that is null).
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+#endif
+    private void SerializeDataToWriter(Utf8JsonWriter writer, object? data)
+    {
+        if (SerializerContext is { } context)
+        {
+            JsonSerializer.Serialize(writer, data, data!.GetType(), context);
+        }
+        else
+        {
+            JsonSerializer.Serialize(writer, data, SerializerOptions);
+        }
+    }
+
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+#endif
+    private string SerializeDataToString(object? data) =>
+        SerializerContext is { } context
+            ? JsonSerializer.Serialize(data, data!.GetType(), context)
+            : JsonSerializer.Serialize(data, SerializerOptions);
+
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+#endif
+    private ReadOnlyMemory<byte> SerializeDataToUtf8Bytes(object? data) =>
+        SerializerContext is { } context
+            ? JsonSerializer.SerializeToUtf8Bytes(data, data!.GetType(), context)
+            : JsonSerializer.SerializeToUtf8Bytes(data, SerializerOptions);
+
     private void WriteCloudEventForBatchOrStructuredMode(Utf8JsonWriter writer, CloudEvent cloudEvent)
     {
         Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
@@ -549,7 +611,7 @@ public class JsonEventFormatter : CloudEventFormatter
         if (IsJsonMediaType(dataContentType.MediaType))
         {
             writer.WritePropertyName(DataPropertyName);
-            JsonSerializer.Serialize(writer, cloudEvent.Data, SerializerOptions);
+            SerializeDataToWriter(writer, cloudEvent.Data);
             return;
         }
         if (cloudEvent.Data is string text && dataContentType.MediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase))
@@ -581,14 +643,9 @@ public class JsonEventFormatter : CloudEventFormatter
         if (IsJsonMediaType(contentType.MediaType))
         {
             var encoding = MimeUtilities.GetEncoding(contentType);
-            if (encoding is UTF8Encoding)
-            {
-                return JsonSerializer.SerializeToUtf8Bytes(cloudEvent.Data, SerializerOptions);
-            }
-            else
-            {
-                return MimeUtilities.GetEncoding(contentType).GetBytes(JsonSerializer.Serialize(cloudEvent.Data, SerializerOptions));
-            }
+            return encoding is UTF8Encoding
+                ? SerializeDataToUtf8Bytes(cloudEvent.Data)
+                : encoding.GetBytes(SerializeDataToString(cloudEvent.Data));
         }
         if (contentType.MediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) && cloudEvent.Data is string text)
         {
@@ -654,6 +711,9 @@ public class JsonEventFormatter<T> : JsonEventFormatter
     /// Creates a JsonEventFormatter that uses the default <see cref="JsonSerializerOptions"/>
     /// and <see cref="JsonDocumentOptions"/> for serializing and parsing.
     /// </summary>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
     public JsonEventFormatter()
     {
     }
@@ -664,12 +724,29 @@ public class JsonEventFormatter<T> : JsonEventFormatter
     /// </summary>
     /// <param name="serializerOptions">The options to use when serializing and parsing. May be null.</param>
     /// <param name="documentOptions">The options to use when parsing JSON documents.</param>
+#if NET8_0_OR_GREATER
+    [RequiresUnreferencedCode("Use a constructor that takes a JsonSerializerContext.")]
+#endif
     public JsonEventFormatter(JsonSerializerOptions serializerOptions, JsonDocumentOptions documentOptions)
         : base(serializerOptions, documentOptions)
     {
     }
 
+    /// <summary>
+    /// Creates a JsonEventFormatter that uses the specified <see cref="JsonSerializerContext"/>
+    /// and default <see cref="JsonDocumentOptions"/> for serializing and parsing.
+    /// </summary>
+    /// <param name="serializerContext">The serializer context to use when serializing and parsing. Must not be null.</param>
+    public JsonEventFormatter(JsonSerializerContext serializerContext)
+        : base(serializerContext, documentOptions: default)
+    {
+    }
+
     /// <inheritdoc />
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+#endif
     public override ReadOnlyMemory<byte> EncodeBinaryModeEventData(CloudEvent cloudEvent)
     {
         Validation.CheckCloudEventArgument(cloudEvent, nameof(cloudEvent));
@@ -679,10 +756,16 @@ public class JsonEventFormatter<T> : JsonEventFormatter
             return Array.Empty<byte>();
         }
         T data = (T) cloudEvent.Data;
-        return JsonSerializer.SerializeToUtf8Bytes(data, SerializerOptions);
+        return SerializerContext is { } context
+            ? JsonSerializer.SerializeToUtf8Bytes(data, typeof(T), context)
+            : JsonSerializer.SerializeToUtf8Bytes(data, SerializerOptions);
     }
 
     /// <inheritdoc />
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+#endif
     public override void DecodeBinaryModeEventData(ReadOnlyMemory<byte> body, CloudEvent cloudEvent)
     {
         Validation.CheckNotNull(cloudEvent, nameof(cloudEvent));
@@ -692,20 +775,39 @@ public class JsonEventFormatter<T> : JsonEventFormatter
             cloudEvent.Data = null;
             return;
         }
-        cloudEvent.Data = JsonSerializer.Deserialize<T>(body.Span, SerializerOptions);
+        cloudEvent.Data = SerializerContext is { } context
+            ? JsonSerializer.Deserialize(body.Span, typeof(T), context)
+            : JsonSerializer.Deserialize<T>(body.Span, SerializerOptions);
     }
 
     /// <inheritdoc />
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+#endif
     protected override void EncodeStructuredModeData(CloudEvent cloudEvent, Utf8JsonWriter writer)
     {
         T data = (T) cloudEvent.Data!;
         writer.WritePropertyName(DataPropertyName);
-        JsonSerializer.Serialize(writer, data, SerializerOptions);
+        if (SerializerContext is { } context)
+        {
+            JsonSerializer.Serialize(writer, data, typeof(T), context);
+        }
+        else
+        {
+            JsonSerializer.Serialize(writer, data, SerializerOptions);
+        }
     }
 
     /// <inheritdoc />
+#if NET8_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "Reflection-based serialization is only reachable through constructors marked with RequiresUnreferencedCode.")]
+#endif
     protected override void DecodeStructuredModeDataProperty(JsonElement dataElement, CloudEvent cloudEvent) =>
-        cloudEvent.Data = JsonSerializer.Deserialize<T>(dataElement, SerializerOptions);
+        cloudEvent.Data = SerializerContext is { } context
+            ? JsonSerializer.Deserialize(dataElement, typeof(T), context)
+            : JsonSerializer.Deserialize<T>(dataElement, SerializerOptions);
 
     // TODO: Consider decoding the base64 data as a byte array, then using DecodeBinaryModeData.
     /// <inheritdoc />

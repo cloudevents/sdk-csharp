@@ -63,6 +63,20 @@ public class GenericJsonEventFormatterTest
     }
 
     [Fact]
+    public void DecodeStructuredMode_UsesSerializerContext()
+    {
+        var obj = JsonEventFormatterTest.CreateMinimalValidJObject();
+        obj["data"] = new JObject { [AttributedModel.JsonPropertyName] = "test" };
+        byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
+
+        var formatter = new JsonEventFormatter<AttributedModel>(new AttributedModelContext());
+        var cloudEvent = formatter.DecodeStructuredModeMessage(bytes, null, null);
+
+        var model = (AttributedModel) cloudEvent.Data!;
+        Assert.Equal("test", model.AttributedProperty);
+    }
+
+    [Fact]
     public void DecodeStructuredMode_NoData()
     {
         var obj = JsonEventFormatterTest.CreateMinimalValidJObject();
@@ -91,6 +105,20 @@ public class GenericJsonEventFormatterTest
         byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
 
         var formatter = CreateFormatter<AttributedModel>();
+        var cloudEvent = new CloudEvent();
+        formatter.DecodeBinaryModeEventData(bytes, cloudEvent);
+
+        var model = (AttributedModel) cloudEvent.Data!;
+        Assert.Equal("test", model.AttributedProperty);
+    }
+
+    [Fact]
+    public void DecodeBinaryEventModeData_UsesSerializerContext()
+    {
+        var obj = new JObject { [AttributedModel.JsonPropertyName] = "test" };
+        byte[] bytes = Encoding.UTF8.GetBytes(obj.ToString());
+
+        var formatter = new JsonEventFormatter<AttributedModel>(new AttributedModelContext());
         var cloudEvent = new CloudEvent();
         formatter.DecodeBinaryModeEventData(bytes, cloudEvent);
 
@@ -137,6 +165,23 @@ public class GenericJsonEventFormatterTest
     }
 
     [Fact]
+    public void EncodeStructuredMode_UsesSerializerContext()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = new AttributedModel { AttributedProperty = "test" };
+        var formatter = new JsonEventFormatter<AttributedModel>(new AttributedModelContext());
+        var body = formatter.EncodeStructuredModeMessage(cloudEvent, out _);
+        var element = JsonEventFormatterTest.ParseJson(body);
+        Assert.False(element.TryGetProperty("data_base64", out _));
+        var data = element.GetProperty("data");
+
+        new JsonElementAsserter
+            {
+                { AttributedModel.JsonPropertyName, JsonValueKind.String, "test" }
+            }.AssertProperties(data, assertCount: true);
+    }
+
+    [Fact]
     public void EncodeStructuredMode_WrongType()
     {
         var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
@@ -166,6 +211,21 @@ public class GenericJsonEventFormatterTest
         var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
         var formatter = CreateFormatter<AttributedModel>();
         Assert.True(formatter.EncodeBinaryModeEventData(cloudEvent).IsEmpty);
+    }
+
+    [Fact]
+    public void EncodeBinaryModeEventData_UsesSerializerContext()
+    {
+        var cloudEvent = new CloudEvent().PopulateRequiredAttributes();
+        cloudEvent.Data = new AttributedModel { AttributedProperty = "test" };
+        var formatter = new JsonEventFormatter<AttributedModel>(new AttributedModelContext());
+        var body = formatter.EncodeBinaryModeEventData(cloudEvent);
+        var element = JsonEventFormatterTest.ParseJson(body);
+
+        new JsonElementAsserter
+            {
+                { AttributedModel.JsonPropertyName, JsonValueKind.String, "test" }
+            }.AssertProperties(element, assertCount: true);
     }
 
     [Fact]
